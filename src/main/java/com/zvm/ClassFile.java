@@ -62,13 +62,15 @@ public class ClassFile {
                 constant_long.tag = tag;
                 constant_long.high_bytes = IOUtils.read_u4();
                 constant_long.low_bytes = IOUtils.read_u4();
-                constant_pool.cp_info[i] = constant_long;
+                /*double和long类型会跳过一个常量标识*/
+                constant_pool.cp_info[i ++] = constant_long;
             }else if(integer_tag == 6){
                 CONSTANT_Double constant_double = new CONSTANT_Double();
                 constant_double.tag = tag;
                 constant_double.high_bytes = IOUtils.read_u4();
                 constant_double.low_bytes = IOUtils.read_u4();
-                constant_pool.cp_info[i] = constant_double;
+                /*double和long类型会跳过一个常量标识*/
+                constant_pool.cp_info[i ++] = constant_double;
             }else if(integer_tag == 7){
                 CONSTANT_Class constant_class = new CONSTANT_Class();
                 constant_class.tag = tag;
@@ -244,6 +246,7 @@ public class ClassFile {
             Integer temp_attributes_count = TypeUtils.byte2Int(code_attribute.attribute_count.u2);
             code_attribute.attributes =  new Attribute_Base[temp_attributes_count];
             for(Integer i = 0; i < temp_attributes_count; i ++){
+
                 processAttribute(i, code_attribute.attributes);
             }
             attributes[index] = code_attribute;
@@ -272,6 +275,7 @@ public class ClassFile {
             Integer classes_size = TypeUtils.byte2Int(innerClasses_attribute.number_of_classes.u2);
             innerClasses_attribute.classes = new classes[classes_size];
             for(Integer j = 0; j < classes_size; j ++){
+                innerClasses_attribute.classes[j] = new classes();
                 innerClasses_attribute.classes[j].inner_class_info_index = IOUtils.read_u2();
                 innerClasses_attribute.classes[j].outer_class_info_index = IOUtils.read_u2();
                 innerClasses_attribute.classes[j].inner_name_index = IOUtils.read_u2();
@@ -368,7 +372,7 @@ public class ClassFile {
             Integer annotations_size = TypeUtils.byte2Int(runtimeVisibleAnnotations.num_annotations.u2);
             runtimeVisibleAnnotations.annotations = new annotation[annotations_size];
             for(Integer j = 0; j < annotations_size; j ++){
-                annotation annotation = runtimeVisibleAnnotations.annotations[j];
+                annotation annotation = runtimeVisibleAnnotations.annotations[j] = new annotation();
                 processAnnotation(annotation);
             }
             attributes[index] = runtimeVisibleAnnotations;
@@ -448,6 +452,7 @@ public class ClassFile {
         Integer annotations_size = TypeUtils.byte2Int(parameter_annotation.num_annotations.u2);
         parameter_annotation.annotations = new annotation[annotations_size];
         for(Integer k = 0; k < annotations_size; k ++){
+            parameter_annotation.annotations[k] = new annotation();
             processAnnotation(parameter_annotation.annotations[k]);
         }
     }
@@ -458,6 +463,7 @@ public class ClassFile {
         Integer pairs_size = TypeUtils.byte2Int(annotation.num_element_value_pairs.u2);
         annotation.element_value_pairs = new element_value_pair[pairs_size];
         for(Integer k = 0; k < pairs_size; k ++){
+            annotation.element_value_pairs[k] = new element_value_pair();
             processElement_value_pair(annotation.element_value_pairs[k]);
         }
     }
@@ -520,6 +526,7 @@ public class ClassFile {
         }else if(tag_integer == Integer.valueOf('@')){
             value_annotation value_annotation = new value_annotation();
             value_annotation.tag = element_value_tag;
+            value_annotation.annotation_value = new annotation();
             processAnnotation(value_annotation.annotation_value);
             element_value = value_annotation;
         }else if(tag_integer == Integer.valueOf('[')){
@@ -598,6 +605,29 @@ public class ClassFile {
                     append_frame.locals[j] = getVerificationTypeTag(verification_type_tag);
                 }
                 stackMapTable_attribute.entries[i] = append_frame;
+
+                /*full_frame*/
+            }else if(frame_tag_integer >= 255 ){
+                full_frame full_frame = new full_frame();
+                full_frame.frame_type = frame_tag;
+                full_frame.offset_delta = IOUtils.read_u2();
+                full_frame.number_of_locals = IOUtils.read_u2();
+                int locals_size = TypeUtils.byte2Int(full_frame.number_of_locals.u2);
+                full_frame.locals = new verification_type_info[locals_size];
+                for(Integer j = 0; j < locals_size; j ++){
+                    u1 verification_type_tag = IOUtils.read_u1();
+                    full_frame.locals[j] = getVerificationTypeTag(verification_type_tag);
+                }
+
+                full_frame.number_of_stack_items = IOUtils.read_u2();
+                int stack_items_size = TypeUtils.byte2Int(full_frame.number_of_stack_items.u2);
+                full_frame.stack = new verification_type_info[stack_items_size];
+                for(Integer j = 0; j < stack_items_size; j ++){
+                    u1 verification_type_tag = IOUtils.read_u1();
+                    full_frame.stack[j] = getVerificationTypeTag(verification_type_tag);
+                }
+
+                stackMapTable_attribute.entries[i] = full_frame;
             }
         }
     }
@@ -773,9 +803,9 @@ class full_frame  extends stack_map_frame {
     u1 frame_type = FULL_FRAME; /* 255 */
     u2 offset_delta;
     u2 number_of_locals;
-    verification_type_info[] locals = new verification_type_info[TypeUtils.byte2Int(number_of_locals.u2)];
+    verification_type_info[] locals ;
     u2 number_of_stack_items;
-    verification_type_info[] stack= new verification_type_info[TypeUtils.byte2Int(number_of_stack_items.u2)];
+    verification_type_info[] stack;
 }
 
 //class verification_type_info  {
