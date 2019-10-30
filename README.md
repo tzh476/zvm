@@ -1,7 +1,7 @@
-- java实现jvm
+java实现jvm
 -  主要这几个模块：
 1. 读取class文件
-2. 
+2. 待续
 
 - 参考：
 1. https://docs.oracle.com/javase/specs/jvms/se8/jvms8.pdf
