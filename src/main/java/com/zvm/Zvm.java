@@ -41,5 +41,60 @@ public class Zvm {
             e.printStackTrace();
             System.out.println(JSON.toJSONString(classFile0));
         }
+
+        Interpreter interpreter = new Interpreter();
+        JavaClass javaClass = new JavaClass();
+        javaClass.setClassFile(classFile0);
+        interpreter.invokeByName(javaClass, "main", "([Ljava/lang/String;)V");
+    }
+
+    public void callMain(){
+        loadClass();
+        linkClass();
+        initClass();
+    }
+
+    /**
+     * 加载类
+     */
+    public void loadClass(){
+
+    }
+
+    /**
+     * 链接类
+     */
+    public void linkClass(){
+        verification();
+        preparation();
+        resolution();
+    }
+
+    /**
+     * 验证
+     */
+    public void verification(){
+
+    }
+
+    /**
+     * 准备
+     */
+    public void preparation(){
+
+    }
+
+    /**
+     * 解析
+     */
+    public void resolution(){
+
+    }
+
+    /**
+     * 初始化类
+     */
+    public void initClass(){
+
     }
 }
