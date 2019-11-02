@@ -1,5 +1,5 @@
 package com.zvm;
 
-public class JType {
+public class Heap {
 
 }

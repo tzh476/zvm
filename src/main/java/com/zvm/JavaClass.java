@@ -1,5 +1,7 @@
 package com.zvm;
 
+import com.zvm.basestruct.u2;
+
 /**
  * classFile是读取字节码为有规范的数据结构。
  * JavaClass作为运行时，来对classFile的读取入口
@@ -23,7 +25,7 @@ public class JavaClass {
     }
 
     public String getString(u2 index){
-        CONSTANT_Utf8 constant_utf8 = (CONSTANT_Utf8) classFile.constant_pool.cp_info[TypeUtils.byte2Int(index.u2)];
+        CONSTANT_Utf8 constant_utf8 = (CONSTANT_Utf8) classFile.constant_pool.cp_info[TypeUtils.byte2Int(index.u2) - 1];
         return TypeUtils.u12String(constant_utf8.bytes);
     }
 

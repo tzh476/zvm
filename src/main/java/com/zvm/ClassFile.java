@@ -1,5 +1,9 @@
 package com.zvm;
 
+import com.zvm.basestruct.u1;
+import com.zvm.basestruct.u2;
+import com.zvm.basestruct.u4;
+
 public class ClassFile {
     public u4 magic;
     public u2 minor_version;
@@ -1095,18 +1099,6 @@ class CONSTANT_InvokeDynamic extends CONSTANT_Base{
     public u2 name_and_type_index;
 }
 
-
-
-class u1{
-    public byte[] u1 ;
-}
-
-class u2{
-    public byte[] u2 ;
-}
-class u4{
-    public byte[] u4 ;
-}
 class cp_info{
     public CONSTANT_Base[] cp_info;
 }

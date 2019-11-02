@@ -1,5 +1,7 @@
 package com.zvm;
 
+import com.zvm.basestruct.u1;
+
 public class TypeUtils {
     /**
      * byte[]转int
@@ -7,7 +9,7 @@ public class TypeUtils {
      * @param bytes
      * @return
      */
-    static Integer byte2Int(byte[] bytes) {
+    static public Integer byte2Int(byte[] bytes) {
         Integer size = bytes.length;
         Integer res = 0xff & bytes[0];
         for (Integer i = 1; i < size; i++) {
@@ -22,7 +24,7 @@ public class TypeUtils {
      * @param bytes
      * @return
      */
-    static String byte2String(byte[] bytes) {
+    static public String byte2String(byte[] bytes) {
         Integer size = bytes.length;
         char[] res = new char[size];
         for (Integer i = 0; i < size; i++) {
@@ -37,7 +39,7 @@ public class TypeUtils {
      * @param bytes
      * @return
      */
-    static String u12String(u1[] bytes) {
+    static public String u12String(u1[] bytes) {
         Integer size = bytes.length;
         char[] res = new char[size];
         for (Integer i = 0; i < size; i++) {
@@ -46,7 +48,7 @@ public class TypeUtils {
         return String.valueOf(res);
     }
 
-    static boolean compare(String s, String d){
+    static public boolean compare(String s, String d){
         if(s == null && d == null){
             return true;
         }

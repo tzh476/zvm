@@ -1,8 +1,16 @@
 package com.zvm;
 
+import com.google.gson.Gson;
+import com.zvm.basestruct.u1;
+import com.zvm.draft.Opcode1;
+import com.zvm.runtime.JThread;
+import com.zvm.runtime.JavaFrame;
+import com.zvm.runtime.LocalVars;
+import com.zvm.runtime.OperandStack;
+
 public class Interpreter {
 
-    JavaFrame javaFrame;
+    JThread jThread;
 
     public void invokeByName(JavaClass javaClass, String name, String descriptor){
         method_info method_info = javaClass.findMethod(name, descriptor);
@@ -11,13 +19,25 @@ public class Interpreter {
         }
         CallSite callSite = new CallSite();
         callSite.setCallSite( method_info);
-        javaFrame.pushFrame(callSite.max_stack, callSite.max_locals);
-        executeByteCode(javaClass, callSite.code, TypeUtils.byte2Int(callSite.code_length.u4));
+        jThread = new JThread();
+        jThread.pushFrame(callSite.max_stack, callSite.max_locals);
+        executeByteCode(jThread, callSite.code, TypeUtils.byte2Int(callSite.code_length.u4));
     }
 
-    public void executeByteCode(JavaClass javaClass, u1[] code, int codeLength) {
-        for (int i = 0; i < codeLength; i++) {
-            int opcodeInt = TypeUtils.byte2Int(code[i].u1);
+    public void executeByteCode(JThread jThread, u1[] codeRaw, int codeLength) {
+        JavaFrame javaFrame = jThread.getTopFrame();
+        OperandStack operandStack = javaFrame.operandStack;
+        LocalVars localVars = javaFrame.localVars;
+        CodeUtils code = new CodeUtils(codeRaw, 0);
+        for (; code.getPc() < codeLength; code.pcAdd(1)) {
+            int opcodeInt = TypeUtils.byte2Int(codeRaw[code.getPc()].u1);
+            Gson gson = new Gson();
+            System.out.println("pc = " + code.getPc() + " operandStack "+gson.toJson(operandStack));
+            System.out.println("pc = " + code.getPc() + " localVars " + gson.toJson(localVars));
+            System.out.println();
+            System.out.println("pc = " + code.getPc() + " opcode:" + Opcode1.getMnemonic(opcodeInt));
+
+
             switch (opcodeInt) {
                 case Opcode.nop: {
 
@@ -31,28 +51,38 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.iconst_0: {
+                    operandStack.putInt(0);
                 }
                 break;
                 case Opcode.iconst_1: {
+                    operandStack.putInt(1);
                 }
                 break;
                 case Opcode.iconst_2: {
+                    operandStack.putInt(2);
+
                 }
                 break;
                 case Opcode.iconst_3: {
+                    operandStack.putInt(3);
+
                 }
                 break;
                 case Opcode.iconst_4: {
+                    operandStack.putInt(4);
+
                 }
                 break;
                 case Opcode.iconst_5: {
+                    operandStack.putInt(5);
                 }
                 break;
                 case Opcode.lconst_0: {
                 }
                 break;
                 case Opcode.bipush: {
-                    //javaFrame
+                    byte byteConstant = code.consumeU1();
+                    operandStack.putByte(byteConstant);
                 }
                 break;
                 case Opcode.sipush: {
@@ -203,6 +233,10 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.iadd: {
+                    int var1 = operandStack.popInt();
+                    int var0 = operandStack.popInt();
+                    int sum = var0 + var1;
+                    operandStack.putInt(sum);
                 }
                 break;
                 case Opcode.ladd: {
@@ -275,6 +309,10 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.iinc: {
+                    byte localVarIndex = code.consumeU1();
+                    byte constValue = code.consumeU1();
+                    int localVar = localVars.getIntByIndex(localVarIndex);
+                    localVars.putIntByIndex(localVarIndex, localVar + constValue);
                 }
                 break;
                 case Opcode.i2l: {
@@ -341,15 +379,19 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.iload_0: {
+                    operandStack.putInt(localVars.getIntByIndex(0));
                 }
                 break;
                 case Opcode.iload_1: {
+                    operandStack.putInt(localVars.getIntByIndex(1));
                 }
                 break;
                 case Opcode.iload_2: {
+                    operandStack.putInt(localVars.getIntByIndex(2));
                 }
                 break;
                 case Opcode.iload_3: {
+                    operandStack.putInt(localVars.getIntByIndex(3));
                 }
                 break;
                 case Opcode.lload_0: {
@@ -380,15 +422,19 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.istore_0: {
+                    localVars.putIntByIndex(0, operandStack.popInt());
                 }
                 break;
                 case Opcode.istore_1: {
+                    localVars.putIntByIndex(1, operandStack.popInt());
                 }
                 break;
                 case Opcode.istore_2: {
+                    localVars.putIntByIndex(2, operandStack.popInt());
                 }
                 break;
                 case Opcode.istore_3: {
+
                 }
                 break;
                 case Opcode.lstore_0: {
@@ -512,6 +558,15 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.if_icmpgt: {
+                    int var1 = operandStack.popInt();
+                    int var0 = operandStack.popInt();
+                    short offset = code.readU2();
+                    if(var0 >= var1){
+                        /*分支*/
+                        code.pcAdd(offset);
+                    }else {
+                        code.pcAdd(2);
+                    }
                 }
                 break;
                 case Opcode.if_icmple: {
@@ -524,6 +579,8 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.goto_: {
+                    short offset = code.readU2();
+                    code.pcAdd(offset - 1);/*循环默认加 1，这里先减回来*/
                 }
                 break;
                 case Opcode.jsr: {
