@@ -2,15 +2,20 @@ package com.zvm;
 
 import com.google.gson.Gson;
 import com.zvm.basestruct.u1;
+import com.zvm.basestruct.u4;
 import com.zvm.draft.Opcode1;
-import com.zvm.runtime.JThread;
-import com.zvm.runtime.JavaFrame;
-import com.zvm.runtime.LocalVars;
-import com.zvm.runtime.OperandStack;
+import com.zvm.runtime.*;
+import com.zvm.runtime.struct.JObject;
 
 public class Interpreter {
 
-    JThread jThread;
+    public RunTimeEnv runTimeEnv;
+    public JThread jThread ;
+
+    public Interpreter(RunTimeEnv runTimeEnv){
+        this.runTimeEnv = runTimeEnv;
+        jThread = new JThread();
+    }
 
     public void invokeByName(JavaClass javaClass, String name, String descriptor){
         method_info method_info = javaClass.findMethod(name, descriptor);
@@ -19,18 +24,18 @@ public class Interpreter {
         }
         CallSite callSite = new CallSite();
         callSite.setCallSite( method_info);
-        jThread = new JThread();
+
         jThread.pushFrame(callSite.max_stack, callSite.max_locals);
-        executeByteCode(jThread, callSite.code, TypeUtils.byte2Int(callSite.code_length.u4));
+        executeByteCode(jThread, javaClass, callSite.code, TypeUtils.byteArr2Int(callSite.code_length.u4));
     }
 
-    public void executeByteCode(JThread jThread, u1[] codeRaw, int codeLength) {
+    public void executeByteCode(JThread jThread,JavaClass javaClass, u1[] codeRaw, int codeLength) {
         JavaFrame javaFrame = jThread.getTopFrame();
         OperandStack operandStack = javaFrame.operandStack;
         LocalVars localVars = javaFrame.localVars;
         CodeUtils code = new CodeUtils(codeRaw, 0);
         for (; code.getPc() < codeLength; code.pcAdd(1)) {
-            int opcodeInt = TypeUtils.byte2Int(codeRaw[code.getPc()].u1);
+            int opcodeInt = TypeUtils.byteArr2Int(codeRaw[code.getPc()].u1);
             Gson gson = new Gson();
             System.out.println("pc = " + code.getPc() + " operandStack "+gson.toJson(operandStack));
             System.out.println("pc = " + code.getPc() + " localVars " + gson.toJson(localVars));
@@ -89,12 +94,51 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.ldc: {
+                    /*从常量池取值到frame顶*/
+                    byte cpIndex = code.consumeU1();
+                    CONSTANT_Base constant_base = javaClass.getClassFile().constant_pool.cp_info[TypeUtils.byte2Int(cpIndex)-1];
+                    if(constant_base instanceof CONSTANT_Integer){
+                        u4 ldcBytes = ((CONSTANT_Integer) constant_base).bytes;
+                        Integer ldcValue = TypeUtils.byteArr2Int(ldcBytes.u4);
+                        operandStack.putInt(ldcValue);
+                    }else if(constant_base instanceof CONSTANT_Float){
+                        u4 ldcBytes = ((CONSTANT_Float) constant_base).bytes;
+                        float ldcValue = TypeUtils.byteArr2Float(ldcBytes.u4);
+                        operandStack.putFloat(ldcValue);
+                    }
+
                 }
                 break;
                 case Opcode.ldc_w: {
+                    /*从常量池取值到frame顶*/
+                    short cpIndex = code.consumeU2();
+                    CONSTANT_Base constant_base = javaClass.getClassFile().constant_pool.cp_info[cpIndex - 1];
+                    if(constant_base instanceof CONSTANT_Integer){
+                        u4 ldcBytes = ((CONSTANT_Integer) constant_base).bytes;
+                        Integer ldcValue = TypeUtils.byteArr2Int(ldcBytes.u4);
+                        operandStack.putInt(ldcValue);
+                    }else if(constant_base instanceof CONSTANT_Float){
+                        u4 ldcBytes = ((CONSTANT_Float) constant_base).bytes;
+                        float ldcValue = TypeUtils.byteArr2Float(ldcBytes.u4);
+                        operandStack.putFloat(ldcValue);
+                    }
                 }
                 break;
                 case Opcode.ldc2_w: {
+                    /*从常量池取值到frame顶*/
+                    short cpIndex = code.consumeU2();
+                    CONSTANT_Base constant_base = javaClass.getClassFile().constant_pool.cp_info[cpIndex - 1];
+                    if(constant_base instanceof CONSTANT_Long){
+                        u4 highBytes = ((CONSTANT_Long) constant_base).high_bytes;
+                        u4 lowBytes = ((CONSTANT_Long) constant_base).low_bytes;
+                        operandStack.putLong(TypeUtils.byteArr2Int(highBytes.u4), TypeUtils.byteArr2Int(lowBytes.u4));
+                    }else if(constant_base instanceof CONSTANT_Double){
+                        u4 highBytes = ((CONSTANT_Double) constant_base).high_bytes;
+                        u4 lowBytes = ((CONSTANT_Double) constant_base).low_bytes;
+                        byte[] doubleByte = TypeUtils.appendByte(highBytes.u4, lowBytes.u4);
+                        double ldcValue = TypeUtils.byteArr2Double(doubleByte);
+                        operandStack.putDouble(ldcValue);
+                    }
                 }
                 break;
                 case Opcode.iload: {
@@ -230,6 +274,7 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.dup: {
+                    operandStack.putSlot(operandStack.getSlot());
                 }
                 break;
                 case Opcode.iadd: {
@@ -358,6 +403,14 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.ifeq: {
+                    int ifeqValue = operandStack.popInt();
+                    if(ifeqValue == 0){
+                        int offset = code.readU2();
+                        code.pcAdd(offset);
+                    }else {
+                        code.pcAdd(2);
+                    }
+
                 }
                 break;
                 case Opcode.lconst_1: {
@@ -401,6 +454,7 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.aload_0: {
+                    operandStack.putInt(localVars.getIntByIndex(3));
                 }
                 break;
                 case Opcode.aload_1: {
@@ -629,9 +683,16 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.invokespecial: {
+                    short invokeIndex = code.consumeU2();
+
                 }
                 break;
                 case Opcode.invokestatic: {
+                    short invokeIndex = code.consumeU2();
+                    CONSTANT_Base[] constant_bases = javaClass.getClassFile().constant_pool.cp_info;
+                    CONSTANT_Base constant_base = constant_bases[invokeIndex - 1];
+
+                    invokeStatic(javaClass,constant_base);
                 }
                 break;
                 case Opcode.invokeinterface: {
@@ -641,6 +702,13 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.new_: {
+                    int newIndex = code.consumeU2();
+                    CONSTANT_Base[] constant_bases = javaClass.getClassFile().constant_pool.cp_info;
+                    CONSTANT_Base constant_base = constant_bases[newIndex - 1];
+                    int name_index = TypeUtils.byteArr2Int(((CONSTANT_Class) constant_base).name_index.u2);
+                    CONSTANT_Utf8 constant_utf8 = (CONSTANT_Utf8) constant_bases[name_index - 1];
+                    JObject jObject = execNew(javaClass,constant_utf8);
+                    operandStack.putJObject(jObject);
                 }
                 break;
                 case Opcode.newarray: {
@@ -696,6 +764,31 @@ public class Interpreter {
                 break;
             }
         }
+    }
+
+    private void invokeStatic(JavaClass javaClass, CONSTANT_Base constant_base) {
+        CONSTANT_Base[] constant_bases = javaClass.getClassFile().constant_pool.cp_info;
+        CONSTANT_Methodref methodref  = (CONSTANT_Methodref) constant_base;
+        int class_index = TypeUtils.byteArr2Int(methodref.class_index.u2);
+        int name_and_type_index = TypeUtils.byteArr2Int(methodref.name_and_type_index.u2);
+
+        CONSTANT_Class constant_class = (CONSTANT_Class) constant_bases[class_index - 1];
+        CONSTANT_NameAndType constant_nameAndType = (CONSTANT_NameAndType)constant_bases[name_and_type_index - 1];
+
+        CONSTANT_Utf8 methodNameUtf8 = (CONSTANT_Utf8)constant_bases[TypeUtils.byteArr2Int(constant_nameAndType.name_index.u2) - 1];
+        CONSTANT_Utf8 descriptorNameUtf8 = (CONSTANT_Utf8)constant_bases[TypeUtils.byteArr2Int(constant_nameAndType.descriptor_index.u2) - 1];
+
+        String methodName = TypeUtils.u12String(methodNameUtf8.bytes);
+        String descriptorName = TypeUtils.u12String(descriptorNameUtf8.bytes);
+       // method_info method_info = javaClass.findMethod(methodName, descriptorName);
+
+        invokeByName(javaClass, methodName, descriptorName);
+
+    }
+
+    private JObject execNew(JavaClass javaClass,CONSTANT_Utf8 constant_utf8) {
+        String str = TypeUtils.u12String(constant_utf8.bytes);
+        return runTimeEnv.javaHeap.createJObject(javaClass);
     }
 
 }

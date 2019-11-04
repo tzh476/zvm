@@ -30,6 +30,11 @@ public class CodeUtils {
         return res;
     }
 
+    public byte readU1(){
+        byte res0 = code[pc + 1].u1[0];
+        return res0;
+    }
+
     public void pcAdd(int offset){
         pc += offset;
     }

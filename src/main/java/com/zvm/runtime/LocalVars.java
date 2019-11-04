@@ -1,5 +1,7 @@
 package com.zvm.runtime;
 
+import com.zvm.runtime.struct.Slot;
+
 public class LocalVars {
     Slot[] slots;
     public LocalVars(Integer max_locals) {

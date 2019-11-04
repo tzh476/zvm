@@ -13,8 +13,8 @@ public class JavaFrame {
     public LocalVars localVars;
 
     public JavaFrame(u2 max_stack, u2 max_locals){
-        this.max_stack = TypeUtils.byte2Int(max_stack.u2);
-        this.max_locals = TypeUtils.byte2Int(max_locals.u2);
+        this.max_stack = TypeUtils.byteArr2Int(max_stack.u2);
+        this.max_locals = TypeUtils.byteArr2Int(max_locals.u2);
         operandStack = new OperandStack(this.max_stack);
         localVars = new LocalVars(this.max_locals);
     }

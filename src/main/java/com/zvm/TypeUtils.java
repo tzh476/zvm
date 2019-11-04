@@ -9,7 +9,7 @@ public class TypeUtils {
      * @param bytes
      * @return
      */
-    static public Integer byte2Int(byte[] bytes) {
+    static public Integer byteArr2Int(byte[] bytes) {
         Integer size = bytes.length;
         Integer res = 0xff & bytes[0];
         for (Integer i = 1; i < size; i++) {
@@ -17,6 +17,42 @@ public class TypeUtils {
         }
         return res;
     }
+
+    static public long byteArr2Long(byte[] bytes) {
+        Integer size = bytes.length;
+        long res = 0xff & bytes[0];
+        for (Integer i = 1; i < size; i++) {
+            res = ((res << 8) + (2 << (8 * i) - 1)) & bytes[i];
+        }
+        return res;
+    }
+
+    /**
+     * byte转int
+     * byte的范围是-128至127，此处视为无符号，0-255
+     * @param value
+     * @return
+     */
+    static public Integer byte2Int(byte value) {
+        Integer res = 0xff & value;
+        return res;
+    }
+
+    static public float byteArr2Float(byte[] bytes) {
+        float res = Float.intBitsToFloat(byteArr2Int(bytes));
+        return res;
+    }
+
+    static public double byteArr2Double(byte[] bytes) {
+
+        double res = Double.longBitsToDouble(byteArr2Long(bytes));
+        return res;
+    }
+
+    static public int float2Int(float value) {
+        return Float.floatToIntBits(value);
+    }
+
 
     /**
      * byte[]转String
@@ -69,5 +105,18 @@ public class TypeUtils {
             }
         }
         return true;
+    }
+
+    public static byte[] appendByte(byte[] high, byte[] low) {
+        int len = high.length + low.length;
+        byte[] res = new byte[len];
+        int i = 0;
+        for(int lowLen = low.length; i < lowLen; i++){
+            res[i] = low[i];
+        }
+        for(int j = 0, highLen = high.length; j < highLen; j++){
+            res[i ++] = high[j];
+        }
+        return res;
     }
 }

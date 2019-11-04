@@ -19,7 +19,7 @@ import java.lang.reflect.Method;
 class Person {
 
     /**
-     * empty()方法同时被 "@Deprecated" 和 "@MyAnnotation(value={"a","b"})"所标注
+     * empty()方法同时被 "@Deprecated" 和 "@MyAnnotation(javaClass={"a","b"})"所标注
      * (01) @Deprecated，意味着empty()方法，不再被建议使用
      * (02) @MyAnnotation, 意味着empty() 方法对应的MyAnnotation的value值是默认值"unknown"
      */
@@ -30,7 +30,7 @@ class Person {
     }
 
     /**
-     * sombody() 被 @MyAnnotation(value={"girl","boy"}) 所标注，
+     * sombody() 被 @MyAnnotation(javaClass={"girl","boy"}) 所标注，
      * @MyAnnotation(value={"girl","boy"}), 意味着MyAnnotation的value值是{"girl","boy"}
      */
     @MyAnnotation(value={"girl","boy"})

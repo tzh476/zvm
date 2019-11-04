@@ -22,4 +22,8 @@ public class JThread {
         JavaFrame topFrame = jvmStack.topFrame;
         return topFrame;
     }
+
+    public JVMStack getStack(){
+        return jvmStack;
+    }
 }

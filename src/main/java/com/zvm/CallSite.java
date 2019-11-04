@@ -22,7 +22,7 @@ public class CallSite {
         access_flags = method_info.access_flags;
         name_index = method_info.name_index;
         descriptor_index = method_info.descriptor_index;
-        Integer count = TypeUtils.byte2Int(method_info.attribute_count.u2);
+        Integer count = TypeUtils.byteArr2Int(method_info.attribute_count.u2);
         for(Integer i = 0; i < count; i++){
             if(method_info.attributes[i] instanceof Code_attribute){
                 Code_attribute code_attribute = (Code_attribute) method_info.attributes[i];

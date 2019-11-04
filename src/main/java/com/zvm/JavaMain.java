@@ -3,8 +3,13 @@ package com.zvm;
 public class JavaMain {
     public static void main(String[] args){
         String path = args[0];
-        Zvm zvm = new Zvm();
+        RunTimeEnv zvmEnv = new RunTimeEnv();
         System.out.println("file path : " + path);
-        zvm.readBytecode2ClassFile(path);
+
+        ZVM zvm = new ZVM(zvmEnv);
+
+        zvm.callMain("main", "([Ljava/lang/String;)V", path);
+
+
     }
 }

@@ -32,7 +32,7 @@ public class ClassFile {
         major_version = IOUtils.read_u2();
         constant_pool_count = IOUtils.read_u2();
 
-        Integer pool_size = TypeUtils.byte2Int(constant_pool_count.u2);
+        Integer pool_size = TypeUtils.byteArr2Int(constant_pool_count.u2);
 
         constant_pool.cp_info = new CONSTANT_Base[pool_size];
 
@@ -40,12 +40,12 @@ public class ClassFile {
         for(Integer i = 0; i < pool_size - 1; i++){
             u1 tag = IOUtils.read_u1();
 
-            Integer integer_tag = TypeUtils.byte2Int(tag.u1);
+            Integer integer_tag = TypeUtils.byteArr2Int(tag.u1);
             if(integer_tag == 1){
                 CONSTANT_Utf8 constant_utf8 = new CONSTANT_Utf8();
                 constant_utf8.tag = tag;
                 constant_utf8.length = IOUtils.read_u2();
-                Integer utf8_len = TypeUtils.byte2Int( constant_utf8.length.u2);
+                Integer utf8_len = TypeUtils.byteArr2Int( constant_utf8.length.u2);
                 constant_utf8.bytes = new u1[utf8_len];
                 for(Integer j = 0; j < utf8_len; j ++){
                     constant_utf8.bytes[j] = IOUtils.read_u1();
@@ -135,14 +135,14 @@ public class ClassFile {
         this_class = IOUtils.read_u2();
         super_class = IOUtils.read_u2();
         interface_count = IOUtils.read_u2();
-        Integer interface_count_integer = TypeUtils.byte2Int(interface_count.u2);
+        Integer interface_count_integer = TypeUtils.byteArr2Int(interface_count.u2);
         interfaces = new u2[interface_count_integer];
         for(Integer i = 0; i < interface_count_integer; i ++){
             interfaces[i] = IOUtils.read_u2();
         }
 
         field_count  = IOUtils.read_u2();
-        Integer field_count_integer = TypeUtils.byte2Int(field_count.u2);
+        Integer field_count_integer = TypeUtils.byteArr2Int(field_count.u2);
         fields = new field_info[field_count_integer];
         for(Integer i = 0; i < field_count_integer; i ++){
             fields[i] = new field_info();
@@ -150,7 +150,7 @@ public class ClassFile {
             fields[i].name_index = IOUtils.read_u2();
             fields[i].descriptor_index = IOUtils.read_u2();
             fields[i].attribute_count = IOUtils.read_u2();
-            Integer temp_attributes_count = TypeUtils.byte2Int(fields[i].attribute_count.u2);
+            Integer temp_attributes_count = TypeUtils.byteArr2Int(fields[i].attribute_count.u2);
             fields[i].attributes =  new Attribute_Base[temp_attributes_count];
             for(Integer j = 0; j < temp_attributes_count; j ++){
                 processAttribute( j, fields[i].attributes);
@@ -158,7 +158,7 @@ public class ClassFile {
         }
 
         methods_count  = IOUtils.read_u2();
-        Integer methods_count_integer = TypeUtils.byte2Int(methods_count.u2);
+        Integer methods_count_integer = TypeUtils.byteArr2Int(methods_count.u2);
         methods = new method_info[methods_count_integer];
         for(Integer i = 0; i < methods_count_integer; i ++){
             methods[i] = new method_info();
@@ -166,7 +166,7 @@ public class ClassFile {
             methods[i].name_index = IOUtils.read_u2();
             methods[i].descriptor_index = IOUtils.read_u2();
             methods[i].attribute_count = IOUtils.read_u2();
-            Integer temp_attributes_count = TypeUtils.byte2Int(methods[i].attribute_count.u2);
+            Integer temp_attributes_count = TypeUtils.byteArr2Int(methods[i].attribute_count.u2);
             methods[i].attributes =  new Attribute_Base[temp_attributes_count];
             for(Integer j = 0; j < temp_attributes_count; j ++){
                 processAttribute( j, methods[i].attributes);
@@ -174,7 +174,7 @@ public class ClassFile {
         }
 
         attributes_count = IOUtils.read_u2();
-        Integer temp_attributes_count = TypeUtils.byte2Int(attributes_count.u2);
+        Integer temp_attributes_count = TypeUtils.byteArr2Int(attributes_count.u2);
         attributes =  new Attribute_Base[temp_attributes_count];
         for(Integer i = 0; i < temp_attributes_count; i ++){
             processAttribute( i, attributes);
@@ -209,7 +209,7 @@ public class ClassFile {
     };
     public void processAttribute( Integer index, Attribute_Base[] attributes){
         u2 attributes_name_index = IOUtils.read_u2();
-        Integer tempIndex = TypeUtils.byte2Int(attributes_name_index.u2);
+        Integer tempIndex = TypeUtils.byteArr2Int(attributes_name_index.u2);
         CONSTANT_Base constant_base = constant_pool.cp_info[tempIndex - 1];
         CONSTANT_Utf8 constant_utf8 = (CONSTANT_Utf8)constant_base;
         if(constant_utf8.tag.u1[0] != 0x1){
@@ -231,13 +231,13 @@ public class ClassFile {
             code_attribute.max_stack = IOUtils.read_u2();
             code_attribute.max_locals = IOUtils.read_u2();
             code_attribute.code_length = IOUtils.read_u4();
-            Integer len = TypeUtils.byte2Int(code_attribute.code_length.u4);
+            Integer len = TypeUtils.byteArr2Int(code_attribute.code_length.u4);
             code_attribute.code = new u1[len];
             for(Integer i = 0; i < len; i++){
                 code_attribute.code[i] = IOUtils.read_u1();
             }
             code_attribute.exception_table_length = IOUtils.read_u2();
-            len = TypeUtils.byte2Int(code_attribute.exception_table_length.u2);
+            len = TypeUtils.byteArr2Int(code_attribute.exception_table_length.u2);
             code_attribute.exception_table = new exception_table[len];
             for(Integer i = 0; i < len; i ++){
                 code_attribute.exception_table[i] = new exception_table();
@@ -247,7 +247,7 @@ public class ClassFile {
                 code_attribute.exception_table[i].catch_type = IOUtils.read_u2();
             }
             code_attribute.attribute_count = IOUtils.read_u2();
-            Integer temp_attributes_count = TypeUtils.byte2Int(code_attribute.attribute_count.u2);
+            Integer temp_attributes_count = TypeUtils.byteArr2Int(code_attribute.attribute_count.u2);
             code_attribute.attributes =  new Attribute_Base[temp_attributes_count];
             for(Integer i = 0; i < temp_attributes_count; i ++){
 
@@ -265,7 +265,7 @@ public class ClassFile {
             exceptions_attribute.attribute_name_index = attributes_name_index;
             exceptions_attribute.attribute_length = IOUtils.read_u4();
             exceptions_attribute.number_of_exceptions = IOUtils.read_u2();
-            Integer exception_size = TypeUtils.byte2Int(exceptions_attribute.number_of_exceptions.u2);
+            Integer exception_size = TypeUtils.byteArr2Int(exceptions_attribute.number_of_exceptions.u2);
             exceptions_attribute.exception_index_table = new u2[exception_size];
             for(Integer j = 0; j < exception_size; j ++){
                 exceptions_attribute.exception_index_table[j] = IOUtils.read_u2();
@@ -276,7 +276,7 @@ public class ClassFile {
             innerClasses_attribute.attribute_name_index = attributes_name_index;
             innerClasses_attribute.attribute_length = IOUtils.read_u4();
             innerClasses_attribute.number_of_classes = IOUtils.read_u2();
-            Integer classes_size = TypeUtils.byte2Int(innerClasses_attribute.number_of_classes.u2);
+            Integer classes_size = TypeUtils.byteArr2Int(innerClasses_attribute.number_of_classes.u2);
             innerClasses_attribute.classes = new classes[classes_size];
             for(Integer j = 0; j < classes_size; j ++){
                 innerClasses_attribute.classes[j] = new classes();
@@ -314,7 +314,7 @@ public class ClassFile {
             SourceDebugExtension_attribute sourceDebugExtension_attribute = new SourceDebugExtension_attribute();
             sourceDebugExtension_attribute.attribute_name_index = attributes_name_index;
             sourceDebugExtension_attribute.attribute_length = IOUtils.read_u4();
-            Integer debug_size = TypeUtils.byte2Int(sourceDebugExtension_attribute.attribute_length.u4);
+            Integer debug_size = TypeUtils.byteArr2Int(sourceDebugExtension_attribute.attribute_length.u4);
             sourceDebugExtension_attribute.debug_extension = new u1[debug_size];
             for(Integer j = 0; j < debug_size; j ++){
                 sourceDebugExtension_attribute.debug_extension[j] = IOUtils.read_u1();
@@ -325,7 +325,7 @@ public class ClassFile {
             lineNumberTable_attribute.attribute_name_index = attributes_name_index;
             lineNumberTable_attribute.attribute_length = IOUtils.read_u4();
             lineNumberTable_attribute.line_number_table_length = IOUtils.read_u2();
-            Integer line_number_size = TypeUtils.byte2Int(lineNumberTable_attribute.line_number_table_length.u2);
+            Integer line_number_size = TypeUtils.byteArr2Int(lineNumberTable_attribute.line_number_table_length.u2);
             lineNumberTable_attribute.line_number_table = new line_number[line_number_size];
             for(Integer j = 0; j < line_number_size; j ++){
                 lineNumberTable_attribute.line_number_table[j] = new line_number();
@@ -338,7 +338,7 @@ public class ClassFile {
             localVariableTable_attribute.attribute_name_index = attributes_name_index;
             localVariableTable_attribute.attribute_length = IOUtils.read_u4();
             localVariableTable_attribute.local_variable_table_length = IOUtils.read_u2();
-            Integer local_variable_size = TypeUtils.byte2Int(localVariableTable_attribute.local_variable_table_length.u2);
+            Integer local_variable_size = TypeUtils.byteArr2Int(localVariableTable_attribute.local_variable_table_length.u2);
             localVariableTable_attribute.local_variable_table = new local_variable[local_variable_size];
             for(Integer j = 0; j < local_variable_size; j ++){
                 localVariableTable_attribute.local_variable_table[j].start_pc = IOUtils.read_u2();
@@ -353,7 +353,7 @@ public class ClassFile {
             localVariableTypeTable.attribute_name_index = attributes_name_index;
             localVariableTypeTable.attribute_length = IOUtils.read_u4();
             localVariableTypeTable.local_variable_type_table_length = IOUtils.read_u2();
-            Integer local_variable_type_size = TypeUtils.byte2Int(localVariableTypeTable.local_variable_type_table_length.u2);
+            Integer local_variable_type_size = TypeUtils.byteArr2Int(localVariableTypeTable.local_variable_type_table_length.u2);
             localVariableTypeTable.local_variable_type_table = new local_variable_type[local_variable_type_size];
             for(Integer j = 0; j < local_variable_type_size; j ++){
                 localVariableTypeTable.local_variable_type_table[j].start_pc = IOUtils.read_u2();
@@ -373,7 +373,7 @@ public class ClassFile {
             runtimeVisibleAnnotations.attribute_name_index = attributes_name_index;
             runtimeVisibleAnnotations.attribute_length = IOUtils.read_u4();
             runtimeVisibleAnnotations.num_annotations = IOUtils.read_u2();
-            Integer annotations_size = TypeUtils.byte2Int(runtimeVisibleAnnotations.num_annotations.u2);
+            Integer annotations_size = TypeUtils.byteArr2Int(runtimeVisibleAnnotations.num_annotations.u2);
             runtimeVisibleAnnotations.annotations = new annotation[annotations_size];
             for(Integer j = 0; j < annotations_size; j ++){
                 annotation annotation = runtimeVisibleAnnotations.annotations[j] = new annotation();
@@ -385,7 +385,7 @@ public class ClassFile {
             runtimeInvisibleAnnotations.attribute_name_index = attributes_name_index;
             runtimeInvisibleAnnotations.attribute_length = IOUtils.read_u4();
             runtimeInvisibleAnnotations.num_annotations = IOUtils.read_u2();
-            Integer annotations_size = TypeUtils.byte2Int(runtimeInvisibleAnnotations.num_annotations.u2);
+            Integer annotations_size = TypeUtils.byteArr2Int(runtimeInvisibleAnnotations.num_annotations.u2);
             for(Integer j = 0; j < annotations_size; j ++){
                 annotation annotation = runtimeInvisibleAnnotations.annotations[j];
                 processAnnotation(annotation);
@@ -396,7 +396,7 @@ public class ClassFile {
             runtimeVisibleParameterAnnotations.attribute_name_index = attributes_name_index;
             runtimeVisibleParameterAnnotations.attribute_length = IOUtils.read_u4();
             runtimeVisibleParameterAnnotations.num_parameters = IOUtils.read_u1();
-            Integer parameters_size = TypeUtils.byte2Int(runtimeVisibleParameterAnnotations.num_parameters.u1);
+            Integer parameters_size = TypeUtils.byteArr2Int(runtimeVisibleParameterAnnotations.num_parameters.u1);
             for(Integer j = 0; j < parameters_size; j ++){
                 parameter_annotation parameter_annotation = runtimeVisibleParameterAnnotations.parameter_annotations[j];
                 processParameter_annotation(parameter_annotation);
@@ -407,7 +407,7 @@ public class ClassFile {
             runtimeInvisibleParameterAnnotations.attribute_name_index = attributes_name_index;
             runtimeInvisibleParameterAnnotations.attribute_length = IOUtils.read_u4();
             runtimeInvisibleParameterAnnotations.num_parameters = IOUtils.read_u1();
-            Integer parameters_size = TypeUtils.byte2Int(runtimeInvisibleParameterAnnotations.num_parameters.u1);
+            Integer parameters_size = TypeUtils.byteArr2Int(runtimeInvisibleParameterAnnotations.num_parameters.u1);
             for(Integer j = 0; j < parameters_size; j ++){
                 parameter_annotation parameter_annotation = runtimeInvisibleParameterAnnotations.parameter_annotations[j];
                 processParameter_annotation(parameter_annotation);
@@ -431,13 +431,13 @@ public class ClassFile {
             bootstrapMethods.attribute_name_index = attributes_name_index;
             bootstrapMethods.attribute_length = IOUtils.read_u4();
             bootstrapMethods.num_bootstrap_methods = IOUtils.read_u2();
-            Integer bootstrapMethods_size = TypeUtils.byte2Int(bootstrapMethods.num_bootstrap_methods.u2);
+            Integer bootstrapMethods_size = TypeUtils.byteArr2Int(bootstrapMethods.num_bootstrap_methods.u2);
             bootstrapMethods.bootstrap_methods = new bootstrap_method[bootstrapMethods_size];
             for(Integer j = 0; j < bootstrapMethods_size; j ++){
                 bootstrap_method bootstrap_method = bootstrapMethods.bootstrap_methods[j];
                 bootstrap_method.bootstrap_method_ref = IOUtils.read_u2();
                 bootstrap_method.num_bootstrap_arguments = IOUtils.read_u2();
-                Integer arguments_size = TypeUtils.byte2Int(bootstrap_method.num_bootstrap_arguments.u2);
+                Integer arguments_size = TypeUtils.byteArr2Int(bootstrap_method.num_bootstrap_arguments.u2);
                 bootstrap_method.bootstrap_arguments = new u2[arguments_size];
                 for(Integer k = 0; k < arguments_size; k ++){
                     bootstrap_method.bootstrap_arguments[k] = IOUtils.read_u2();
@@ -453,7 +453,7 @@ public class ClassFile {
 
     void processParameter_annotation(parameter_annotation parameter_annotation){
         parameter_annotation.num_annotations = IOUtils.read_u2();
-        Integer annotations_size = TypeUtils.byte2Int(parameter_annotation.num_annotations.u2);
+        Integer annotations_size = TypeUtils.byteArr2Int(parameter_annotation.num_annotations.u2);
         parameter_annotation.annotations = new annotation[annotations_size];
         for(Integer k = 0; k < annotations_size; k ++){
             parameter_annotation.annotations[k] = new annotation();
@@ -464,7 +464,7 @@ public class ClassFile {
     void processAnnotation(annotation annotation){
         annotation.type_index = IOUtils.read_u2();
         annotation.num_element_value_pairs = IOUtils.read_u2();
-        Integer pairs_size = TypeUtils.byte2Int(annotation.num_element_value_pairs.u2);
+        Integer pairs_size = TypeUtils.byteArr2Int(annotation.num_element_value_pairs.u2);
         annotation.element_value_pairs = new element_value_pair[pairs_size];
         for(Integer k = 0; k < pairs_size; k ++){
             annotation.element_value_pairs[k] = new element_value_pair();
@@ -479,7 +479,7 @@ public class ClassFile {
 
     void processElement_value(element_value element_value ){
         u1 element_value_tag = IOUtils.read_u1();
-        Integer tag_integer = TypeUtils.byte2Int(element_value_tag.u1);
+        Integer tag_integer = TypeUtils.byteArr2Int(element_value_tag.u1);
 //        if(tag_integer == Integer.valueOf('B')){
 //
 //        }else if(tag_integer == Integer.valueOf('C')){
@@ -537,7 +537,7 @@ public class ClassFile {
             array_value array_value =  new array_value();
             array_value.tag = element_value_tag;
             array_value.num_values = IOUtils.read_u2();
-            Integer num_value_integer = TypeUtils.byte2Int(array_value.num_values.u2);
+            Integer num_value_integer = TypeUtils.byteArr2Int(array_value.num_values.u2);
             element_value[] element_values = new element_value[num_value_integer];
             for(Integer i = 0; i < num_value_integer; i++){
                 processElement_value(element_values[i]);
@@ -551,12 +551,12 @@ public class ClassFile {
     void processStackMapTable(StackMapTable_attribute stackMapTable_attribute){
         stackMapTable_attribute.attribute_length = IOUtils.read_u4();
         stackMapTable_attribute.number_of_entries = IOUtils.read_u2();
-        Integer len = TypeUtils.byte2Int(stackMapTable_attribute.number_of_entries.u2);
+        Integer len = TypeUtils.byteArr2Int(stackMapTable_attribute.number_of_entries.u2);
         stackMapTable_attribute.entries = new stack_map_frame[len];
         for(Integer i = 0; i < len; i++){
             // stackMapTable_attribute.entries[i];
             u1 frame_tag = IOUtils.read_u1();
-            Integer frame_tag_integer = TypeUtils.byte2Int(frame_tag.u1);
+            Integer frame_tag_integer = TypeUtils.byteArr2Int(frame_tag.u1);
             /* 128 至 246是预留的*/
             /*same_frame */
             if(frame_tag_integer >= 0 && frame_tag_integer <= 63 ){
@@ -616,7 +616,7 @@ public class ClassFile {
                 full_frame.frame_type = frame_tag;
                 full_frame.offset_delta = IOUtils.read_u2();
                 full_frame.number_of_locals = IOUtils.read_u2();
-                int locals_size = TypeUtils.byte2Int(full_frame.number_of_locals.u2);
+                int locals_size = TypeUtils.byteArr2Int(full_frame.number_of_locals.u2);
                 full_frame.locals = new verification_type_info[locals_size];
                 for(Integer j = 0; j < locals_size; j ++){
                     u1 verification_type_tag = IOUtils.read_u1();
@@ -624,7 +624,7 @@ public class ClassFile {
                 }
 
                 full_frame.number_of_stack_items = IOUtils.read_u2();
-                int stack_items_size = TypeUtils.byte2Int(full_frame.number_of_stack_items.u2);
+                int stack_items_size = TypeUtils.byteArr2Int(full_frame.number_of_stack_items.u2);
                 full_frame.stack = new verification_type_info[stack_items_size];
                 for(Integer j = 0; j < stack_items_size; j ++){
                     u1 verification_type_tag = IOUtils.read_u1();
@@ -637,7 +637,7 @@ public class ClassFile {
     }
 
     verification_type_info getVerificationTypeTag(u1 tag){
-        Integer tag_integer = TypeUtils.byte2Int(tag.u1);
+        Integer tag_integer = TypeUtils.byteArr2Int(tag.u1);
         if(tag_integer == 0){
             Top_variable_info top_variable_info = new Top_variable_info();
             top_variable_info.tag = tag;
