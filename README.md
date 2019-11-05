@@ -2,7 +2,8 @@ java实现jvm
 -  主要这几个模块：
 1. 读取class文件
 2. 取opcode，解释执行程序
-3. 待续
+3. 函数调用
+4. 待续
 
 - 文档、书籍参考：
 1. java虚拟机规范：https://docs.oracle.com/javase/specs/jvms/se8/jvms8.pdf
