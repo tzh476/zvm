@@ -6,8 +6,8 @@ import com.zvm.basestruct.u2;
 public class JavaFrame {
     JavaFrame lowerFrame;/*保留调用当前帧的帧*/
 
-    public static Integer max_stack;
-    public static Integer max_locals;
+    public Integer max_stack;
+    public Integer max_locals;
 
     public OperandStack operandStack;
     public LocalVars localVars;

@@ -17,8 +17,11 @@ public class JThread {
         jvmStack.put(new JavaFrame(max_stack, max_locals));
     }
 
-    public JavaFrame getTopFrame(){
+    public JavaFrame popFrame(){
+        return jvmStack.pop();
+    }
 
+    public JavaFrame getTopFrame(){
         JavaFrame topFrame = jvmStack.topFrame;
         return topFrame;
     }

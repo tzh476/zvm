@@ -7,6 +7,9 @@ import com.zvm.draft.Opcode1;
 import com.zvm.runtime.*;
 import com.zvm.runtime.struct.JObject;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Interpreter {
 
     public RunTimeEnv runTimeEnv;
@@ -29,7 +32,7 @@ public class Interpreter {
         executeByteCode(jThread, javaClass, callSite.code, TypeUtils.byteArr2Int(callSite.code_length.u4));
     }
 
-    public void executeByteCode(JThread jThread,JavaClass javaClass, u1[] codeRaw, int codeLength) {
+    public void executeByteCode(JThread jThread, JavaClass javaClass, u1[] codeRaw, int codeLength) {
         JavaFrame javaFrame = jThread.getTopFrame();
         OperandStack operandStack = javaFrame.operandStack;
         LocalVars localVars = javaFrame.localVars;
@@ -75,7 +78,6 @@ public class Interpreter {
                 break;
                 case Opcode.iconst_4: {
                     operandStack.putInt(4);
-
                 }
                 break;
                 case Opcode.iconst_5: {
@@ -83,6 +85,7 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.lconst_0: {
+                    operandStack.putLong(0);
                 }
                 break;
                 case Opcode.bipush: {
@@ -217,12 +220,15 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.lstore_1: {
+                    localVars.putLong(1, operandStack.popLong());
                 }
                 break;
                 case Opcode.lstore_2: {
+                    localVars.putLong(2, operandStack.popLong());
                 }
                 break;
                 case Opcode.lstore_3: {
+                    localVars.putLong(3, operandStack.popLong());
                 }
                 break;
                 case Opcode.fstore_0: {
@@ -285,6 +291,10 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.ladd: {
+                    long var1 = operandStack.popLong();
+                    long var0 = operandStack.popLong();
+                    long addValue = var0 + var1;
+                    operandStack.putLong(addValue);
                 }
                 break;
                 case Opcode.fadd: {
@@ -297,6 +307,10 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.lsub: {
+                    long var1 = operandStack.popLong();
+                    long var0 = operandStack.popLong();
+                    long subValue = var0 - var1;
+                    operandStack.putLong(subValue);
                 }
                 break;
                 case Opcode.fsub: {
@@ -388,6 +402,15 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.lcmp: {
+                    long var1 = operandStack.popLong();
+                    long var0 = operandStack.popLong();
+                    int cmpRes = 0;
+                    if(var0 > var1){
+                        cmpRes = 1;
+                    }else if(var0 < var1){
+                        cmpRes = -1;
+                    }
+                    operandStack.putInt(cmpRes);
                 }
                 break;
                 case Opcode.fcmpl: {
@@ -414,6 +437,7 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.lconst_1: {
+                    operandStack.putLong(1);
                 }
                 break;
                 case Opcode.fconst_0: {
@@ -448,9 +472,13 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.lload_0: {
+                    long loadValue = localVars.getLongByIndex(0);
+                    operandStack.putLong(loadValue);
                 }
                 break;
                 case Opcode.lload_1: {
+                    long loadValue = localVars.getLongByIndex(1);
+                    operandStack.putLong(loadValue);
                 }
                 break;
                 case Opcode.aload_0: {
@@ -488,10 +516,12 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.istore_3: {
+                    localVars.putIntByIndex(3, operandStack.popInt());
 
                 }
                 break;
                 case Opcode.lstore_0: {
+                    localVars.putLong(0, operandStack.popLong());
                 }
                 break;
                 case Opcode.dstore_3: {
@@ -585,18 +615,53 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.ifne: {
+                    int var0 = operandStack.popInt();
+                    short offset = code.readU2();
+                    if(var0 != 0){
+                        code.pcAdd(offset);
+                    }else {
+                        code.pcAdd(2);
+                    }
                 }
                 break;
                 case Opcode.iflt: {
+                    int var0 = operandStack.popInt();
+                    short offset = code.readU2();
+                    if(var0 < 0){
+                        code.pcAdd(offset);
+                    }else {
+                        code.pcAdd(2);
+                    }
                 }
                 break;
                 case Opcode.ifge: {
+                    int var0 = operandStack.popInt();
+                    short offset = code.readU2();
+                    if(var0 >= 0){
+                        code.pcAdd(offset);
+                    }else {
+                        code.pcAdd(2);
+                    }
                 }
                 break;
                 case Opcode.ifgt: {
+                    int var0 = operandStack.popInt();
+                    short offset = code.readU2();
+                    if(var0 > 0){
+                        code.pcAdd(offset);
+                    }else {
+                        code.pcAdd(2);
+                    }
                 }
                 break;
                 case Opcode.ifle: {
+                    int var0 = operandStack.popInt();
+                    short offset = code.readU2();
+                    if(var0 <= 0){
+                        code.pcAdd(offset);
+                    }else {
+                        code.pcAdd(2);
+                    }
                 }
                 break;
                 case Opcode.if_icmpeq: {
@@ -653,8 +718,12 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.lreturn: {
+                    JavaFrame curFrame = jThread.popFrame();
+                    JavaFrame invokerFrame = jThread.getTopFrame();
+                    long val = operandStack.popLong();
+                    invokerFrame.operandStack.putLong(val);
+                    return;
                 }
-                break;
                 case Opcode.freturn: {
                 }
                 break;
@@ -691,8 +760,8 @@ public class Interpreter {
                     short invokeIndex = code.consumeU2();
                     CONSTANT_Base[] constant_bases = javaClass.getClassFile().constant_pool.cp_info;
                     CONSTANT_Base constant_base = constant_bases[invokeIndex - 1];
-
                     invokeStatic(javaClass,constant_base);
+
                 }
                 break;
                 case Opcode.invokeinterface: {
@@ -781,9 +850,156 @@ public class Interpreter {
         String methodName = TypeUtils.u12String(methodNameUtf8.bytes);
         String descriptorName = TypeUtils.u12String(descriptorNameUtf8.bytes);
        // method_info method_info = javaClass.findMethod(methodName, descriptorName);
+        method_info method_info = javaClass.findMethod(methodName, descriptorName);
+        if (method_info == null){
+            return ;
+        }
+        CallSite callSite = new CallSite();
+        callSite.setCallSite( method_info);
+        OperandStack invokerStack = jThread.getTopFrame().operandStack;
+        jThread.pushFrame(callSite.max_stack, callSite.max_locals);
+        JavaFrame curFrame = jThread.getTopFrame();
+        LocalVars curLocalVars = curFrame.localVars;
+        /*调用传递参数*/
+        Descriptor descriptor = processDescriptor(descriptorName);
+        int parametersCount = descriptor.parameters.size();
 
-        invokeByName(javaClass, methodName, descriptorName);
+        int slotCount = parametersCount;
+        for(int i = 0; i < parametersCount; i++){
+            if(descriptor.parameters.get(i) == TypeCode.T_LONG
+            ||descriptor.parameters.get(i) == TypeCode.T_DOUBLE){
+                slotCount ++;
+            }
+        }
 
+        for(int i = 0; i < slotCount; i++){
+            curLocalVars.putSlot(slotCount - 1 - i, invokerStack.popSlot());
+        }
+
+        executeByteCode(jThread, javaClass, callSite.code, TypeUtils.byteArr2Int(callSite.code_length.u4));
+
+    }
+
+    private Descriptor processDescriptor(String descriptorName) {
+        Descriptor descriptor = new Descriptor();
+        List<Integer> parameters = new ArrayList<>();
+        Integer returnType = new Integer(0);
+        char[] descriptorNameArr = descriptorName.toCharArray();
+        int i = 0;
+        while (descriptorNameArr[i] != ')'){
+            switch (descriptorNameArr[i]) {
+                case 'B': {
+                    parameters.add(TypeCode.T_BYTE);
+                }
+                break;
+                case 'C': {
+                    parameters.add(TypeCode.T_CHAR);
+                }
+                break;
+                case 'D': {
+                    parameters.add(TypeCode.T_DOUBLE);
+
+                }
+                break;
+                case 'F': {
+                    parameters.add(TypeCode.T_FLOAT);
+
+                }
+                break;
+                case 'I': {
+                    parameters.add(TypeCode.T_INT);
+
+                }
+                break;
+                case 'J': {
+                    parameters.add(TypeCode.T_LONG);
+
+                }
+                break;
+                case 'S': {
+                    parameters.add(TypeCode.T_SHORT);
+
+                }
+                break;
+                case 'Z': {
+                    parameters.add(TypeCode.T_BOOLEAN);
+
+                }
+                break;
+                case '[': {
+                    int arrayComponentType = ++i;
+                    while (descriptorNameArr[arrayComponentType] == '[') {
+                        arrayComponentType++;
+                    }
+                    i = arrayComponentType;
+                    parameters.add(TypeCode.T_EXTRA_ARRAY);
+                }
+                break;
+                case 'L': {
+                    int objectType = i++;
+                    while (descriptorNameArr[objectType] != ';') {
+                        objectType++;
+                    }
+                    i = objectType;
+                    parameters.add(TypeCode.T_EXTRA_OBJECT);
+                }
+                break;
+            }
+            i++;
+        }
+        int len = descriptorName.length();
+        while (i < len) {
+            switch (descriptorNameArr[i]) {
+                case 'B':{
+                    returnType = TypeCode.T_BYTE;
+                }
+                break;
+                case 'C':{
+                    returnType = TypeCode.T_BYTE;
+                }
+                break;
+                case 'D':{
+                    returnType = TypeCode.T_BYTE;
+                }
+                break;
+                case 'F':{
+                    returnType = TypeCode.T_BYTE;
+                }
+                break;
+                case 'I':{
+                    returnType = TypeCode.T_BYTE;
+                }
+                break;
+                case 'J':{
+                    returnType = TypeCode.T_BYTE;
+                }
+                break;
+                case 'S':{
+                    returnType = TypeCode.T_BYTE;
+                }
+                break;
+                case 'Z':{
+                    returnType = TypeCode.T_BYTE;
+                }
+                break;
+                case 'V':{
+                    returnType = TypeCode.T_BYTE;
+                }
+                break;
+                case '[': {
+                    returnType = TypeCode.T_BYTE;
+                }
+                break;
+                case 'L': {
+                    returnType = TypeCode.T_BYTE;
+                }
+                break;
+            }
+            i++;
+        }
+        descriptor.parameters = parameters;
+        descriptor.returnType = returnType;
+        return descriptor;
     }
 
     private JObject execNew(JavaClass javaClass,CONSTANT_Utf8 constant_utf8) {
