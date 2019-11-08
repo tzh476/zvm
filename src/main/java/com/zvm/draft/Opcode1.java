@@ -190,13 +190,13 @@ public class Opcode1 implements Serializable {
       int	dreturn			= 0xaf;
       int	areturn			= 0xb0;
       int	return_			= 0xb1;
-      int	get		= 0xb2;
-      int	put		= 0xb3;
+      int	getstatic		= 0xb2;
+      int	putstatic		= 0xb3;
       int	getfield		= 0xb4;
       int	putfield		= 0xb5;
       int	invokevirtual	= 0xb6;
       int	invokespecial	= 0xb7;
-      int	invoke	= 0xb8;
+      int	invokestatic	= 0xb8;
       int	invokeinterface	= 0xb9;
       int	xxxunusedxxx	= 0xba;
       int	new_			= 0xbb;

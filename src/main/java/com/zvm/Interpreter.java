@@ -15,6 +15,7 @@ public class Interpreter {
     public RunTimeEnv runTimeEnv;
     public JThread jThread ;
 
+
     public Interpreter(RunTimeEnv runTimeEnv){
         this.runTimeEnv = runTimeEnv;
         jThread = new JThread();
@@ -737,6 +738,32 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.getstatic: {
+                    short staticIndex = code.consumeU2();
+                    CONSTANT_Base[] constant_bases = javaClass.getClassFile().constant_pool.cp_info;
+                    CONSTANT_Base constant_base = constant_bases[staticIndex - 1];
+                    CONSTANT_Fieldref fieldref  = (CONSTANT_Fieldref) constant_base;
+                    int class_index = TypeUtils.byteArr2Int(fieldref.class_index.u2);
+                    int name_and_type_index = TypeUtils.byteArr2Int(fieldref.name_and_type_index.u2);
+
+                    CONSTANT_Class constant_class = (CONSTANT_Class) constant_bases[class_index - 1];
+                    CONSTANT_NameAndType constant_nameAndType = (CONSTANT_NameAndType)constant_bases[name_and_type_index - 1];
+
+                    CONSTANT_Utf8 fieldNameUtf8 = (CONSTANT_Utf8)constant_bases[TypeUtils.byteArr2Int(constant_nameAndType.name_index.u2) - 1];
+                    CONSTANT_Utf8 descriptorNameUtf8 = (CONSTANT_Utf8)constant_bases[TypeUtils.byteArr2Int(constant_nameAndType.descriptor_index.u2) - 1];
+                    CONSTANT_Utf8 classNameUtf8 = (CONSTANT_Utf8)constant_bases[TypeUtils.byteArr2Int(constant_class.name_index.u2) - 1];
+
+                    String fieldName = TypeUtils.u12String(fieldNameUtf8.bytes);
+                    String descriptorName = TypeUtils.u12String(descriptorNameUtf8.bytes);
+                    String className = TypeUtils.u12String(classNameUtf8.bytes);
+
+                    resolvedField(className, descriptorName, fieldName);
+
+                    // method_info method_info = javaClass.findMethod(methodName, descriptorName);
+                    method_info method_info = javaClass.findMethod(fieldName, descriptorName);
+
+//                    if (method_info == null){
+//                        return ;
+//                    }
                 }
                 break;
                 case Opcode.putstatic: {
@@ -749,6 +776,10 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.invokevirtual: {
+                    short invokeIndex = code.consumeU2();
+                    CONSTANT_Base[] constant_bases = javaClass.getClassFile().constant_pool.cp_info;
+                    CONSTANT_Base constant_base = constant_bases[invokeIndex - 1];
+                    invokeVirtual(javaClass,constant_base);
                 }
                 break;
                 case Opcode.invokespecial: {
@@ -833,6 +864,84 @@ public class Interpreter {
                 break;
             }
         }
+    }
+
+    /**
+     * 解析字段
+     * @param className
+     * @param descriptorName
+     * @param fieldName
+     */
+    private void resolvedField(String className, String descriptorName, String fieldName) {
+       // MethodArea methodArea = runTimeEnv.methodArea;
+        resolvedClassIfAbent(className);
+    }
+
+    /**
+     * 解析类
+     * @param className
+     */
+    private void resolvedClassIfAbent(String className) {
+        MethodArea methodArea = runTimeEnv.methodArea;
+        JavaClass javaClass = methodArea.findClass(className);
+        if(javaClass == null){
+            resolvedClass(className);
+        }
+    }
+    private void resolvedClass(String className){
+        JavaClass javaClass = runTimeEnv.methodArea.loadClass(className);
+        link(javaClass);
+    }
+
+    private void link(JavaClass javaClass) {
+        verify(javaClass);
+        prepare(javaClass);
+    }
+
+    private void prepare(JavaClass javaClass) {
+
+    }
+
+    private void verify(JavaClass javaClass) {
+    }
+
+    private void invokeVirtual(JavaClass javaClass, CONSTANT_Base constant_base) {
+        CONSTANT_Base[] constant_bases = javaClass.getClassFile().constant_pool.cp_info;
+        CONSTANT_Methodref methodref  = (CONSTANT_Methodref) constant_base;
+        int class_index = TypeUtils.byteArr2Int(methodref.class_index.u2);
+        int name_and_type_index = TypeUtils.byteArr2Int(methodref.name_and_type_index.u2);
+
+        CONSTANT_Class constant_class = (CONSTANT_Class) constant_bases[class_index - 1];
+        CONSTANT_NameAndType constant_nameAndType = (CONSTANT_NameAndType)constant_bases[name_and_type_index - 1];
+
+        CONSTANT_Utf8 methodNameUtf8 = (CONSTANT_Utf8)constant_bases[TypeUtils.byteArr2Int(constant_nameAndType.name_index.u2) - 1];
+        CONSTANT_Utf8 descriptorNameUtf8 = (CONSTANT_Utf8)constant_bases[TypeUtils.byteArr2Int(constant_nameAndType.descriptor_index.u2) - 1];
+
+        String methodName = TypeUtils.u12String(methodNameUtf8.bytes);
+
+        /*hack*/
+        if(methodName == "println"){
+
+        }
+
+        String descriptorName = TypeUtils.u12String(descriptorNameUtf8.bytes);
+        // method_info method_info = javaClass.findMethod(methodName, descriptorName);
+        method_info method_info = javaClass.findMethod(methodName, descriptorName);
+        if (method_info == null){
+            return ;
+        }
+        CallSite callSite = new CallSite();
+        callSite.setCallSite( method_info);
+        OperandStack invokerStack = jThread.getTopFrame().operandStack;
+        jThread.pushFrame(callSite.max_stack, callSite.max_locals);
+        JavaFrame curFrame = jThread.getTopFrame();
+        LocalVars curLocalVars = curFrame.localVars;
+        /*调用传递参数*/
+        Descriptor descriptor = processDescriptor(descriptorName);
+        int parametersCount = descriptor.parameters.size();
+
+
+
     }
 
     private void invokeStatic(JavaClass javaClass, CONSTANT_Base constant_base) {

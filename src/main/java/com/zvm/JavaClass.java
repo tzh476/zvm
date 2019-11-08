@@ -3,10 +3,6 @@ package com.zvm;
 import com.alibaba.fastjson.JSON;
 import com.zvm.basestruct.u2;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 
 /**
  * classFile是读取字节码为有规范的数据结构。
@@ -17,6 +13,7 @@ public class JavaClass {
 
     private String classPath;
     private ClassFile classFile;
+
 
     public JavaClass(String classPath){
         this.classPath = classPath;
@@ -37,23 +34,8 @@ public class JavaClass {
         return null;
     }
 
-    public ClassFile readBytecode2ClassFile(String path){
-        File classFile = new File(path);
+    public ClassFile readBytecode2ClassFile(byte[] byteCode){
 
-        byte[] byteCode = new byte[CLASS_BYTECODE_FILE_MAX];
-
-        try {
-            FileInputStream in = new FileInputStream(classFile);
-            in.read(byteCode);
-        } catch (FileNotFoundException e) {
-            System.out.println("file not found " + path);
-            e.printStackTrace();
-            return null;
-        } catch (IOException e) {
-            System.out.println("读取 "+ path + " 失败");
-            e.printStackTrace();
-            return null;
-        }
 
         this.classFile = new ClassFile();
         try {

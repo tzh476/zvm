@@ -11,9 +11,11 @@ public class TypeUtils {
      */
     static public Integer byteArr2Int(byte[] bytes) {
         Integer size = bytes.length;
+        /*bytes[0]为高位*/
         Integer res = 0xff & bytes[0];
         for (Integer i = 1; i < size; i++) {
-            res = ((res << 8) + 0xff) & bytes[i];
+            //res = ((res << 8) + 0xff) & bytes[i];
+            res = (res << 8)  + (0xff & bytes[i]);
         }
         return res;
     }

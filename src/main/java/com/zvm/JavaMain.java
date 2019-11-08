@@ -2,14 +2,17 @@ package com.zvm;
 
 public class JavaMain {
     public static void main(String[] args){
-        String path = args[0];
+        Cmd.processCmd(args);
         RunTimeEnv zvmEnv = new RunTimeEnv();
-        System.out.println("file path : " + path);
+        String curClassNamePath = Cmd.curClassNamePath;
+        System.out.println("file path : " + curClassNamePath);
 
         ZVM zvm = new ZVM(zvmEnv);
 
-        zvm.callMain("main", "([Ljava/lang/String;)V", path);
+        zvm.callMain("main", "([Ljava/lang/String;)V", curClassNamePath);
 
 
     }
+
+
 }

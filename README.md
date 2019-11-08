@@ -14,7 +14,7 @@ java实现jvm
 
 - 代码参考：
 1. c++实现的java虚拟机：https://github.com/kelthuzadx/yvm
-2. go实现jvm
+2. go实现jvm：https://github.com/zxh0/jvmgo-book
 3. Hotspot源码：https://github.com/tzh476/Hotspot
 
 - 工具
