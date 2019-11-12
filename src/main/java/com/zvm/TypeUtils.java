@@ -54,7 +54,9 @@ public class TypeUtils {
     static public int float2Int(float value) {
         return Float.floatToIntBits(value);
     }
-
+    static public float int2Float(int value) {
+        return Float.intBitsToFloat(value);
+    }
 
     /**
      * byte[]转String

@@ -69,6 +69,11 @@ public class OperandStack {
         size ++;
     }
 
+    public float popFloat() {
+        int value = popInt();
+        return TypeUtils.int2Float(value);
+    }
+
     public Slot popSlot(){
         size --;
         return slots[size];
@@ -82,6 +87,10 @@ public class OperandStack {
     public void putJObject(JObject jObject){
         slots[size].jType = jObject;
         size ++;
+    }
+
+    public JObject getJObjectFromTop(int index){
+        return (JObject) slots[size - 1 - index].jType;
     }
 
     public Slot getSlot(){

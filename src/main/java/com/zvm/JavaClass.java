@@ -2,6 +2,9 @@ package com.zvm;
 
 import com.alibaba.fastjson.JSON;
 import com.zvm.basestruct.u2;
+import com.zvm.runtime.struct.Slot;
+
+import java.util.List;
 
 
 /**
@@ -10,6 +13,8 @@ import com.zvm.basestruct.u2;
  */
 public class JavaClass {
     public static final Integer CLASS_BYTECODE_FILE_MAX = 63325;
+    public int staticSlotCount;
+    public StaticVars staticVars;
 
     private String classPath;
     private ClassFile classFile;
@@ -29,6 +34,21 @@ public class JavaClass {
 
             if(TypeUtils.compare(cpMethodName, methodName) && TypeUtils.compare(cpMethodDescriptor, methodDescriptor)){
                 return classFile.methods[i];
+            }
+        }
+        return null;
+    }
+
+    public field_info findField(String fieldName, String fieldDescriptor){
+
+        Integer fieldSize = TypeUtils.byteArr2Int(classFile.field_count.u2);
+        for(Integer i = 0; i < fieldSize; i++){
+
+            String cpFieldName = getString(classFile.fields[i].name_index);
+            String cpFieldDescriptor = getString(classFile.fields[i].descriptor_index);
+
+            if(TypeUtils.compare(cpFieldName, fieldName) && TypeUtils.compare(cpFieldDescriptor, fieldDescriptor)){
+                return classFile.fields[i];
             }
         }
         return null;

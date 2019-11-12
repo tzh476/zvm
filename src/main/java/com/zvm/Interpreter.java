@@ -739,7 +739,8 @@ public class Interpreter {
                 break;
                 case Opcode.getstatic: {
                     short staticIndex = code.consumeU2();
-                    CONSTANT_Base[] constant_bases = javaClass.getClassFile().constant_pool.cp_info;
+                    ClassFile classFile = javaClass.getClassFile();
+                    CONSTANT_Base[] constant_bases = classFile.constant_pool.cp_info;
                     CONSTANT_Base constant_base = constant_bases[staticIndex - 1];
                     CONSTANT_Fieldref fieldref  = (CONSTANT_Fieldref) constant_base;
                     int class_index = TypeUtils.byteArr2Int(fieldref.class_index.u2);
@@ -755,15 +756,24 @@ public class Interpreter {
                     String fieldName = TypeUtils.u12String(fieldNameUtf8.bytes);
                     String descriptorName = TypeUtils.u12String(descriptorNameUtf8.bytes);
                     String className = TypeUtils.u12String(classNameUtf8.bytes);
+                    field_info field_info = parseFieldRef(className, descriptorName, fieldName);
+                    int slotId = field_info.slotId;
+                    JavaClass javaClass1 = runTimeEnv.methodArea.findClass(className);
+                    StaticVars staticVars = javaClass1.staticVars;
+                    char s = descriptorName.charAt(0);
+                    if(s == 'Z' || s == 'B' || s == 'C' || s == 'S' || s == 'I'){
+                        operandStack.putInt(staticVars.getIntByIndex(slotId));
+                    }else if ( s == 'J' ){
+                        operandStack.putLong(staticVars.getLongByIndex(slotId));
+                    }else if (s == 'F'){
+                        operandStack.putFloat(staticVars.getFloat(slotId));
+                    }else if (s == 'D'){
+                        operandStack.putDouble(staticVars.getDouble(slotId));
+                    }else if(s == 'L' || s== '['){
+                        /*bug*/
+                        operandStack.putJObject(staticVars.getJObject(slotId));
+                    }
 
-                    resolvedField(className, descriptorName, fieldName);
-
-                    // method_info method_info = javaClass.findMethod(methodName, descriptorName);
-                    method_info method_info = javaClass.findMethod(fieldName, descriptorName);
-
-//                    if (method_info == null){
-//                        return ;
-//                    }
                 }
                 break;
                 case Opcode.putstatic: {
@@ -872,38 +882,17 @@ public class Interpreter {
      * @param descriptorName
      * @param fieldName
      */
-    private void resolvedField(String className, String descriptorName, String fieldName) {
+    private field_info parseFieldRef(String className, String descriptorName, String fieldName) {
        // MethodArea methodArea = runTimeEnv.methodArea;
-        resolvedClassIfAbent(className);
-    }
-
-    /**
-     * 解析类
-     * @param className
-     */
-    private void resolvedClassIfAbent(String className) {
-        MethodArea methodArea = runTimeEnv.methodArea;
-        JavaClass javaClass = methodArea.findClass(className);
-        if(javaClass == null){
-            resolvedClass(className);
-        }
-    }
-    private void resolvedClass(String className){
         JavaClass javaClass = runTimeEnv.methodArea.loadClass(className);
-        link(javaClass);
+        runTimeEnv.methodArea.linkClass(className);
+        runTimeEnv.methodArea.initClass(className);
+        JavaClass javaClass1 = runTimeEnv.methodArea.findClass(className);
+        field_info field_info = javaClass1.findField(fieldName, descriptorName);
+        return field_info;
     }
 
-    private void link(JavaClass javaClass) {
-        verify(javaClass);
-        prepare(javaClass);
-    }
 
-    private void prepare(JavaClass javaClass) {
-
-    }
-
-    private void verify(JavaClass javaClass) {
-    }
 
     private void invokeVirtual(JavaClass javaClass, CONSTANT_Base constant_base) {
         CONSTANT_Base[] constant_bases = javaClass.getClassFile().constant_pool.cp_info;
@@ -916,32 +905,69 @@ public class Interpreter {
 
         CONSTANT_Utf8 methodNameUtf8 = (CONSTANT_Utf8)constant_bases[TypeUtils.byteArr2Int(constant_nameAndType.name_index.u2) - 1];
         CONSTANT_Utf8 descriptorNameUtf8 = (CONSTANT_Utf8)constant_bases[TypeUtils.byteArr2Int(constant_nameAndType.descriptor_index.u2) - 1];
+        CONSTANT_Utf8 classNameUtf8 = (CONSTANT_Utf8)constant_bases[TypeUtils.byteArr2Int(constant_class.name_index.u2) - 1];
 
         String methodName = TypeUtils.u12String(methodNameUtf8.bytes);
-
-        /*hack*/
-        if(methodName == "println"){
-
-        }
-
         String descriptorName = TypeUtils.u12String(descriptorNameUtf8.bytes);
-        // method_info method_info = javaClass.findMethod(methodName, descriptorName);
-        method_info method_info = javaClass.findMethod(methodName, descriptorName);
-        if (method_info == null){
-            return ;
-        }
-        CallSite callSite = new CallSite();
-        callSite.setCallSite( method_info);
-        OperandStack invokerStack = jThread.getTopFrame().operandStack;
-        jThread.pushFrame(callSite.max_stack, callSite.max_locals);
-        JavaFrame curFrame = jThread.getTopFrame();
-        LocalVars curLocalVars = curFrame.localVars;
+        String className = TypeUtils.u12String(classNameUtf8.bytes);
+
+        method_info method_info = parseMethodRef(className, descriptorName, methodName);
         /*调用传递参数*/
         Descriptor descriptor = processDescriptor(descriptorName);
         int parametersCount = descriptor.parameters.size();
 
+        JObject jObject = jThread.getTopFrame().operandStack.getJObjectFromTop(method_info.argSlotCount - 1);
+
+        if(jObject == null){
+            /*hack*/
+            if("println".equals(methodName)){
+                _println(jThread.getTopFrame().operandStack, descriptorName);
+                return;
+            }
+        }
 
 
+    }
+
+    private void _println(OperandStack operandStack, String descriptor) {
+        if("(Z)V".equals(descriptor)){
+            System.out.println(operandStack.popInt() != 0);
+        }else if("(C)V".equals(descriptor)){
+            System.out.println((char)operandStack.popInt());
+        }else if("(I)V".equals(descriptor)
+                ||"(B)V".equals(descriptor)||"(S)V".equals(descriptor)){
+            System.out.println(operandStack.popInt());
+        }else if("(F)V".equals(descriptor)){
+            System.out.println(operandStack.popFloat());
+        }else if("(J)V".equals(descriptor)){
+            System.out.println(operandStack.popLong());
+        }else if("(D)V".equals(descriptor)){
+            System.out.println(operandStack.popDouble());
+        }else {
+            System.out.println("println " + descriptor);
+        }
+    }
+
+
+    /**
+     * 解析方法
+     * @param className
+     * @param descriptorName
+     * @param methodName
+     */
+    private method_info parseMethodRef(String className, String descriptorName, String methodName) {
+        JavaClass javaClass = runTimeEnv.methodArea.loadClass(className);
+        runTimeEnv.methodArea.linkClass(className);
+        runTimeEnv.methodArea.initClass(className);
+        JavaClass javaClass1 = runTimeEnv.methodArea.findClass(className);
+        method_info method_info = javaClass1.findMethod(methodName, descriptorName);
+        if(method_info.argSlotCount == -1){
+            Descriptor descriptor = processDescriptor(descriptorName);
+            int slotCount = calParametersSlot(method_info, descriptor.parameters);
+            method_info.argSlotCount = slotCount;
+
+        }
+        return method_info;
     }
 
     private void invokeStatic(JavaClass javaClass, CONSTANT_Base constant_base) {
@@ -969,17 +995,11 @@ public class Interpreter {
         jThread.pushFrame(callSite.max_stack, callSite.max_locals);
         JavaFrame curFrame = jThread.getTopFrame();
         LocalVars curLocalVars = curFrame.localVars;
+
         /*调用传递参数*/
         Descriptor descriptor = processDescriptor(descriptorName);
-        int parametersCount = descriptor.parameters.size();
 
-        int slotCount = parametersCount;
-        for(int i = 0; i < parametersCount; i++){
-            if(descriptor.parameters.get(i) == TypeCode.T_LONG
-            ||descriptor.parameters.get(i) == TypeCode.T_DOUBLE){
-                slotCount ++;
-            }
-        }
+        int slotCount = calParametersSlot(method_info, descriptor.parameters);
 
         for(int i = 0; i < slotCount; i++){
             curLocalVars.putSlot(slotCount - 1 - i, invokerStack.popSlot());
@@ -989,6 +1009,11 @@ public class Interpreter {
 
     }
 
+    /**
+     * 解析方法的修饰符，如(J)J解析为Descriptor：{parameters:[J],returnType:J}
+     * @param descriptorName
+     * @return
+     */
     private Descriptor processDescriptor(String descriptorName) {
         Descriptor descriptor = new Descriptor();
         List<Integer> parameters = new ArrayList<>();
@@ -1109,6 +1134,22 @@ public class Interpreter {
         descriptor.parameters = parameters;
         descriptor.returnType = returnType;
         return descriptor;
+    }
+
+    private int calParametersSlot(method_info method_info, List<Integer> parameters){
+        int parametersCount = parameters.size();
+
+        int slotCount = parametersCount;
+        for(int i = 0; i < parametersCount; i++){
+            if(parameters.get(i) == TypeCode.T_LONG
+                    ||parameters.get(i) == TypeCode.T_DOUBLE){
+                slotCount ++;
+            }
+        }
+        if(!MethodArea.isStatic(method_info.access_flags)){
+            slotCount ++;/*'this' 引用*/
+        }
+        return slotCount;
     }
 
     private JObject execNew(JavaClass javaClass,CONSTANT_Utf8 constant_utf8) {

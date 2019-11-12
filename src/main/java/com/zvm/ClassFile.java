@@ -1108,6 +1108,9 @@ class field_info{
     u2 descriptor_index;
     u2 attribute_count;
     Attribute_Base[] attributes;
+
+    int slotId;
+    int constValueIndex;
 }
 class method_info{
     u2 access_flags;
@@ -1115,4 +1118,6 @@ class method_info{
     u2 descriptor_index;
     u2 attribute_count;
     Attribute_Base[] attributes;
+
+    int argSlotCount = -1;
 }
