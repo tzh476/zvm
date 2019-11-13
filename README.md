@@ -9,6 +9,7 @@ java实现jvm
 zvm\bytecode\Test.class  
 zvm\bytecode\java\lang\System.class  
 zvm\bytecode\java\io\PrintStream.class  
+zvm\bytecode\com\zvm\javaclass\integer\Table1.class
 
 - 可运行demo：
 1. 循环运算，入栈出栈等  
