@@ -5,6 +5,25 @@ java实现jvm
 3. 函数调用
 4. 待续
 
+
+- 读取后可以**解析**为内存中classfile的类demo  
+zvm\bytecode\Test.class  
+zvm\bytecode\java\lang\System.class  
+zvm\bytecode\java\io\PrintStream.class  
+
+- 可运行demo：
+1. 循环运算，入栈出栈等
+zvm\javaclass\GaussTest.java  
+
+2. 函数调用，包括getstatic、invokestatic、invokevirtual指令
+zvm\javaclass\FibonacciTest.java  
+
+- 已实现指令：
+1. 
+
+- 备注：
+1. 由jdk1.8.0_45\jre\lib\rt.jar中的java文件夹得到zvm\bytecode\java文件夹
+
 - 文档、书籍参考：
 1. java虚拟机规范：https://docs.oracle.com/javase/specs/jvms/se8/jvms8.pdf
 2. 周志明的《深入理解java虚拟机》
