@@ -39,6 +39,15 @@ public class CodeUtils {
         pc += offset;
     }
 
+    /**
+     *循环默认加 1，这里先减回来
+     * @param offset
+     */
+    public void pcAddSubOne(int offset){
+        pc += offset;
+        pc --; /*循环默认加 1，这里先减回来*/
+    }
+
     public int getPc(){
         return pc;
     }

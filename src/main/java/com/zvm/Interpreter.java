@@ -41,10 +41,10 @@ public class Interpreter {
         for (; code.getPc() < codeLength; code.pcAdd(1)) {
             int opcodeInt = TypeUtils.byteArr2Int(codeRaw[code.getPc()].u1);
             Gson gson = new Gson();
-            System.out.println("pc = " + code.getPc() + " operandStack "+gson.toJson(operandStack));
-            System.out.println("pc = " + code.getPc() + " localVars " + gson.toJson(localVars));
-            System.out.println();
-            System.out.println("pc = " + code.getPc() + " opcode:" + Opcode1.getMnemonic(opcodeInt));
+//            System.out.println("pc = " + code.getPc() + " operandStack "+gson.toJson(operandStack));
+//            System.out.println("pc = " + code.getPc() + " localVars " + gson.toJson(localVars));
+//            System.out.println();
+//            System.out.println("pc = " + code.getPc() + " opcode:" + Opcode1.getMnemonic(opcodeInt));
 
 
             switch (opcodeInt) {
@@ -430,7 +430,7 @@ public class Interpreter {
                     int ifeqValue = operandStack.popInt();
                     if(ifeqValue == 0){
                         int offset = code.readU2();
-                        code.pcAdd(offset);
+                        code.pcAddSubOne(offset);
                     }else {
                         code.pcAdd(2);
                     }
@@ -619,7 +619,7 @@ public class Interpreter {
                     int var0 = operandStack.popInt();
                     short offset = code.readU2();
                     if(var0 != 0){
-                        code.pcAdd(offset);
+                        code.pcAddSubOne(offset);
                     }else {
                         code.pcAdd(2);
                     }
@@ -629,7 +629,7 @@ public class Interpreter {
                     int var0 = operandStack.popInt();
                     short offset = code.readU2();
                     if(var0 < 0){
-                        code.pcAdd(offset);
+                        code.pcAddSubOne(offset);
                     }else {
                         code.pcAdd(2);
                     }
@@ -639,7 +639,7 @@ public class Interpreter {
                     int var0 = operandStack.popInt();
                     short offset = code.readU2();
                     if(var0 >= 0){
-                        code.pcAdd(offset);
+                        code.pcAddSubOne(offset);
                     }else {
                         code.pcAdd(2);
                     }
@@ -649,7 +649,7 @@ public class Interpreter {
                     int var0 = operandStack.popInt();
                     short offset = code.readU2();
                     if(var0 > 0){
-                        code.pcAdd(offset);
+                        code.pcAddSubOne(offset);
                     }else {
                         code.pcAdd(2);
                     }
@@ -659,7 +659,7 @@ public class Interpreter {
                     int var0 = operandStack.popInt();
                     short offset = code.readU2();
                     if(var0 <= 0){
-                        code.pcAdd(offset);
+                        code.pcAddSubOne(offset);
                     }else {
                         code.pcAdd(2);
                     }
@@ -683,7 +683,7 @@ public class Interpreter {
                     short offset = code.readU2();
                     if(var0 >= var1){
                         /*分支*/
-                        code.pcAdd(offset);
+                        code.pcAddSubOne(offset);
                     }else {
                         code.pcAdd(2);
                     }
@@ -700,7 +700,7 @@ public class Interpreter {
                 break;
                 case Opcode.goto_: {
                     short offset = code.readU2();
-                    code.pcAdd(offset - 1);/*循环默认加 1，这里先减回来*/
+                    code.pcAddSubOne(offset );
                 }
                 break;
                 case Opcode.jsr: {

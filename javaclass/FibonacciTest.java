@@ -2,7 +2,7 @@
 public class FibonacciTest {
 
     public static void main(String[] args) {
-        long x = fibonacci(1);
+        long x = fibonacci(30);
         System.out.println(x);
     }
 
