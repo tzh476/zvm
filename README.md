@@ -3,8 +3,7 @@ java实现jvm
 1. 读取class文件
 2. 取opcode，解释执行程序
 3. 函数调用
-4. 待续
-
+4. 待续  
 
 - 读取后可以**解析**为内存中classfile的类demo  
 zvm\bytecode\Test.class  
@@ -12,14 +11,14 @@ zvm\bytecode\java\lang\System.class
 zvm\bytecode\java\io\PrintStream.class  
 
 - 可运行demo：
-1. 循环运算，入栈出栈等
+1. 循环运算，入栈出栈等  
 zvm\javaclass\GaussTest.java  
 
-2. 函数调用，包括getstatic、invokestatic、invokevirtual指令
+2. 函数调用，包括getstatic、invokestatic、invokevirtual指令  
 zvm\javaclass\FibonacciTest.java  
 
-- 已实现指令：
-1. 
+- 已实现指令
+1. 待续  
 
 - 备注：
 1. 由jdk1.8.0_45\jre\lib\rt.jar中的java文件夹得到zvm\bytecode\java文件夹

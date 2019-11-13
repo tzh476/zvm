@@ -41,10 +41,10 @@ public class Interpreter {
         for (; code.getPc() < codeLength; code.pcAdd(1)) {
             int opcodeInt = TypeUtils.byteArr2Int(codeRaw[code.getPc()].u1);
             Gson gson = new Gson();
-//            System.out.println("pc = " + code.getPc() + " operandStack "+gson.toJson(operandStack));
-//            System.out.println("pc = " + code.getPc() + " localVars " + gson.toJson(localVars));
-//            System.out.println();
-//            System.out.println("pc = " + code.getPc() + " opcode:" + Opcode1.getMnemonic(opcodeInt));
+            System.out.println("pc = " + code.getPc() + " operandStack "+gson.toJson(operandStack));
+            System.out.println("pc = " + code.getPc() + " localVars " + gson.toJson(localVars));
+            System.out.println();
+            System.out.println("pc = " + code.getPc() + " opcode:" + Opcode1.getMnemonic(opcodeInt));
 
 
             switch (opcodeInt) {
