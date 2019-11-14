@@ -1120,4 +1120,5 @@ class method_info{
     Attribute_Base[] attributes;
 
     int argSlotCount = -1;
+    JavaClass javaClass;
 }

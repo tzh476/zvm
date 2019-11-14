@@ -89,6 +89,13 @@ public class OperandStack {
         size ++;
     }
 
+    public JObject popJObject(){
+        size --;
+        JObject jObject = (JObject) slots[size].jType;
+        slots[size].jType = null;
+        return jObject;
+    }
+
     public JObject getJObjectFromTop(int index){
         return (JObject) slots[size - 1 - index].jType;
     }

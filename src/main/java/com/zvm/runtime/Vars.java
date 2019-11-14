@@ -2,6 +2,7 @@ package com.zvm.runtime;
 
 import com.zvm.TypeUtils;
 import com.zvm.runtime.struct.JObject;
+import com.zvm.runtime.struct.JType;
 import com.zvm.runtime.struct.Slot;
 
 public class Vars {
@@ -60,4 +61,13 @@ public class Vars {
     public JObject getJObject(int index){
         return (JObject) slots[index].jType;
     }
+
+    public void putJType(int index, JType jType){
+        slots[index].jType = jType;
+    }
+
+    public JType getJType(int index){
+        return (JObject) slots[index].jType;
+    }
+
 }

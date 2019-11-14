@@ -2,7 +2,6 @@ package com.zvm;
 
 import com.zvm.basestruct.u2;
 import com.zvm.basestruct.u4;
-import com.zvm.runtime.struct.Slot;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -26,7 +25,7 @@ public class MethodArea {
     ZvmClassLoader zvmClassLoader = new ZvmClassLoader();
 
     /**
-     * 加载类
+     * 加载类 .class结尾的需要时绝对路径。否则需要是类似ch07/Vector2D的类名
      * @param classPath
      */
     public JavaClass loadClass(String classPath){
@@ -61,6 +60,11 @@ public class MethodArea {
         return byteCode;
     }
 
+    /**
+     * 类似ch07/Vector2D的类名
+     * @param className
+     * @return
+     */
     public JavaClass findClass(String className){
         boolean hasClass =  javaClasses.containsKey(className);
         if(hasClass){
@@ -104,7 +108,7 @@ public class MethodArea {
         ClassFile classFile = javaClass.getClassFile();
         field_info[] field_infos = classFile.fields;
         CONSTANT_Base[] cp =  classFile.constant_pool.cp_info;
-        Integer staticSlotCount = javaClass.staticSlotCount;
+        Integer staticSlotCount = javaClass.staticFieldSlotCount;
         javaClass.staticVars = new StaticVars(staticSlotCount);
         StaticVars staticVars = javaClass.staticVars;
         for (int i = 0, len = field_infos.length; i < len; i++){
@@ -168,16 +172,10 @@ public class MethodArea {
             u2 access_flags = field_infos[i].access_flags;
             if(isStatic(access_flags)){
                 field_infos[i].slotId = slotId;
-                slotId ++;
-                int descriptorIndex = TypeUtils.byteArr2Int(field_infos[i].descriptor_index.u2);
-                CONSTANT_Utf8 constant_utf8 = (CONSTANT_Utf8) cp[descriptorIndex - 1];
-                String descriptorName = TypeUtils.u12String(constant_utf8.bytes);
-                if(isLongOrDouble(descriptorName)){
-                    slotId++;
-                }
+                slotId = countSlotId(slotId, field_infos[i], cp);
             }
         }
-        javaClass.staticSlotCount = slotId;
+        javaClass.staticFieldSlotCount = slotId;
     }
 
     private boolean isLongOrDouble(String descriptorName) {
@@ -204,7 +202,30 @@ public class MethodArea {
     }
 
     private void calcInstanceFieldSlotIds(JavaClass javaClass) {
+        ClassFile classFile = javaClass.getClassFile();
+        field_info[] field_infos = classFile.fields;
+        CONSTANT_Base[] cp =  classFile.constant_pool.cp_info;
+        int len = field_infos.length;
+        int slotId = 0;
+        for(int i = 0; i < len; i ++){
+            u2 access_flags = field_infos[i].access_flags;
+            if(!isStatic(access_flags)){
+                field_infos[i].slotId = slotId;
+                slotId = countSlotId(slotId, field_infos[i], cp);
+            }
+        }
+        javaClass.instanceFieldSlotCount = slotId;
+    }
 
+    private int countSlotId(int slotId, field_info field_info, CONSTANT_Base[] cp) {
+        slotId ++;
+        int descriptorIndex = TypeUtils.byteArr2Int(field_info.descriptor_index.u2);
+        CONSTANT_Utf8 constant_utf8 = (CONSTANT_Utf8) cp[descriptorIndex - 1];
+        String descriptorName = TypeUtils.u12String(constant_utf8.bytes);
+        if(isLongOrDouble(descriptorName)){
+            slotId++;
+        }
+        return slotId;
     }
 
     /**

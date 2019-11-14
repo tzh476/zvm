@@ -1,6 +1,7 @@
 package com.zvm;
 
 import com.zvm.basestruct.u2;
+import com.zvm.runtime.ObjectFields;
 import com.zvm.runtime.struct.JObject;
 import com.zvm.runtime.struct.JType;
 
@@ -14,7 +15,7 @@ public class JavaHeap {
     /**
      * 保存对象
      */
-    public Map<Integer, List<JType>> objectContainer = new HashMap<>();
+    public Map<Integer, ObjectFields> objectContainer = new HashMap<>();
 
 
     /**
@@ -27,15 +28,8 @@ public class JavaHeap {
         JObject jObject = new JObject();
         jObject.javaClass = javaClass;
         jObject.offset = objectContainer.size();
-        List<JType> instanceFields = new ArrayList<>();
-
-        field_info[] field_infos = javaClass.getClassFile().fields;
-        for(field_info field_info:field_infos){
-            u2 access_flags = field_info.access_flags;
-            instanceFields.add(new JType());
-        }
-
-        objectContainer.put(jObject.offset, instanceFields);
+        ObjectFields objectFields = new ObjectFields(javaClass.instanceFieldSlotCount);
+        objectContainer.put(jObject.offset, objectFields);
         return jObject;
     }
 }

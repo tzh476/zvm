@@ -13,7 +13,8 @@ import java.util.List;
  */
 public class JavaClass {
     public static final Integer CLASS_BYTECODE_FILE_MAX = 63325;
-    public int staticSlotCount;
+    public int staticFieldSlotCount;
+    public int instanceFieldSlotCount;
     public StaticVars staticVars;
 
     private String classPath;
@@ -60,7 +61,7 @@ public class JavaClass {
         this.classFile = new ClassFile();
         try {
             this.classFile.processByteCode(byteCode);
-            System.out.println(JSON.toJSONString(this.classFile));
+            //System.out.println(JSON.toJSONString(this.classFile));
         }catch (Exception e){
             e.printStackTrace();
             System.out.println(JSON.toJSONString(this.classFile));

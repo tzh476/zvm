@@ -19,7 +19,7 @@ public class JVMStack {
         JavaFrame popFrame = topFrame;
         topFrame = topFrame.lowerFrame;
         popFrame.lowerFrame = null;
-        size ++;
+        size --;
         return popFrame;
     }
 }

@@ -7,7 +7,7 @@ import com.zvm.JavaClass;
  */
 public class JObject extends JType{
     /**
-     * 实例对象所属的类
+     * 实例对象所属的类的引用
      */
     public JavaClass javaClass;
 
