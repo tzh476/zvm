@@ -9,13 +9,15 @@ import java.util.List;
 
 /**
  * classFile是读取字节码为有规范的数据结构。
- * JavaClass作为运行时，来对classFile的读取入口
  */
 public class JavaClass {
     public static final Integer CLASS_BYTECODE_FILE_MAX = 63325;
     public int staticFieldSlotCount;
     public int instanceFieldSlotCount;
     public StaticVars staticVars;
+    public String superClassName;
+    public JavaClass superClass;
+
 
     private String classPath;
     private ClassFile classFile;
@@ -47,10 +49,15 @@ public class JavaClass {
 
             String cpFieldName = getString(classFile.fields[i].name_index);
             String cpFieldDescriptor = getString(classFile.fields[i].descriptor_index);
-
             if(TypeUtils.compare(cpFieldName, fieldName) && TypeUtils.compare(cpFieldDescriptor, fieldDescriptor)){
                 return classFile.fields[i];
             }
+        }
+
+        /*找不到在父类中找*/
+        JavaClass superClass = ZVM.zvmEnv.methodArea.findClass(this.superClassName);
+        if(superClass != null){
+            return superClass.findField(fieldName, fieldDescriptor);
         }
         return null;
     }

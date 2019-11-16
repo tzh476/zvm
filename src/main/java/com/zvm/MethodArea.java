@@ -32,10 +32,27 @@ public class MethodArea {
         JavaClass javaClass = new JavaClass(classPath);
 
         byte[] bytecode = readClass(classPath);
-
         javaClass.readBytecode2ClassFile(bytecode);
+        ClassFile classFile = javaClass.getClassFile();
+        if(!"java/lang/Object".equals(classPath)){
+            String superClassName = getSuperClassName(classFile);
+            if(findClass(superClassName) == null){
+                loadClass(superClassName);
+            }
+            javaClass.superClassName = superClassName;
+        }
+
         javaClasses.put(classPath, javaClass);
         return javaClass;
+    }
+
+    public String getSuperClassName(ClassFile classFile){
+        int cpIndex = TypeUtils.byteArr2Int(classFile.super_class.u2);
+        CONSTANT_Class constant_class = (CONSTANT_Class) classFile.constant_pool.cp_info[cpIndex - 1];
+        int classCpIndex = TypeUtils.byteArr2Int(constant_class.name_index.u2);
+        CONSTANT_Utf8 constant_utf8 = (CONSTANT_Utf8) classFile.constant_pool.cp_info[classCpIndex - 1];
+        String superClassName = TypeUtils.u12String(constant_utf8.bytes);
+        return superClassName;
     }
 
     private byte[] readClass(String path)  {
@@ -82,6 +99,12 @@ public class MethodArea {
             return;
         }
         JavaClass javaClass = findClass(classPath);
+        if(!"java/lang/Object".equals(classPath)){
+            String superClassName = getSuperClassName(javaClass.getClassFile());
+            if(findClass(superClassName) == null){
+                linkClass(superClassName);
+            }
+        }
         verification();
         prepare(javaClass);
         resolved();
@@ -207,6 +230,10 @@ public class MethodArea {
         CONSTANT_Base[] cp =  classFile.constant_pool.cp_info;
         int len = field_infos.length;
         int slotId = 0;
+        if(javaClass.superClassName != null && !javaClass.superClassName.isEmpty()){
+            JavaClass superClass = findClass(javaClass.superClassName);
+            slotId = superClass.instanceFieldSlotCount;
+        }
         for(int i = 0; i < len; i ++){
             u2 access_flags = field_infos[i].access_flags;
             if(!isStatic(access_flags)){

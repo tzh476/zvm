@@ -34,8 +34,8 @@ public class OperandStack {
     }
 
     public void putLong(long value){
-        slots[size].value = (int) value;
-        slots[size + 1].value = (int) (value >> 32);
+        slots[size].value = (int) value;/*low bytes*/
+        slots[size + 1].value = (int) (value >> 32);/*high bytes*/
         size += 2;
     }
 
@@ -43,7 +43,8 @@ public class OperandStack {
         size -= 2;
         int low = slots[size].value;
         int high = slots[size + 1].value;
-        return (((long)high) << 32) | ((long)low);
+        //return (((long)high) << 32) | ((long)low);
+        return (((long)high) << 32) | ((long)low & 0x0ffffffffL);
     }
 
     public void putDouble(double value){

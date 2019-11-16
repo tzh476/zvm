@@ -24,7 +24,8 @@ public class TypeUtils {
         Integer size = bytes.length;
         long res = 0xff & bytes[0];
         for (Integer i = 1; i < size; i++) {
-            res = ((res << 8) + (2 << (8 * i) - 1)) & bytes[i];
+            //res = ((res << 8) + (2 << (8 * i) - 1)) & bytes[i];
+            res = (res << 8)  + ( bytes[i] & 0xff);
         }
         return res;
     }
@@ -115,12 +116,20 @@ public class TypeUtils {
         int len = high.length + low.length;
         byte[] res = new byte[len];
         int i = 0;
-        for(int lowLen = low.length; i < lowLen; i++){
-            res[i] = low[i];
+
+        for(int highLen = high.length; i < highLen; i++){
+            res[i] = high[i];
         }
-        for(int j = 0, highLen = high.length; j < highLen; j++){
-            res[i ++] = high[j];
+        for(int j = 0, lowLen = high.length; j < lowLen; j++){
+            res[i ++] = low[j];
         }
+
+//        for(int lowLen = low.length; i < lowLen; i++){
+//            res[i] = low[i];
+//        }
+//        for(int j = 0, highLen = high.length; j < highLen; j++){
+//            res[i ++] = high[j];
+//        }
         return res;
     }
 }

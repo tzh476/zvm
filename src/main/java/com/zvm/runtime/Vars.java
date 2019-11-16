@@ -24,7 +24,8 @@ public class Vars {
     public long getLongByIndex(int index){
         int low = slots[index].value;
         int high = slots[index + 1].value;
-        return (((long)high) << 32) | ((long)low);
+        //return (((long)high) << 32) | ((long)low);
+        return (((long)high) << 32) | ((long)low & 0x0ffffffffL);
     }
 
     public void putLong(int index, int high, int low){

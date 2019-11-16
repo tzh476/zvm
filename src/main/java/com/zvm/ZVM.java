@@ -1,7 +1,7 @@
 package com.zvm;
 
 public class ZVM {
-    private RunTimeEnv zvmEnv;
+    public static RunTimeEnv zvmEnv;
     public ZVM(RunTimeEnv zvmEnv){
         this.zvmEnv = zvmEnv;
     }

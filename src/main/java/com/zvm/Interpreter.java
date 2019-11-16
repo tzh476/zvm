@@ -6,8 +6,6 @@ import com.zvm.basestruct.u4;
 import com.zvm.draft.Opcode1;
 import com.zvm.runtime.*;
 import com.zvm.runtime.struct.JObject;
-import com.zvm.runtime.struct.JType;
-import com.zvm.runtime.struct.Slot;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -156,6 +154,9 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.dload: {
+                    int index = TypeUtils.byte2Int(code.consumeU1());
+                    double loadValue = localVars.getDouble(index);
+                    operandStack.putDouble(loadValue);
                 }
                 break;
                 case Opcode.aload: {
@@ -185,18 +186,18 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.dload_1: {
-                    long loadValue = localVars.getLongByIndex(1);
-                    operandStack.putLong(loadValue);
+                    double loadValue = localVars.getDouble(1);
+                    operandStack.putDouble(loadValue);
                 }
                 break;
                 case Opcode.dload_2: {
-                    long loadValue = localVars.getLongByIndex(2);
-                    operandStack.putLong(loadValue);
+                    double loadValue = localVars.getDouble(2);
+                    operandStack.putDouble(loadValue);
                 }
                 break;
                 case Opcode.dload_3: {
-                    long loadValue = localVars.getLongByIndex(3);
-                    operandStack.putLong(loadValue);
+                    double loadValue = localVars.getDouble(3);
+                    operandStack.putDouble(loadValue);
                 }
                 break;
                 case Opcode.faload: {
@@ -786,6 +787,10 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.getfield: {
+                    short fieldCpIndex = code.consumeU2();
+                    CONSTANT_Base[] constant_bases = javaClass.getClassFile().constant_pool.cp_info;
+                    CONSTANT_Base constant_fieldref = constant_bases[fieldCpIndex - 1];
+                    getField(javaClass,constant_fieldref);
                 }
                 break;
                 case Opcode.putfield: {
@@ -889,6 +894,33 @@ public class Interpreter {
         }
     }
 
+    private void getField(JavaClass javaClass, CONSTANT_Base constant_fieldref) {
+        OperandStack operandStack = jThread.getTopFrame().operandStack;
+        Ref fieldRef = processRef(javaClass, constant_fieldref);
+        JavaClass classOfCurField = runTimeEnv.methodArea.findClass(fieldRef.className);
+        if(classOfCurField == null){
+            runTimeEnv.methodArea.loadClass(fieldRef.className);
+            runTimeEnv.methodArea.linkClass(fieldRef.className);
+            runTimeEnv.methodArea.initClass(fieldRef.className);
+        }
+        field_info field_info = classOfCurField.findField(fieldRef.refName,fieldRef.descriptorName);
+        char s = fieldRef.descriptorName.charAt(0);
+        JObject jObject = operandStack.popJObject();
+        ObjectFields objectFields = runTimeEnv.javaHeap.objectContainer.get(jObject.offset);
+        if(s == 'Z' || s == 'B' || s == 'C' || s == 'S' || s == 'I'){
+            operandStack.putInt(objectFields.getIntByIndex(field_info.slotId));
+        }else if ( s == 'J' ){
+            operandStack.putLong(objectFields.getLongByIndex(field_info.slotId));
+        }else if (s == 'F'){
+            operandStack.putFloat(objectFields.getFloat(field_info.slotId));
+        }else if (s == 'D'){
+            operandStack.putDouble(objectFields.getDouble(field_info.slotId));
+        }else if(s == 'L' || s== '['){
+            /*bug*/
+            operandStack.putJObject(objectFields.getJObject(field_info.slotId));
+        }
+    }
+
     /**
      * putfield指令
      * @param javaClass
@@ -927,8 +959,6 @@ public class Interpreter {
             ObjectFields objectFields = runTimeEnv.javaHeap.objectContainer.get(jObject.offset);
             objectFields.putJObject(field_info.slotId, val);
         }
-       // int offset = s;
-        //runTimeEnv.javaHeap.objectContainer;
     }
 
 
@@ -1009,6 +1039,7 @@ public class Interpreter {
         }else {
             System.out.println("println " + descriptor);
         }
+        operandStack.popJObject();
     }
 
 
