@@ -19,7 +19,7 @@ public class JavaClass {
     public JavaClass superClass;
 
 
-    private String classPath;
+    public String classPath;
     private ClassFile classFile;
 
 

@@ -93,7 +93,9 @@ public class OperandStack {
     public JObject popJObject(){
         size --;
         JObject jObject = (JObject) slots[size].jType;
-        slots[size].jType = null;
+        //slots[size].jType = null;/*会将jType对象值设为null，可能有其他地方引用了这个jType*/
+        //slots[size] = null;/*后面的opcode给slots[size].jType赋值时，报空指针*/
+        slots[size] = new Slot();
         return jObject;
     }
 

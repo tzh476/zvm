@@ -583,6 +583,10 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.dmul: {
+                    double var1 = operandStack.popDouble();
+                    double var0 = operandStack.popDouble();
+                    double sum = var0 * var1;
+                    operandStack.putDouble(sum);
                 }
                 break;
                 case Opcode.idiv: {
@@ -852,6 +856,7 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.checkcast: {
+                    code.consumeU2();
                 }
                 break;
                 case Opcode.instanceof_: {
@@ -1009,7 +1014,6 @@ public class Interpreter {
         method_info method_info = parseMethodRef(methodRef);
         /*调用传递参数 如(J)J*/
         Descriptor descriptor = processDescriptor(methodRef.descriptorName);
-        int parametersCount = descriptor.parameters.size();
 
         JObject jObject = jThread.getTopFrame().operandStack.getJObjectFromTop(method_info.argSlotCount - 1);
 
@@ -1020,6 +1024,28 @@ public class Interpreter {
                 return;
             }
         }
+        /*类似 Father object = new Son();son 存在方法时，需要调用son的方法，而不是father的*/
+        if(!methodRef.className.equals(jObject.javaClass.classPath)){
+            //method_info concreteClassMethod = jObject.javaClass.findMethod(methodRef.refName, methodRef.descriptorName);
+            methodRef.className = jObject.javaClass.classPath;
+            method_info = parseMethodRef(methodRef);
+        }
+
+        CallSite callSite = new CallSite();
+        callSite.setCallSite( method_info);
+        OperandStack invokerStack = jThread.getTopFrame().operandStack;
+        jThread.pushFrame(callSite.max_stack, callSite.max_locals);
+        JavaFrame curFrame = jThread.getTopFrame();
+        LocalVars curLocalVars = curFrame.localVars;
+
+        /*调用传递参数*/
+        int slotCount = calParametersSlot(method_info, descriptor.parameters);
+
+        for(int i = 0; i < slotCount; i++){
+            curLocalVars.putSlot(slotCount - 1 - i, invokerStack.popSlot());
+        }
+
+        executeByteCode(jThread, method_info.javaClass, callSite.code, TypeUtils.byteArr2Int(callSite.code_length.u4));
     }
 
     private void _println(OperandStack operandStack, String descriptor) {
@@ -1044,16 +1070,16 @@ public class Interpreter {
 
 
     /**
-     * 解析方法
+     * 解析方法:将方法的argSlotCount和javaClass赋值
      * @param methodRef
      */
     private method_info parseMethodRef(Ref methodRef) {
-        JavaClass javaClass = runTimeEnv.methodArea.loadClass(methodRef.className);
+        runTimeEnv.methodArea.loadClass(methodRef.className);
         runTimeEnv.methodArea.linkClass(methodRef.className);
         runTimeEnv.methodArea.initClass(methodRef.className);
-        JavaClass javaClass1 = runTimeEnv.methodArea.findClass(methodRef.className);
-        method_info method_info = javaClass1.findMethod(methodRef.refName, methodRef.descriptorName);
-        method_info.javaClass = javaClass1;
+        JavaClass javaClass = runTimeEnv.methodArea.findClass(methodRef.className);
+        method_info method_info = javaClass.findMethod(methodRef.refName, methodRef.descriptorName);
+        method_info.javaClass = javaClass;
         /*argSlotCount未赋值过，则赋值*/
         if(method_info.argSlotCount == -1){
             Descriptor descriptor = processDescriptor(methodRef.descriptorName);
