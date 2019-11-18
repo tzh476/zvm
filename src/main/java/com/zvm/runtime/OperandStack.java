@@ -2,6 +2,7 @@ package com.zvm.runtime;
 
 
 import com.zvm.TypeUtils;
+import com.zvm.runtime.struct.JArray;
 import com.zvm.runtime.struct.JObject;
 import com.zvm.runtime.struct.Slot;
 
@@ -44,7 +45,8 @@ public class OperandStack {
         int low = slots[size].value;
         int high = slots[size + 1].value;
         //return (((long)high) << 32) | ((long)low);
-        return (((long)high) << 32) | ((long)low & 0x0ffffffffL);
+        return (((long)high) << 32) | ((long)low & 0x0ffffffffL
+        );
     }
 
     public void putDouble(double value){
@@ -97,6 +99,20 @@ public class OperandStack {
         //slots[size] = null;/*后面的opcode给slots[size].jType赋值时，报空指针*/
         slots[size] = new Slot();
         return jObject;
+    }
+
+    public void putJArray(JArray jArray){
+        slots[size].jType = jArray;
+        size ++;
+    }
+
+    public JArray popJArray(){
+        size --;
+        JArray jArray = (JArray) slots[size].jType;
+        //slots[size].jType = null;/*会将jType对象值设为null，可能有其他地方引用了这个jType*/
+        //slots[size] = null;/*后面的opcode给slots[size].jType赋值时，报空指针*/
+        slots[size] = new Slot();
+        return jArray;
     }
 
     public JObject getJObjectFromTop(int index){

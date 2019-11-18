@@ -222,7 +222,7 @@ public class ClassFile {
             constantValue.attribute_name_index = attributes_name_index;
             /*恒等于2*/
             constantValue.attribute_length = IOUtils.read_u4();
-            constantValue.attribute_name_index = IOUtils.read_u2();
+            constantValue.constantvalue_index = IOUtils.read_u2();
             attributes[index] = constantValue;
         }else if(TypeUtils.compare(s, attributeStrs[1])){
             Code_attribute code_attribute = new Code_attribute();

@@ -47,7 +47,7 @@ dup
 条件分支: ifeq,ifne,iflt,ifge,ifgt,ifle,if_icmpgt  
 无条件分支: goto_
 
-6. 方法调用和返回
+6. 方法调用和返回  
 invokevirtual: 调用对象实例方法，根据对象实际类型分派  
 invokespecial：特殊处理的实例方法：实例初始化方法，父类方法   
 invokestatic：调用类方法  

@@ -29,8 +29,10 @@ public class MethodArea {
      * @param classPath
      */
     public JavaClass loadClass(String classPath){
+        if(classPath.startsWith("[")){
+            return loadArrayClass(classPath);
+        }
         JavaClass javaClass = new JavaClass(classPath);
-
         byte[] bytecode = readClass(classPath);
         javaClass.readBytecode2ClassFile(bytecode);
         ClassFile classFile = javaClass.getClassFile();
@@ -42,6 +44,13 @@ public class MethodArea {
             javaClass.superClassName = superClassName;
         }
 
+        javaClasses.put(classPath, javaClass);
+        return javaClass;
+    }
+
+    public JavaClass loadArrayClass(String classPath){
+        JavaClass javaClass = new JavaClass(classPath);
+        javaClass.superClassName = "java/lang/Object";
         javaClasses.put(classPath, javaClass);
         return javaClass;
     }
@@ -98,6 +107,11 @@ public class MethodArea {
         if(linkedClasses.contains(classPath)){
             return;
         }
+//
+//        if(classPath.startsWith("[")){
+//            linkArrayClass(classPath);
+//        }
+
         JavaClass javaClass = findClass(classPath);
         if(!"java/lang/Object".equals(classPath)){
             String superClassName = getSuperClassName(javaClass.getClassFile());
@@ -109,6 +123,10 @@ public class MethodArea {
         prepare(javaClass);
         resolved();
     }
+
+//    private void linkArrayClass(String classPath) {
+//
+//    }
 
     /**
      * 验证
@@ -146,21 +164,21 @@ public class MethodArea {
                 String descriptorName = TypeUtils.u12String(constant_utf8.bytes);
                 char s = descriptorName.charAt(0);
                 if(s == 'Z' || s == 'B' || s == 'C' || s == 'S' || s == 'I'){
-                    CONSTANT_Integer constant_integer = (CONSTANT_Integer) cp[constValueIndex];
+                    CONSTANT_Integer constant_integer = (CONSTANT_Integer) cp[constValueIndex - 1];
                     int value = TypeUtils.byteArr2Int(constant_integer.bytes.u4);
                     staticVars.putIntByIndex(slotId, value);
                 }else if ( s == 'J' ){
-                    CONSTANT_Long constant_long = (CONSTANT_Long) cp[constValueIndex];
+                    CONSTANT_Long constant_long = (CONSTANT_Long) cp[constValueIndex - 1];
                     u4 highBytes = constant_long.high_bytes;
                     u4 lowBytes = constant_long.low_bytes;
                     staticVars.putLong(slotId, TypeUtils.byteArr2Int(highBytes.u4), TypeUtils.byteArr2Int(lowBytes.u4));
                 }else if (s == 'F'){
-                    CONSTANT_Float constant_float = (CONSTANT_Float) cp[constValueIndex];
+                    CONSTANT_Float constant_float = (CONSTANT_Float) cp[constValueIndex - 1];
                     u4 ldcBytes = constant_float.bytes;
                     float value = TypeUtils.byteArr2Float(ldcBytes.u4);
                     staticVars.putFloat(slotId, value);
                 }else if (s == 'D'){
-                    CONSTANT_Double constant_double = (CONSTANT_Double) cp[constValueIndex];
+                    CONSTANT_Double constant_double = (CONSTANT_Double) cp[constValueIndex - 1];
                     u4 highBytes = constant_double.high_bytes;
                     u4 lowBytes = constant_double.low_bytes;
                     staticVars.putLong(slotId, TypeUtils.byteArr2Int(highBytes.u4), TypeUtils.byteArr2Int(lowBytes.u4));

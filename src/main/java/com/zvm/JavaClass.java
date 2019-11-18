@@ -16,7 +16,7 @@ public class JavaClass {
     public int instanceFieldSlotCount;
     public StaticVars staticVars;
     public String superClassName;
-    public JavaClass superClass;
+   // public JavaClass superClass;
 
 
     public String classPath;

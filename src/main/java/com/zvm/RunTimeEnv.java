@@ -8,8 +8,6 @@ public class RunTimeEnv {
     public JavaHeap javaHeap;
     public MethodArea methodArea;
 
-    ClassFile[] classFiles ;
-
     public RunTimeEnv(){
         methodArea = new MethodArea();
         javaHeap = new JavaHeap();

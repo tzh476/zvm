@@ -19,14 +19,14 @@ public class CodeUtils {
     public short consumeU2(){
         byte res0 = consumeU1();
         byte res1 = consumeU1();
-        short res = (short) ((res0 << 8) | res1);
+        short res = (short) ((res0 << 8) | (res1 & 0xff));
         return res;
     }
 
     public short readU2(){
         byte res0 = code[pc + 1].u1[0];
         byte res1 = code[pc + 2].u1[0];
-        short res = (short) ((res0 << 8) | res1);
+        short res = (short) ((res0 << 8) | (res1 & 0xff));
         return res;
     }
 
@@ -43,7 +43,7 @@ public class CodeUtils {
      *循环默认加 1，这里先减回来
      * @param offset
      */
-    public void pcAddSubOne(int offset){
+    public void pcAddBackOne(int offset){
         pc += offset;
         pc --; /*循环默认加 1，这里先减回来*/
     }

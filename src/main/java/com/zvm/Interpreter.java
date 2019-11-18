@@ -5,10 +5,15 @@ import com.zvm.basestruct.u1;
 import com.zvm.basestruct.u4;
 import com.zvm.draft.Opcode1;
 import com.zvm.runtime.*;
+import com.zvm.runtime.struct.JArray;
 import com.zvm.runtime.struct.JObject;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.zvm.Opcode.newarray;
+import static com.zvm.TypeCode.T_BYTE;
+import static com.zvm.TypeCode.T_CHAR;
 
 public class Interpreter {
 
@@ -52,7 +57,7 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.aconst_null: {
-
+                    operandStack.putJObject(null);
                 }
                 break;
                 case Opcode.iconst_m1: {
@@ -94,6 +99,8 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.sipush: {
+                    short shortConstant = code.consumeU2();
+                    operandStack.putInt(shortConstant);
                 }
                 break;
                 case Opcode.ldc: {
@@ -440,7 +447,7 @@ public class Interpreter {
                     int ifeqValue = operandStack.popInt();
                     if(ifeqValue == 0){
                         int offset = code.readU2();
-                        code.pcAddSubOne(offset);
+                        code.pcAddBackOne(offset);
                     }else {
                         code.pcAdd(2);
                     }
@@ -559,6 +566,10 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.iastore: {
+                    int value = operandStack.popInt();
+                    int index = operandStack.popInt();
+                    JObject arrayObject = operandStack.popJObject();
+                    String className = arrayObject.javaClass.classPath;
                 }
                 break;
                 case Opcode.dup_x1: {
@@ -641,7 +652,7 @@ public class Interpreter {
                     int var0 = operandStack.popInt();
                     short offset = code.readU2();
                     if(var0 != 0){
-                        code.pcAddSubOne(offset);
+                        code.pcAddBackOne(offset);
                     }else {
                         code.pcAdd(2);
                     }
@@ -651,7 +662,7 @@ public class Interpreter {
                     int var0 = operandStack.popInt();
                     short offset = code.readU2();
                     if(var0 < 0){
-                        code.pcAddSubOne(offset);
+                        code.pcAddBackOne(offset);
                     }else {
                         code.pcAdd(2);
                     }
@@ -661,7 +672,7 @@ public class Interpreter {
                     int var0 = operandStack.popInt();
                     short offset = code.readU2();
                     if(var0 >= 0){
-                        code.pcAddSubOne(offset);
+                        code.pcAddBackOne(offset);
                     }else {
                         code.pcAdd(2);
                     }
@@ -671,7 +682,7 @@ public class Interpreter {
                     int var0 = operandStack.popInt();
                     short offset = code.readU2();
                     if(var0 > 0){
-                        code.pcAddSubOne(offset);
+                        code.pcAddBackOne(offset);
                     }else {
                         code.pcAdd(2);
                     }
@@ -681,7 +692,7 @@ public class Interpreter {
                     int var0 = operandStack.popInt();
                     short offset = code.readU2();
                     if(var0 <= 0){
-                        code.pcAddSubOne(offset);
+                        code.pcAddBackOne(offset);
                     }else {
                         code.pcAdd(2);
                     }
@@ -697,15 +708,24 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.if_icmpge: {
+                    int var1 = operandStack.popInt();
+                    int var0 = operandStack.popInt();
+                    short offset = code.readU2();
+                    if(var0 >= var1){
+                        /*分支*/
+                        code.pcAddBackOne(offset);
+                    }else {
+                        code.pcAdd(2);
+                    }
                 }
                 break;
                 case Opcode.if_icmpgt: {
                     int var1 = operandStack.popInt();
                     int var0 = operandStack.popInt();
                     short offset = code.readU2();
-                    if(var0 >= var1){
+                    if(var0 > var1){
                         /*分支*/
-                        code.pcAddSubOne(offset);
+                        code.pcAddBackOne(offset);
                     }else {
                         code.pcAdd(2);
                     }
@@ -722,7 +742,7 @@ public class Interpreter {
                 break;
                 case Opcode.goto_: {
                     short offset = code.readU2();
-                    code.pcAddSubOne(offset );
+                    code.pcAddBackOne(offset );
                 }
                 break;
                 case Opcode.jsr: {
@@ -843,7 +863,11 @@ public class Interpreter {
                     operandStack.putJObject(jObject);
                 }
                 break;
-                case Opcode.newarray: {
+                case newarray: {
+                    int arrayType = code.consumeU1();
+                    int count = operandStack.popInt();
+                    JObject jArray = newarray(arrayType,count);
+                    operandStack.putJObject(jArray);
                 }
                 break;
                 case Opcode.anewarray: {
@@ -898,6 +922,8 @@ public class Interpreter {
             }
         }
     }
+
+
 
     private void getField(JavaClass javaClass, CONSTANT_Base constant_fieldref) {
         OperandStack operandStack = jThread.getTopFrame().operandStack;
@@ -957,13 +983,19 @@ public class Interpreter {
             JObject jObject = operandStack.popJObject();
             ObjectFields objectFields = runTimeEnv.javaHeap.objectContainer.get(jObject.offset);
             objectFields.putDouble(field_info.slotId, val);
-        }else if(s == 'L' || s== '['){
+        }else if(s == 'L' || s == '['){
             /*bug*/
             JObject val = operandStack.popJObject();
             JObject jObject = operandStack.popJObject();
             ObjectFields objectFields = runTimeEnv.javaHeap.objectContainer.get(jObject.offset);
             objectFields.putJObject(field_info.slotId, val);
         }
+//        else if( s == '['){
+//            JArray val = operandStack.popJArray();
+//            JObject jObject = operandStack.popJObject();
+//            ArrayFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(jObject.offset);
+//            arrayFields.putJArray(field_info.slotId, val);
+//        }
     }
 
 
@@ -1167,41 +1199,35 @@ public class Interpreter {
         while (descriptorNameArr[i] != ')'){
             switch (descriptorNameArr[i]) {
                 case 'B': {
-                    parameters.add(TypeCode.T_BYTE);
+                    parameters.add(T_BYTE);
                 }
                 break;
                 case 'C': {
-                    parameters.add(TypeCode.T_CHAR);
+                    parameters.add(T_CHAR);
                 }
                 break;
                 case 'D': {
                     parameters.add(TypeCode.T_DOUBLE);
-
                 }
                 break;
                 case 'F': {
                     parameters.add(TypeCode.T_FLOAT);
-
                 }
                 break;
                 case 'I': {
                     parameters.add(TypeCode.T_INT);
-
                 }
                 break;
                 case 'J': {
                     parameters.add(TypeCode.T_LONG);
-
                 }
                 break;
                 case 'S': {
                     parameters.add(TypeCode.T_SHORT);
-
                 }
                 break;
                 case 'Z': {
                     parameters.add(TypeCode.T_BOOLEAN);
-
                 }
                 break;
                 case '[': {
@@ -1229,47 +1255,47 @@ public class Interpreter {
         while (i < len) {
             switch (descriptorNameArr[i]) {
                 case 'B':{
-                    returnType = TypeCode.T_BYTE;
+                    returnType = T_BYTE;
                 }
                 break;
                 case 'C':{
-                    returnType = TypeCode.T_BYTE;
+                    returnType = T_BYTE;
                 }
                 break;
                 case 'D':{
-                    returnType = TypeCode.T_BYTE;
+                    returnType = T_BYTE;
                 }
                 break;
                 case 'F':{
-                    returnType = TypeCode.T_BYTE;
+                    returnType = T_BYTE;
                 }
                 break;
                 case 'I':{
-                    returnType = TypeCode.T_BYTE;
+                    returnType = T_BYTE;
                 }
                 break;
                 case 'J':{
-                    returnType = TypeCode.T_BYTE;
+                    returnType = T_BYTE;
                 }
                 break;
                 case 'S':{
-                    returnType = TypeCode.T_BYTE;
+                    returnType = T_BYTE;
                 }
                 break;
                 case 'Z':{
-                    returnType = TypeCode.T_BYTE;
+                    returnType = T_BYTE;
                 }
                 break;
                 case 'V':{
-                    returnType = TypeCode.T_BYTE;
+                    returnType = T_BYTE;
                 }
                 break;
                 case '[': {
-                    returnType = TypeCode.T_BYTE;
+                    returnType = T_BYTE;
                 }
                 break;
                 case 'L': {
-                    returnType = TypeCode.T_BYTE;
+                    returnType = T_BYTE;
                 }
                 break;
             }
@@ -1306,4 +1332,40 @@ public class Interpreter {
         return runTimeEnv.javaHeap.createJObject(runTimeEnv.methodArea.findClass(className));
     }
 
+    private JObject newarray( int arrayType, int count) {
+        JavaClass arrayClass = getPrimitiveArrayClass(arrayType, count);
+
+        return runTimeEnv.javaHeap.createJArray(arrayClass,arrayType, count);
+    }
+
+    private JavaClass getPrimitiveArrayClass(int arrayType, int count){
+        String className = null;
+        if(arrayType == TypeCode.T_BOOLEAN){
+            className = "[Z";
+        }else if(arrayType == TypeCode.T_CHAR){
+            className = "[C";
+        }else if(arrayType == TypeCode.T_FLOAT){
+            className = "[F";
+
+        }else if(arrayType == TypeCode.T_DOUBLE){
+            className = "[D";
+
+        }else if(arrayType == TypeCode.T_BYTE){
+            className = "[B";
+
+        }else if(arrayType == TypeCode.T_SHORT){
+            className = "[S";
+
+        }else if(arrayType == TypeCode.T_INT){
+            className = "[I";
+
+        }else if(arrayType == TypeCode.T_LONG){
+            className = "[J";
+
+        }
+        JavaClass arrayClass = runTimeEnv.methodArea.loadClass(className);
+//        runTimeEnv.methodArea.linkClass(className);
+ //       runTimeEnv.methodArea.initClass(className);
+        return arrayClass;
+    }
 }
