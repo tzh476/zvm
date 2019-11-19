@@ -5,13 +5,11 @@ import com.zvm.basestruct.u1;
 import com.zvm.basestruct.u4;
 import com.zvm.draft.Opcode1;
 import com.zvm.runtime.*;
-import com.zvm.runtime.struct.JArray;
 import com.zvm.runtime.struct.JObject;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.zvm.Opcode.d2f;
 import static com.zvm.Opcode.newarray;
 import static com.zvm.TypeCode.T_BYTE;
 import static com.zvm.TypeCode.T_CHAR;
@@ -47,10 +45,10 @@ public class Interpreter {
         for (; code.getPc() < codeLength; code.pcAdd(1)) {
             int opcodeInt = TypeUtils.byteArr2Int(codeRaw[code.getPc()].u1);
             Gson gson = new Gson();
-            System.out.println("pc = " + code.getPc() + " operandStack "+gson.toJson(operandStack));
-            System.out.println("pc = " + code.getPc() + " localVars " + gson.toJson(localVars));
-            System.out.println();
-            System.out.println("pc = " + code.getPc() + " opcode:" + Opcode1.getMnemonic(opcodeInt));
+//            System.out.println("pc = " + code.getPc() + " operandStack "+gson.toJson(operandStack));
+//            System.out.println("pc = " + code.getPc() + " localVars " + gson.toJson(localVars));
+//            System.out.println();
+//            System.out.println("pc = " + code.getPc() + " opcode:" + Opcode1.getMnemonic(opcodeInt));
 
             switch (opcodeInt) {
                 case Opcode.nop: {
@@ -240,6 +238,11 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.daload: {
+                    int index = operandStack.popInt();
+                    JObject arrayObject = operandStack.popJObject();
+                    ObjectFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(arrayObject.offset);
+                    /*double数组中，一个double占2个slot，定位是，偏移*2*/
+                    operandStack.putDouble(arrayFields.getDouble(2 * index));
                 }
                 break;
                 case Opcode.aaload: {
@@ -250,10 +253,10 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.baload: {
-
                 }
                 break;
                 case Opcode.caload: {
+
                 }
                 break;
                 case Opcode.saload: {
@@ -292,33 +295,57 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.fstore_0: {
+                    localVars.putFloat(0, operandStack.popFloat());
                 }
                 break;
                 case Opcode.fstore_1: {
+                    localVars.putFloat(1, operandStack.popFloat());
                 }
                 break;
                 case Opcode.fstore_2: {
+                    localVars.putFloat(2, operandStack.popFloat());
                 }
                 break;
                 case Opcode.fstore_3: {
+                    localVars.putFloat(3, operandStack.popFloat());
                 }
                 break;
                 case Opcode.dstore_0: {
+                    localVars.putDouble(0, operandStack.popDouble());
                 }
                 break;
                 case Opcode.dstore_1: {
+                    localVars.putDouble(1, operandStack.popDouble());
                 }
                 break;
                 case Opcode.dstore_2: {
+                    localVars.putDouble(2, operandStack.popDouble());
                 }
                 break;
                 case Opcode.lastore: {
+                    long value = operandStack.popLong();
+                    int index = operandStack.popInt();
+                    JObject arrayObject = operandStack.popJObject();
+                    ObjectFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(arrayObject.offset);
+                    /*long数组中，一个long占2个slot，定位是，偏移*2*/
+                    arrayFields.putLong(2 * index, value);
                 }
                 break;
                 case Opcode.fastore: {
+                    float value = operandStack.popFloat();
+                    int index = operandStack.popInt();
+                    JObject arrayObject = operandStack.popJObject();
+                    ObjectFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(arrayObject.offset);
+                    arrayFields.putFloat(index, value);
                 }
                 break;
                 case Opcode.dastore: {
+                    double value = operandStack.popDouble();
+                    int index = operandStack.popInt();
+                    JObject arrayObject = operandStack.popJObject();
+                    ObjectFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(arrayObject.offset);
+                    /*double数组中，一个double占2个slot，定位是，偏移*2*/
+                    arrayFields.putDouble(2 * index, value);
                 }
                 break;
                 case Opcode.aastore: {
@@ -461,6 +488,9 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.i2d: {
+                    int iValue = operandStack.popInt();
+                    double dValue = iValue + 0.0;
+                    operandStack.putDouble(dValue);
                 }
                 break;
                 case Opcode.l2i: {
@@ -494,15 +524,55 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.fcmpl: {
+                    /*未考虑出现NaN的情况*/
+                    float var1 = operandStack.popFloat();
+                    float var0 = operandStack.popFloat();
+                    int cmpRes = 0;
+                    if(var0 > var1){
+                        cmpRes = 1;
+                    }else if(var0 < var1){
+                        cmpRes = -1;
+                    }
+                    operandStack.putInt(cmpRes);
                 }
                 break;
                 case Opcode.fcmpg: {
+                    /*未考虑出现NaN的情况*/
+                    float var1 = operandStack.popFloat();
+                    float var0 = operandStack.popFloat();
+                    int cmpRes = 0;
+                    if(var0 > var1){
+                        cmpRes = 1;
+                    }else if(var0 < var1){
+                        cmpRes = -1;
+                    }
+                    operandStack.putInt(cmpRes);
                 }
                 break;
                 case Opcode.dcmpl: {
+                    /*未考虑出现NaN的情况*/
+                    double var1 = operandStack.popDouble();
+                    double var0 = operandStack.popDouble();
+                    int cmpRes = 0;
+                    if(var0 > var1){
+                        cmpRes = 1;
+                    }else if(var0 < var1){
+                        cmpRes = -1;
+                    }
+                    operandStack.putInt(cmpRes);
                 }
                 break;
                 case Opcode.dcmpg: {
+                    /*未考虑出现NaN的情况*/
+                    double var1 = operandStack.popDouble();
+                    double var0 = operandStack.popDouble();
+                    int cmpRes = 0;
+                    if(var0 > var1){
+                        cmpRes = 1;
+                    }else if(var0 < var1){
+                        cmpRes = -1;
+                    }
+                    operandStack.putInt(cmpRes);
                 }
                 break;
                 case Opcode.ifeq: {
@@ -517,22 +587,27 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.lconst_1: {
-                    operandStack.putLong(1);
+                    operandStack.putLong(1L);
                 }
                 break;
                 case Opcode.fconst_0: {
+                    operandStack.putFloat(0.0f);
                 }
                 break;
                 case Opcode.fconst_1: {
+                    operandStack.putFloat(1.0f);
                 }
                 break;
                 case Opcode.fconst_2: {
+                    operandStack.putFloat(2.0f);
                 }
                 break;
                 case Opcode.dconst_0: {
+                    operandStack.putDouble(0.0);
                 }
                 break;
                 case Opcode.dconst_1: {
+                    operandStack.putDouble(1.0);
                 }
                 break;
                 case Opcode.iload_0: {
@@ -585,10 +660,16 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.laload: {
-
+                    int index = operandStack.popInt();
+                    JObject arrayObject = operandStack.popJObject();
+                    ObjectFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(arrayObject.offset);
+                    /*long数组中，一个long占2个slot，定位是，偏移*2*/
+                    operandStack.putLong(arrayFields.getLongByIndex(2 * index));
                 }
                 break;
                 case Opcode.astore: {
+                    int index = code.consumeU1();
+                    localVars.putJObject(index, operandStack.popJObject());
                 }
                 break;
                 case Opcode.istore_0: {
@@ -605,7 +686,6 @@ public class Interpreter {
                 break;
                 case Opcode.istore_3: {
                     localVars.putIntByIndex(3, operandStack.popInt());
-
                 }
                 break;
                 case Opcode.lstore_0: {
@@ -613,6 +693,7 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.dstore_3: {
+                    localVars.putDouble(3, operandStack.popDouble());
                 }
                 break;
                 case Opcode.astore_0: {
@@ -625,7 +706,6 @@ public class Interpreter {
                 break;
                 case Opcode.astore_2: {
                     localVars.putJObject(2, operandStack.popJObject());
-
                 }
                 break;
                 case Opcode.astore_3: {
