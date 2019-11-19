@@ -35,6 +35,7 @@ public class JavaHeap {
 
         JObject jObject = new JObject();
         jObject.offset = arrayContainer.size();
+        jObject.javaClass = arrayClass;
         ObjectFields arrayFields = null;
         if (arrayType == TypeCode.T_LONG || arrayType == TypeCode.T_DOUBLE) {
             arrayFields = new ObjectFields(2 * count);

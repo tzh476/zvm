@@ -153,12 +153,21 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.iload: {
+                    int index = TypeUtils.byte2Int(code.consumeU1());
+                    int loadValue = localVars.getIntByIndex(index);
+                    operandStack.putInt(loadValue);
                 }
                 break;
                 case Opcode.lload: {
+                    int index = TypeUtils.byte2Int(code.consumeU1());
+                    long loadValue = localVars.getLongByIndex(index);
+                    operandStack.putLong(loadValue);
                 }
                 break;
                 case Opcode.fload: {
+                    int index = TypeUtils.byte2Int(code.consumeU1());
+                    float loadValue = localVars.getFloat(index);
+                    operandStack.putFloat(loadValue);
                 }
                 break;
                 case Opcode.dload: {
@@ -168,24 +177,39 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.aload: {
+                    int index = TypeUtils.byte2Int(code.consumeU1());
+                    JObject jObject = localVars.getJObject(index);
+                    operandStack.putJObject(jObject);
                 }
                 break;
                 case Opcode.lload_2: {
+                    long loadValue = localVars.getLongByIndex(2);
+                    operandStack.putLong(loadValue);
                 }
                 break;
                 case Opcode.lload_3: {
+                    long loadValue = localVars.getLongByIndex(3);
+                    operandStack.putLong(loadValue);
                 }
                 break;
                 case Opcode.fload_0: {
+                    float loadValue = localVars.getFloat(0);
+                    operandStack.putFloat(loadValue);
                 }
                 break;
                 case Opcode.fload_1: {
+                    float loadValue = localVars.getFloat(1);
+                    operandStack.putFloat(loadValue);
                 }
                 break;
                 case Opcode.fload_2: {
+                    float loadValue = localVars.getFloat(2);
+                    operandStack.putFloat(loadValue);
                 }
                 break;
                 case Opcode.fload_3: {
+                    float loadValue = localVars.getFloat(3);
+                    operandStack.putFloat(loadValue);
                 }
                 break;
                 case Opcode.dload_0: {
@@ -209,15 +233,24 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.faload: {
+                    int index = operandStack.popInt();
+                    JObject arrayObject = operandStack.popJObject();
+                    ObjectFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(arrayObject.offset);
+                    operandStack.putFloat(arrayFields.getFloat(index));
                 }
                 break;
                 case Opcode.daload: {
                 }
                 break;
                 case Opcode.aaload: {
+                    int index = operandStack.popInt();
+                    JObject arrayObject = operandStack.popJObject();
+                    ObjectFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(arrayObject.offset);
+                    operandStack.putJObject(arrayFields.getJObject(index));
                 }
                 break;
                 case Opcode.baload: {
+
                 }
                 break;
                 case Opcode.caload: {
@@ -227,15 +260,23 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.istore: {
+                    int index = code.consumeU1();
+                    localVars.putIntByIndex(index, operandStack.popInt());
                 }
                 break;
                 case Opcode.lstore: {
+                    int index = code.consumeU1();
+                    localVars.putLong(index, operandStack.popLong());
                 }
                 break;
                 case Opcode.fstore: {
+                    int index = code.consumeU1();
+                    localVars.putFloat(index, operandStack.popFloat());
                 }
                 break;
                 case Opcode.dstore: {
+                    int index = code.consumeU1();
+                    localVars.putDouble(index, operandStack.popDouble());
                 }
                 break;
                 case Opcode.lstore_1: {
@@ -317,12 +358,24 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.fadd: {
+                    float var1 = operandStack.popFloat();
+                    float var0 = operandStack.popFloat();
+                    float addValue = var0 + var1;
+                    operandStack.putFloat(addValue);
                 }
                 break;
                 case Opcode.dadd: {
+                    double var1 = operandStack.popDouble();
+                    double var0 = operandStack.popDouble();
+                    double addValue = var0 + var1;
+                    operandStack.putDouble(addValue);
                 }
                 break;
                 case Opcode.isub: {
+                    int var1 = operandStack.popInt();
+                    int var0 = operandStack.popInt();
+                    int subValue = var0 - var1;
+                    operandStack.putInt(subValue);
                 }
                 break;
                 case Opcode.lsub: {
@@ -333,9 +386,17 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.fsub: {
+                    float var1 = operandStack.popFloat();
+                    float var0 = operandStack.popFloat();
+                    float subValue = var0 - var1;
+                    operandStack.putFloat(subValue);
                 }
                 break;
                 case Opcode.dsub: {
+                    double var1 = operandStack.popLong();
+                    double var0 = operandStack.popLong();
+                    double subValue = var0 - var1;
+                    operandStack.putDouble(subValue);
                 }
                 break;
                 case Opcode.imul: {
@@ -524,6 +585,7 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.laload: {
+
                 }
                 break;
                 case Opcode.astore: {
@@ -705,12 +767,39 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.if_icmpeq: {
+                    int var1 = operandStack.popInt();
+                    int var0 = operandStack.popInt();
+                    short offset = code.readU2();
+                    if(var0 == var1){
+                        /*分支*/
+                        code.pcAddBackOne(offset);
+                    }else {
+                        code.pcAdd(2);
+                    }
                 }
                 break;
                 case Opcode.if_icmpne: {
+                    int var1 = operandStack.popInt();
+                    int var0 = operandStack.popInt();
+                    short offset = code.readU2();
+                    if(var0 != var1){
+                        /*分支*/
+                        code.pcAddBackOne(offset);
+                    }else {
+                        code.pcAdd(2);
+                    }
                 }
                 break;
                 case Opcode.if_icmplt: {
+                    int var1 = operandStack.popInt();
+                    int var0 = operandStack.popInt();
+                    short offset = code.readU2();
+                    if(var0 == var1){
+                        /*分支*/
+                        code.pcAddBackOne(offset);
+                    }else {
+                        code.pcAdd(2);
+                    }
                 }
                 break;
                 case Opcode.if_icmpge: {
@@ -738,12 +827,23 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.if_icmple: {
+                    int var1 = operandStack.popInt();
+                    int var0 = operandStack.popInt();
+                    short offset = code.readU2();
+                    if(var0 <= var1){
+                        /*分支*/
+                        code.pcAddBackOne(offset);
+                    }else {
+                        code.pcAdd(2);
+                    }
                 }
                 break;
                 case Opcode.if_acmpeq: {
+
                 }
                 break;
                 case Opcode.if_acmpne: {
+
                 }
                 break;
                 case Opcode.goto_: {
@@ -880,6 +980,10 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.arraylength: {
+                    JObject arrayJObject = operandStack.popJObject();
+                    ObjectFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(arrayJObject.offset);
+                    int size = getArraySize(arrayJObject.javaClass, arrayFields.slots.length);
+                    operandStack.putInt(size);
                 }
                 break;
                 case Opcode.athrow: {
@@ -929,6 +1033,15 @@ public class Interpreter {
         }
     }
 
+    private int getArraySize(JavaClass javaClass, int length) {
+        String className = javaClass.classPath;
+        int size = length;
+
+        if (className.startsWith("[J") || className.startsWith("[D")){
+            size = size / 2;
+        }
+        return size;
+    }
 
 
     private void getField(JavaClass javaClass, CONSTANT_Base constant_fieldref) {
