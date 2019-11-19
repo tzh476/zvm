@@ -11,6 +11,7 @@ import com.zvm.runtime.struct.JObject;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.zvm.Opcode.d2f;
 import static com.zvm.Opcode.newarray;
 import static com.zvm.TypeCode.T_BYTE;
 import static com.zvm.TypeCode.T_CHAR;
@@ -516,6 +517,10 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.iaload: {
+                    int index = operandStack.popInt();
+                    JObject arrayObject = operandStack.popJObject();
+                    ObjectFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(arrayObject.offset);
+                    operandStack.putInt(arrayFields.getIntByIndex(index));
                 }
                 break;
                 case Opcode.laload: {
@@ -569,7 +574,8 @@ public class Interpreter {
                     int value = operandStack.popInt();
                     int index = operandStack.popInt();
                     JObject arrayObject = operandStack.popJObject();
-                    String className = arrayObject.javaClass.classPath;
+                    ObjectFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(arrayObject.offset);
+                    arrayFields.putIntByIndex(index, value);
                 }
                 break;
                 case Opcode.dup_x1: {
