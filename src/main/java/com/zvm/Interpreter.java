@@ -232,21 +232,21 @@ public class Interpreter {
                 case Opcode.faload: {
                     int index = operandStack.popInt();
                     JObject arrayObject = operandStack.popJObject();
-                    ObjectFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(arrayObject.offset);
+                    ArrayFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(arrayObject.offset);
                     operandStack.putFloat(arrayFields.getFloat(index));
                 }
                 break;
                 case Opcode.daload: {
                     int index = operandStack.popInt();
                     JObject arrayObject = operandStack.popJObject();
-                    ObjectFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(arrayObject.offset);
-                    operandStack.putDouble(arrayFields.getDoubleInArray(index));
+                    ArrayFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(arrayObject.offset);
+                    operandStack.putDouble(arrayFields.getDouble(index));
                 }
                 break;
                 case Opcode.aaload: {
                     int index = operandStack.popInt();
                     JObject arrayObject = operandStack.popJObject();
-                    ObjectFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(arrayObject.offset);
+                    ArrayFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(arrayObject.offset);
                     operandStack.putJObject(arrayFields.getJObject(index));
                 }
                 break;
@@ -324,15 +324,15 @@ public class Interpreter {
                     long value = operandStack.popLong();
                     int index = operandStack.popInt();
                     JObject arrayObject = operandStack.popJObject();
-                    ObjectFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(arrayObject.offset);
-                    arrayFields.putLongInArray(index, value);
+                    ArrayFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(arrayObject.offset);
+                    arrayFields.putLong(index, value);
                 }
                 break;
                 case Opcode.fastore: {
                     float value = operandStack.popFloat();
                     int index = operandStack.popInt();
                     JObject arrayObject = operandStack.popJObject();
-                    ObjectFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(arrayObject.offset);
+                    ArrayFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(arrayObject.offset);
                     arrayFields.putFloat(index, value);
                 }
                 break;
@@ -340,8 +340,8 @@ public class Interpreter {
                     double value = operandStack.popDouble();
                     int index = operandStack.popInt();
                     JObject arrayObject = operandStack.popJObject();
-                    ObjectFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(arrayObject.offset);
-                    arrayFields.putDoubleInArray( index, value);
+                    ArrayFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(arrayObject.offset);
+                    arrayFields.putDouble( index, value);
                 }
                 break;
                 case Opcode.aastore: {
@@ -651,15 +651,15 @@ public class Interpreter {
                 case Opcode.iaload: {
                     int index = operandStack.popInt();
                     JObject arrayObject = operandStack.popJObject();
-                    ObjectFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(arrayObject.offset);
-                    operandStack.putInt(arrayFields.getIntByIndex(index));
+                    ArrayFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(arrayObject.offset);
+                    operandStack.putInt(arrayFields.getInt(index));
                 }
                 break;
                 case Opcode.laload: {
                     int index = operandStack.popInt();
                     JObject arrayObject = operandStack.popJObject();
-                    ObjectFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(arrayObject.offset);
-                    operandStack.putLong(arrayFields.getLongInArray( index));
+                    ArrayFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(arrayObject.offset);
+                    operandStack.putLong(((ArrayFields) arrayFields).getLong( index));
                 }
                 break;
                 case Opcode.astore: {
@@ -711,8 +711,8 @@ public class Interpreter {
                     int value = operandStack.popInt();
                     int index = operandStack.popInt();
                     JObject arrayObject = operandStack.popJObject();
-                    ObjectFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(arrayObject.offset);
-                    arrayFields.putIntByIndex(index, value);
+                    ArrayFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(arrayObject.offset);
+                    arrayFields.putInt(index, value);
                 }
                 break;
                 case Opcode.dup_x1: {
@@ -1056,7 +1056,7 @@ public class Interpreter {
                 break;
                 case Opcode.arraylength: {
                     JObject arrayJObject = operandStack.popJObject();
-                    ObjectFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(arrayJObject.offset);
+                    ArrayFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(arrayJObject.offset);
                     int size = arrayFields.arraySize;
                     operandStack.putInt(size);
                 }
