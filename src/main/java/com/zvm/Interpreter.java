@@ -77,7 +77,6 @@ public class Interpreter {
                 break;
                 case Opcode.iconst_3: {
                     operandStack.putInt(3);
-
                 }
                 break;
                 case Opcode.iconst_4: {
@@ -241,8 +240,7 @@ public class Interpreter {
                     int index = operandStack.popInt();
                     JObject arrayObject = operandStack.popJObject();
                     ObjectFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(arrayObject.offset);
-                    /*double数组中，一个double占2个slot，定位是，偏移*2*/
-                    operandStack.putDouble(arrayFields.getDouble(2 * index));
+                    operandStack.putDouble(arrayFields.getDoubleInArray(index));
                 }
                 break;
                 case Opcode.aaload: {
@@ -327,8 +325,7 @@ public class Interpreter {
                     int index = operandStack.popInt();
                     JObject arrayObject = operandStack.popJObject();
                     ObjectFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(arrayObject.offset);
-                    /*long数组中，一个long占2个slot，定位是，偏移*2*/
-                    arrayFields.putLong(2 * index, value);
+                    arrayFields.putLongInArray(index, value);
                 }
                 break;
                 case Opcode.fastore: {
@@ -344,8 +341,7 @@ public class Interpreter {
                     int index = operandStack.popInt();
                     JObject arrayObject = operandStack.popJObject();
                     ObjectFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(arrayObject.offset);
-                    /*double数组中，一个double占2个slot，定位是，偏移*2*/
-                    arrayFields.putDouble(2 * index, value);
+                    arrayFields.putDoubleInArray( index, value);
                 }
                 break;
                 case Opcode.aastore: {
@@ -663,8 +659,7 @@ public class Interpreter {
                     int index = operandStack.popInt();
                     JObject arrayObject = operandStack.popJObject();
                     ObjectFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(arrayObject.offset);
-                    /*long数组中，一个long占2个slot，定位是，偏移*2*/
-                    operandStack.putLong(arrayFields.getLongByIndex(2 * index));
+                    operandStack.putLong(arrayFields.getLongInArray( index));
                 }
                 break;
                 case Opcode.astore: {
@@ -1062,7 +1057,7 @@ public class Interpreter {
                 case Opcode.arraylength: {
                     JObject arrayJObject = operandStack.popJObject();
                     ObjectFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(arrayJObject.offset);
-                    int size = getArraySize(arrayJObject.javaClass, arrayFields.slots.length);
+                    int size = arrayFields.arraySize;
                     operandStack.putInt(size);
                 }
                 break;
@@ -1113,15 +1108,15 @@ public class Interpreter {
         }
     }
 
-    private int getArraySize(JavaClass javaClass, int length) {
-        String className = javaClass.classPath;
-        int size = length;
-
-        if (className.startsWith("[J") || className.startsWith("[D")){
-            size = size / 2;
-        }
-        return size;
-    }
+//    private int getArraySize(JavaClass javaClass, int length) {
+//        String className = javaClass.classPath;
+//        int size = length;
+//
+//        if (className.startsWith("[J") || className.startsWith("[D")){
+//            size = size / 2;
+//        }
+//        return size;
+//    }
 
 
     private void getField(JavaClass javaClass, CONSTANT_Base constant_fieldref) {
