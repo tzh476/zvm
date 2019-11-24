@@ -47,10 +47,10 @@ public class Interpreter {
         for (; code.getPc() < codeLength; code.pcAdd(1)) {
             int opcodeInt = TypeUtils.byteArr2Int(codeRaw[code.getPc()].u1);
             Gson gson = new Gson();
-            System.out.println("pc = " + code.getPc() + " operandStack "+gson.toJson(operandStack));
-            System.out.println("pc = " + code.getPc() + " localVars " + gson.toJson(localVars));
-            System.out.println();
-            System.out.println("pc = " + code.getPc() + " opcode:" + Opcode1.getMnemonic(opcodeInt));
+//            System.out.println("pc = " + code.getPc() + " operandStack "+gson.toJson(operandStack));
+//            System.out.println("pc = " + code.getPc() + " localVars " + gson.toJson(localVars));
+//            System.out.println();
+//            System.out.println("pc = " + code.getPc() + " opcode:" + Opcode1.getMnemonic(opcodeInt));
 
             switch (opcodeInt) {
                 case Opcode.nop: {
@@ -130,6 +130,10 @@ public class Interpreter {
                         char[] chars = value.toCharArray();
 
                         int charsLen = chars.length;
+                        /*1.新建new String()对象stringObject，
+                          2.stringObject里面含有char[]对象charArrayJObject(JObject 类型)
+                          3.charArrayJObject中的offset指向javaHeap中的arrayContainer，将类似"abc"的值填入
+                          4.将stringObject put至operandStack中*/
                         JObject stringObject = runTimeEnv.javaHeap.createJObject(stringClass);
                         String cClassName = "[C";
                         JavaClass cClass = runTimeEnv.methodArea.findClass(cClassName);
@@ -377,6 +381,11 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.aastore: {
+                    JObject value = operandStack.popJObject();
+                    int index = operandStack.popInt();
+                    JObject arrayObject = operandStack.popJObject();
+                    ArrayFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(arrayObject.offset);
+                    arrayFields.putJOject( index, value);
                 }
                 break;
                 case Opcode.bastore: {
@@ -1605,7 +1614,7 @@ public class Interpreter {
 
         JObject jObject = runTimeEnv.javaHeap.createJArray(curClass, TypeCode.T_EXTRA_OBJECT, count);
 
-        return new JObject();
+        return jObject;
     }
 
 
