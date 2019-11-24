@@ -1,45 +1,66 @@
 package com.zvm.runtime;
 
+import com.zvm.JavaClass;
 import com.zvm.runtime.struct.*;
 
 public class ArrayFields {
-    public JType[] primitiveType;
+    public JType[] primitiveTypes;
     public int arraySize;
 
+    public JType[] getPrimitiveTypes() {
+        return primitiveTypes;
+    }
 
+    public char[] trans2CharArr(){
+        if(primitiveTypes instanceof JChar[]){
+            JChar[] jChars = (JChar[])primitiveTypes;
+            int len = jChars.length;
+            char[] chars = new char[len];
+            for(int i = 0; i < len; i++ ){
+                chars[i] = jChars[i].value;
+            }
+            return chars;
+        }
+        return null;
+    }
 
     public ArrayFields(byte[] bytes){
-        primitiveType = newJByte(bytes);
+        primitiveTypes = newJByte(bytes);
         arraySize = bytes.length;
     }
 
     public ArrayFields(char[] chars){
-        primitiveType = newJChar(chars);
+        primitiveTypes = newJChar(chars);
         arraySize = chars.length;
     }
     public ArrayFields(short[] shorts){
-        primitiveType = newJShort(shorts);
+        primitiveTypes = newJShort(shorts);
         arraySize = shorts.length;
     }
 
     public ArrayFields(int[] ints){
-        primitiveType = newJInt(ints);
+        primitiveTypes = newJInt(ints);
         arraySize = ints.length;
 
     }
     public ArrayFields(long[] longs){
-        primitiveType = newJLong(longs);
+        primitiveTypes = newJLong(longs);
         arraySize = longs.length;
     }
 
     public ArrayFields(float[] floats){
-        primitiveType = newJFloat(floats);
+        primitiveTypes = newJFloat(floats);
         arraySize = floats.length;
     }
 
     public ArrayFields(double[] doubles){
-        primitiveType = newJDouble(doubles);
+        primitiveTypes = newJDouble(doubles);
         arraySize = doubles.length;
+    }
+
+    public ArrayFields(JObject[] objects, JavaClass baseClass){
+        primitiveTypes = newJObject(objects, baseClass);
+        arraySize = objects.length;
     }
 
     JByte[] newJByte(byte[] bytes){
@@ -102,57 +123,65 @@ public class ArrayFields {
         return jLongs;
     }
 
-    JObject[] newJObject(JObject[] objects) {
+    JObject[] newJObject(JObject[] objects, JavaClass baseClass) {
         int len = objects.length;
         JObject[] jObjects = objects;
-//        for (int i = 0; i < len; i++) {
-//            jObjects[i] = new JObject(objects[i]);
-//        }
+        for (int i = 0; i < len; i++) {
+            jObjects[i] = new JObject();
+            jObjects[i].javaClass = baseClass;
+        }
         return jObjects;
     }
 
     public float getFloat(int index) {
-        return ((JFloat)primitiveType[index]).value;
+        return ((JFloat) primitiveTypes[index]).value;
     }
     public double getDouble(int index) {
-        return ((JDouble)primitiveType[index]).value;
+        return ((JDouble) primitiveTypes[index]).value;
     }
     public byte getByte(int index) {
-        return ((JByte)primitiveType[index]).value;
+        return ((JByte) primitiveTypes[index]).value;
     }
     public short getShort(int index) {
-        return ((JShort)primitiveType[index]).value;
+        return ((JShort) primitiveTypes[index]).value;
     }
     public int getInt(int index) {
-        return ((JInt)primitiveType[index]).value;
+        return ((JInt) primitiveTypes[index]).value;
     }
     public long getLong(int index) {
-        return ((JLong)primitiveType[index]).value;
+        return ((JLong) primitiveTypes[index]).value;
     }
     public JObject getJObject(int index) {
-        return (JObject)primitiveType[index];
+        return (JObject) primitiveTypes[index];
     }
 
     public void putFloat(int index, float value) {
-        ((JFloat)primitiveType[index]).value = value;
+        ((JFloat) primitiveTypes[index]).value = value;
     }
     public void putDouble(int index, double value) {
-        ((JDouble)primitiveType[index]).value = value;
+        ((JDouble) primitiveTypes[index]).value = value;
     }
     public void putChar(int index, char value) {
-        ((JChar)primitiveType[index]).value = value;
+        ((JChar) primitiveTypes[index]).value = value;
     }
     public void putShort(int index, short value) {
-        ((JShort)primitiveType[index]).value = value;
+        ((JShort) primitiveTypes[index]).value = value;
     }
     public void putInt(int index, int value) {
-        ((JLong)primitiveType[index]).value = value;
+        ((JInt) primitiveTypes[index]).value = value;
     }
     public void putLong(int index, long value) {
-        ((JLong)primitiveType[index]).value = value;
+        ((JLong) primitiveTypes[index]).value = value;
     }
     public void putJOject(int index, JObject jObject){
-        primitiveType[index] = jObject;
+        primitiveTypes[index] = jObject;
     }
-    
+
+    public void putCharArr(char[] chars) {
+        JChar[] jChars = (JChar[]) primitiveTypes;
+        int len = primitiveTypes.length;
+        for (int i = 0; i < len; i++ ){
+            jChars[i].value = chars[i];
+        }
+    }
 }

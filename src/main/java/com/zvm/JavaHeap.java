@@ -64,6 +64,9 @@ public class JavaHeap {
         }else if(arrayType == TypeCode.T_LONG){
             arrayFields = new ArrayFields(new long[count]);
             arrayContainer.put(jObject.offset, arrayFields);
+        }else if(arrayType == TypeCode.T_EXTRA_OBJECT){
+            arrayFields = new ArrayFields(new JObject[count],arrayClass );
+            arrayContainer.put(jObject.offset, arrayFields);
         }
         return jObject;
     }

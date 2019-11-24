@@ -2,9 +2,11 @@ package com.zvm;
 
 import com.google.gson.Gson;
 import com.zvm.basestruct.u1;
+import com.zvm.basestruct.u2;
 import com.zvm.basestruct.u4;
 import com.zvm.draft.Opcode1;
 import com.zvm.runtime.*;
+import com.zvm.runtime.struct.JChar;
 import com.zvm.runtime.struct.JObject;
 
 import java.util.ArrayList;
@@ -45,10 +47,10 @@ public class Interpreter {
         for (; code.getPc() < codeLength; code.pcAdd(1)) {
             int opcodeInt = TypeUtils.byteArr2Int(codeRaw[code.getPc()].u1);
             Gson gson = new Gson();
-//            System.out.println("pc = " + code.getPc() + " operandStack "+gson.toJson(operandStack));
-//            System.out.println("pc = " + code.getPc() + " localVars " + gson.toJson(localVars));
-//            System.out.println();
-//            System.out.println("pc = " + code.getPc() + " opcode:" + Opcode1.getMnemonic(opcodeInt));
+            System.out.println("pc = " + code.getPc() + " operandStack "+gson.toJson(operandStack));
+            System.out.println("pc = " + code.getPc() + " localVars " + gson.toJson(localVars));
+            System.out.println();
+            System.out.println("pc = " + code.getPc() + " opcode:" + Opcode1.getMnemonic(opcodeInt));
 
             switch (opcodeInt) {
                 case Opcode.nop: {
@@ -113,6 +115,36 @@ public class Interpreter {
                         u4 ldcBytes = ((CONSTANT_Float) constant_base).bytes;
                         float ldcValue = TypeUtils.byteArr2Float(ldcBytes.u4);
                         operandStack.putFloat(ldcValue);
+                    }else if(constant_base instanceof CONSTANT_String){
+                        u2 stringIndex = ((CONSTANT_String) constant_base).string_index;
+                        String className = "java/lang/String";
+                        JavaClass stringClass = runTimeEnv.methodArea.findClass(className);
+                        if(stringClass == null){
+                            stringClass = runTimeEnv.methodArea.loadClass(className);
+                            runTimeEnv.methodArea.linkClass(className);
+                            runTimeEnv.methodArea.initClass(className);
+                        }
+
+                        CONSTANT_Utf8 valueUtf8 = (CONSTANT_Utf8) javaClass.getClassFile().constant_pool.cp_info[TypeUtils.byteArr2Int(stringIndex.u2)-1];
+                        String value = TypeUtils.u12String(valueUtf8.bytes);
+                        char[] chars = value.toCharArray();
+
+                        int charsLen = chars.length;
+                        JObject stringObject = runTimeEnv.javaHeap.createJObject(stringClass);
+                        String cClassName = "[C";
+                        JavaClass cClass = runTimeEnv.methodArea.findClass(cClassName);
+                        if(cClass == null){
+                            cClass = runTimeEnv.methodArea.loadClass(cClassName);
+                        //    runTimeEnv.methodArea.linkClass(cClassName);
+                         //   runTimeEnv.methodArea.initClass(cClassName);
+                        }
+                        JObject charArrayJObject = runTimeEnv.javaHeap.createJArray(cClass,TypeCode.T_CHAR,charsLen);
+                        putCharArrField(charArrayJObject, chars);
+
+                        ObjectFields stringFields = runTimeEnv.javaHeap.objectContainer.get(stringObject.offset);
+                        int slotId = stringClass.findField("value", cClassName).slotId;
+                        stringFields.putJObject(slotId, charArrayJObject);
+                        operandStack.putJObject(stringObject);
                     }
 
                 }
@@ -1052,6 +1084,10 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.anewarray: {
+                    int classIndex = code.consumeU2();
+                    int count = operandStack.popInt();
+                    JObject jArray = anewarray(classIndex, javaClass,count);
+                    operandStack.putJObject(jArray);
                 }
                 break;
                 case Opcode.arraylength: {
@@ -1107,6 +1143,12 @@ public class Interpreter {
             }
         }
     }
+
+    private void putCharArrField(JObject charArrayJObject, char[] chars) {
+        ArrayFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(charArrayJObject.offset);
+        arrayFields.putCharArr(chars);
+    }
+
 
 //    private int getArraySize(JavaClass javaClass, int length) {
 //        String className = javaClass.classPath;
@@ -1288,6 +1330,14 @@ public class Interpreter {
             System.out.println(operandStack.popLong());
         }else if("(D)V".equals(descriptor)){
             System.out.println(operandStack.popDouble());
+        }else if("(Ljava/lang/String;)V".equals(descriptor)) {
+            JObject jObject = operandStack.popJObject();
+            ObjectFields objectFields = runTimeEnv.javaHeap.objectContainer.get(jObject.offset);
+            field_info field_info = jObject.javaClass.findField("value","[C");
+            JObject charArrObject = objectFields.getJObject(field_info.slotId);
+            ArrayFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(charArrObject.offset);
+            char[] chars = arrayFields.trans2CharArr();
+            System.out.println(chars);
         }else {
             System.out.println("println " + descriptor);
         }
@@ -1530,6 +1580,38 @@ public class Interpreter {
         JavaClass arrayClass = getPrimitiveArrayClass(arrayType, count);
 
         return runTimeEnv.javaHeap.createJArray(arrayClass,arrayType, count);
+    }
+
+    /**
+     * 引用类型数组创建
+     * @param classIndex
+     * @param javaClass
+     * @param count
+     * @return
+     */
+    private JObject anewarray(int classIndex, JavaClass javaClass, int count) {
+        CONSTANT_Base[] constant_bases = javaClass.getClassFile().constant_pool.cp_info;
+        CONSTANT_Class constant_class = (CONSTANT_Class) constant_bases[classIndex - 1];
+        CONSTANT_Utf8 classNameUtf8 = (CONSTANT_Utf8)constant_bases[TypeUtils.byteArr2Int(constant_class.name_index.u2) - 1];
+        String className = TypeUtils.u12String(classNameUtf8.bytes);
+        JavaClass curClass = runTimeEnv.methodArea.findClass(className);
+        if(curClass == null){
+            curClass = runTimeEnv.methodArea.loadClass(className);
+            runTimeEnv.methodArea.linkClass(className);
+            runTimeEnv.methodArea.initClass(className);
+        }
+
+        className = processClassName(className);
+
+        JObject jObject = runTimeEnv.javaHeap.createJArray(curClass, TypeCode.T_EXTRA_OBJECT, count);
+
+        return new JObject();
+    }
+
+
+    private String processClassName(String className){
+        className = "[L" + className + ";";
+        return className;
     }
 
     private JavaClass getPrimitiveArrayClass(int arrayType, int count){
