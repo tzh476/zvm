@@ -47,10 +47,12 @@ public class Interpreter {
         for (; code.getPc() < codeLength; code.pcAdd(1)) {
             int opcodeInt = TypeUtils.byteArr2Int(codeRaw[code.getPc()].u1);
             Gson gson = new Gson();
-//            System.out.println("pc = " + code.getPc() + " operandStack "+gson.toJson(operandStack));
-//            System.out.println("pc = " + code.getPc() + " localVars " + gson.toJson(localVars));
-//            System.out.println();
-//            System.out.println("pc = " + code.getPc() + " opcode:" + Opcode1.getMnemonic(opcodeInt));
+            System.out.println("pc = " + code.getPc() + " operandStack size "+ operandStack.size);
+            //System.out.println("pc = " + code.getPc() + " operandStack "+gson.toJson(operandStack));
+            System.out.println("pc = " + code.getPc() + " localVars size "+ localVars.slots.length);
+            //System.out.println("pc = " + code.getPc() + " localVars " + gson.toJson(localVars));
+            System.out.println();
+            System.out.println("pc = " + code.getPc() + " opcode:" + Opcode1.getMnemonic(opcodeInt));
 
             switch (opcodeInt) {
                 case Opcode.nop: {
@@ -464,6 +466,10 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.imul: {
+                    int var1 = operandStack.popInt();
+                    int var0 = operandStack.popInt();
+                    int sum = var0 * var1;
+                    operandStack.putInt(sum);
                 }
                 break;
                 case Opcode.lmul: {
@@ -980,24 +986,40 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.ireturn: {
+                    jThread.popFrame();
+                    JavaFrame invokerFrame = jThread.getTopFrame();
+                    int val = operandStack.popInt();
+                    invokerFrame.operandStack.putInt(val);
+                    return;
                 }
-                break;
                 case Opcode.lreturn: {
-                    JavaFrame curFrame = jThread.popFrame();
+                    jThread.popFrame();
                     JavaFrame invokerFrame = jThread.getTopFrame();
                     long val = operandStack.popLong();
                     invokerFrame.operandStack.putLong(val);
                     return;
                 }
                 case Opcode.freturn: {
+                    jThread.popFrame();
+                    JavaFrame invokerFrame = jThread.getTopFrame();
+                    float val = operandStack.popFloat();
+                    invokerFrame.operandStack.putFloat(val);
+                    return;
                 }
-                break;
                 case Opcode.dreturn: {
+                    jThread.popFrame();
+                    JavaFrame invokerFrame = jThread.getTopFrame();
+                    double val = operandStack.popDouble();
+                    invokerFrame.operandStack.putDouble(val);
+                    return;
                 }
-                break;
                 case Opcode.areturn: {
+                    jThread.popFrame();
+                    JavaFrame invokerFrame = jThread.getTopFrame();
+                    JObject val = operandStack.popJObject();
+                    invokerFrame.operandStack.putJObject(val);
+                    return;
                 }
-                break;
                 case Opcode.return_: {
                     jThread.popFrame();
                     return;
@@ -1030,6 +1052,7 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.putstatic: {
+
                 }
                 break;
                 case Opcode.getfield: {
@@ -1132,6 +1155,13 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.ifnonnull: {
+                    JObject jObject = operandStack.popJObject();
+                    if(jObject != null){
+                        int offset = code.readU2();
+                        code.pcAddBackOne(offset);
+                    }else {
+                        code.pcAdd(2);
+                    }
                 }
                 break;
                 case Opcode.goto_w: {
@@ -1228,19 +1258,22 @@ public class Interpreter {
             JObject jObject = operandStack.popJObject();
             ObjectFields objectFields = runTimeEnv.javaHeap.objectContainer.get(jObject.offset);
             objectFields.putDouble(field_info.slotId, val);
-        }else if(s == 'L' || s == '['){
+        }else if(s == 'L' ){
             /*bug*/
             JObject val = operandStack.popJObject();
             JObject jObject = operandStack.popJObject();
             ObjectFields objectFields = runTimeEnv.javaHeap.objectContainer.get(jObject.offset);
             objectFields.putJObject(field_info.slotId, val);
         }
-//        else if( s == '['){
-//            JArray val = operandStack.popJArray();
-//            JObject jObject = operandStack.popJObject();
-//            ArrayFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(jObject.offset);
-//            arrayFields.putJArray(field_info.slotId, val);
-//        }
+        else if( s == '['){
+            /*这个是数组对象引用*/
+            JObject val = operandStack.popJObject();
+            /*将数组对象引用放入这个对象中*/
+            JObject jObject = operandStack.popJObject();
+            field_info concreteFieldInfo = jObject.javaClass.findField(fieldRef.refName, fieldRef.descriptorName);
+            ObjectFields objectFields = runTimeEnv.javaHeap.objectContainer.get(jObject.offset);
+            objectFields.putJObject(concreteFieldInfo.slotId, val);
+        }
     }
 
 
@@ -1302,10 +1335,12 @@ public class Interpreter {
             }
         }
         /*类似 Father object = new Son();son 存在方法时，需要调用son的方法，而不是father的*/
-        if(!methodRef.className.equals(jObject.javaClass.classPath)){
-            //method_info concreteClassMethod = jObject.javaClass.findMethod(methodRef.refName, methodRef.descriptorName);
-            methodRef.className = jObject.javaClass.classPath;
-            method_info = parseMethodRef(methodRef);
+        if(!methodRef.className.equals(jObject.javaClass.classPath) ){
+            method_info concreteClassMethod = jObject.javaClass.findMethod(methodRef.refName, methodRef.descriptorName);
+            if(concreteClassMethod != null){
+                methodRef.className = jObject.javaClass.classPath;
+                method_info = parseMethodRef(methodRef);
+            }
         }
 
         CallSite callSite = new CallSite();
@@ -1380,7 +1415,10 @@ public class Interpreter {
         Ref ref = processRef(javaClass, constant_base);
 
        // method_info method_info = javaClass.findMethod(methodName, descriptorName);
-        method_info method_info = javaClass.findMethod(ref.refName, ref.descriptorName);
+       // method_info method_info = javaClass.findMethod(ref.refName, ref.descriptorName);
+        JavaClass curClass = runTimeEnv.methodArea.findClass(ref.className);
+        method_info method_info = curClass.findMethod(ref.refName, ref.descriptorName);
+
         if (method_info == null){
             return ;
         }

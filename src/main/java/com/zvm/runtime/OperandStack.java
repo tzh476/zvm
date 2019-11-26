@@ -7,7 +7,7 @@ import com.zvm.runtime.struct.JObject;
 import com.zvm.runtime.struct.Slot;
 
 public class OperandStack {
-    Integer size;
+    public Integer size;
     Slot[] slots;
 
     public OperandStack(Integer max_stack) {
@@ -77,9 +77,15 @@ public class OperandStack {
         return TypeUtils.int2Float(value);
     }
 
+    /*传递引用时需要特殊考虑*/
     public Slot popSlot(){
         size --;
-        return slots[size];
+        Slot slot = slots[size];
+        //slots[size].jType = null;/*会将jType对象值设为null，可能有其他地方引用了这个jType*/
+        //slots[size] = null;/*后面的opcode给slots[size].jType赋值时，报空指针*/
+        slots[size] = new Slot();
+       // return slots[size];
+        return slot;
     }
 
     public void putSlot(Slot slot){
@@ -92,6 +98,7 @@ public class OperandStack {
         size ++;
     }
 
+    /*传递引用时需要特殊考虑*/
     public JObject popJObject(){
         size --;
         JObject jObject = (JObject) slots[size].jType;

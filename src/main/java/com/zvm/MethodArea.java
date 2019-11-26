@@ -32,19 +32,26 @@ public class MethodArea {
         if(classPath.startsWith("[")){
             return loadArrayClass(classPath);
         }
+
+        if(loadedClasses.contains(classPath)){
+            return findClass(classPath);
+        }
+
         JavaClass javaClass = new JavaClass(classPath);
         byte[] bytecode = readClass(classPath);
         javaClass.readBytecode2ClassFile(bytecode);
         ClassFile classFile = javaClass.getClassFile();
         if(!"java/lang/Object".equals(classPath)){
             String superClassName = getSuperClassName(classFile);
-            if(findClass(superClassName) == null){
+            //if(findClass(superClassName) == null){
+            if(!loadedClasses.contains(superClassName)){
                 loadClass(superClassName);
             }
             javaClass.superClassName = superClassName;
         }
 
         javaClasses.put(classPath, javaClass);
+        loadedClasses.add(classPath);
         return javaClass;
     }
 
@@ -115,13 +122,15 @@ public class MethodArea {
         JavaClass javaClass = findClass(classPath);
         if(!"java/lang/Object".equals(classPath)){
             String superClassName = getSuperClassName(javaClass.getClassFile());
-            if(findClass(superClassName) == null){
+            //if(findClass(superClassName) == null){
+            if(!linkedClasses.contains(superClassName)){
                 linkClass(superClassName);
             }
         }
         verification();
         prepare(javaClass);
         resolved();
+        linkedClasses.add(classPath);
     }
 
 //    private void linkArrayClass(String classPath) {

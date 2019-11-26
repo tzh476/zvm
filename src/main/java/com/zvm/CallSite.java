@@ -11,12 +11,19 @@ public class CallSite {
     public u2 access_flags;
     public u2 name_index;
     public u2 descriptor_index;
-    public u2 max_stack;
-    public u2 max_locals;
+    public u2 max_stack ;
+    public u2 max_locals ;
     public u4 code_length;
     public u1[] code;
     public u2 exception_table_length;
     public exception_table[] exception_table;
+
+    public CallSite(){
+        max_stack = new u2();
+        max_stack.u2 = new byte[1];
+        max_locals = new u2();
+        max_locals.u2 = new byte[1];
+    }
 
     public void setCallSite(method_info method_info) {
         access_flags = method_info.access_flags;
