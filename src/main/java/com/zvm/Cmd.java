@@ -41,6 +41,8 @@ public class Cmd {
 
         curClassName = args[len - 1];
         curClassNamePath = userClassPath + curClassName.replace(".", "\\") + ".class";
+        curClassName = curClassName.replace(".", "/") ;
+
     }
 
     public static String processPath(String path) {

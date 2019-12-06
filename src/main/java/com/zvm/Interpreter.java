@@ -12,9 +12,9 @@ import com.zvm.runtime.struct.JObject;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.zvm.Opcode.arraylength;
 import static com.zvm.Opcode.newarray;
-import static com.zvm.TypeCode.T_BYTE;
-import static com.zvm.TypeCode.T_CHAR;
+import static com.zvm.TypeCode.*;
 
 public class Interpreter {
 
@@ -47,12 +47,12 @@ public class Interpreter {
         for (; code.getPc() < codeLength; code.pcAdd(1)) {
             int opcodeInt = TypeUtils.byteArr2Int(codeRaw[code.getPc()].u1);
             Gson gson = new Gson();
-            System.out.println("pc = " + code.getPc() + " operandStack size "+ operandStack.size);
-            //System.out.println("pc = " + code.getPc() + " operandStack "+gson.toJson(operandStack));
-            System.out.println("pc = " + code.getPc() + " localVars size "+ localVars.slots.length);
-            //System.out.println("pc = " + code.getPc() + " localVars " + gson.toJson(localVars));
-            System.out.println();
-            System.out.println("pc = " + code.getPc() + " opcode:" + Opcode1.getMnemonic(opcodeInt));
+//            System.out.println("pc = " + code.getPc() + " operandStack size "+ operandStack.size);
+//            //System.out.println("pc = " + code.getPc() + " operandStack "+gson.toJson(operandStack));
+//            System.out.println("pc = " + code.getPc() + " localVars size "+ localVars.slots.length);
+//            //System.out.println("pc = " + code.getPc() + " localVars " + gson.toJson(localVars));
+//            System.out.println();
+//            System.out.println("pc = " + code.getPc() + " opcode:" + Opcode1.getMnemonic(opcodeInt));
 
             switch (opcodeInt) {
                 case Opcode.nop: {
@@ -1173,7 +1173,8 @@ public class Interpreter {
                 case Opcode.breakpoint: {
                 }
                 break;
-                case Opcode.impdep1: {
+                case Opcode.invokenative: {
+                    invokeNative(javaClass);
                 }
                 break;
                 case Opcode.impdep2: {
@@ -1417,31 +1418,96 @@ public class Interpreter {
        // method_info method_info = javaClass.findMethod(methodName, descriptorName);
        // method_info method_info = javaClass.findMethod(ref.refName, ref.descriptorName);
         JavaClass curClass = runTimeEnv.methodArea.findClass(ref.className);
+        if(curClass == null){
+            curClass = runTimeEnv.methodArea.loadClass(ref.className);
+            runTimeEnv.methodArea.linkClass(ref.className);
+            runTimeEnv.methodArea.initClass(ref.className);
+        }
         method_info method_info = curClass.findMethod(ref.refName, ref.descriptorName);
 
         if (method_info == null){
             return ;
         }
 
-
+//        if(MethodArea.isNative(method_info.access_flags)){
+//            invokeNative(javaClass, ref, method_info);
+//            return;
+//        }
+        Descriptor descriptor = processDescriptor(ref.descriptorName);
         CallSite callSite = new CallSite();
-        callSite.setCallSite( method_info);
+        callSite.setCallSiteOrNative( method_info, descriptor.returnType);
         OperandStack invokerStack = jThread.getTopFrame().operandStack;
         jThread.pushFrame(callSite.max_stack, callSite.max_locals);
         JavaFrame curFrame = jThread.getTopFrame();
         LocalVars curLocalVars = curFrame.localVars;
 
         /*调用传递参数*/
-        Descriptor descriptor = processDescriptor(ref.descriptorName);
-
         int slotCount = calParametersSlot(method_info, descriptor.parameters);
 
         for(int i = 0; i < slotCount; i++){
             curLocalVars.putSlot(slotCount - 1 - i, invokerStack.popSlot());
         }
 
-        executeByteCode(jThread, javaClass, callSite.code, TypeUtils.byteArr2Int(callSite.code_length.u4));
+        //executeByteCode(jThread, javaClass, callSite.code, TypeUtils.byteArr2Int(callSite.code_length.u4));
+        executeByteCode(jThread, curClass, callSite.code, TypeUtils.byteArr2Int(callSite.code_length.u4));
+    }
 
+    /**
+     * 调用native方法
+     * @param javaClass
+     */
+    private void invokeNative(JavaClass javaClass) {
+        JavaFrame javaFrame = jThread.getTopFrame();
+        arraycopy(javaFrame);
+
+//        // method_info method_info = javaClass.findMethod(methodName, descriptorName);
+//        // method_info method_info = javaClass.findMethod(ref.refName, ref.descriptorName);
+////        JavaClass curClass = runTimeEnv.methodArea.findClass(ref.className);
+////        method_info method_info = curClass.findMethod(ref.refName, ref.descriptorName);
+//
+////        if (method_info == null){
+////            return ;
+////        }
+//
+////        if(MethodArea.isNative(method_info.access_flags)){
+////            invokeNative(javaClass, ref, method_info);
+////            return;
+////        }
+//        Descriptor descriptor = processDescriptor(ref.descriptorName);
+//        CallSite callSite = new CallSite();
+//        callSite.setCallSiteOrNative( method_info, descriptor.returnType);
+//        OperandStack invokerStack = jThread.getTopFrame().operandStack;
+//        jThread.pushFrame(callSite.max_stack, callSite.max_locals);
+//        JavaFrame curFrame = jThread.getTopFrame();
+//        LocalVars curLocalVars = curFrame.localVars;
+//
+//        /*调用传递参数*/
+//        int slotCount = calParametersSlot(method_info, descriptor.parameters);
+//
+//        for(int i = 0; i < slotCount; i++){
+//            curLocalVars.putSlot(slotCount - 1 - i, invokerStack.popSlot());
+//        }
+//
+//        executeByteCode(jThread, javaClass, callSite.code, TypeUtils.byteArr2Int(callSite.code_length.u4));
+
+    }
+
+    private void arraycopy(JavaFrame javaFrame) {
+        OperandStack operandStack = javaFrame.operandStack;
+        LocalVars localVars = javaFrame.localVars;
+        JObject src = localVars.getJObject(0);
+        int srcPos = localVars.getIntByIndex(1);
+        JObject dest = localVars.getJObject(2);
+        int descPos = localVars.getIntByIndex(3);
+        int length = localVars.getIntByIndex(4);
+
+        ArrayFields srcFields = runTimeEnv.javaHeap.arrayContainer.get(src.offset);
+        ArrayFields destFields = runTimeEnv.javaHeap.arrayContainer.get(dest.offset);
+
+        for(int i = 0; i < length; i ++){
+            /*暂时只考虑char*/
+            destFields.putChar(descPos + i, srcFields.getChar(srcPos + i));
+        }
     }
 
     /**
@@ -1550,43 +1616,43 @@ public class Interpreter {
                 }
                 break;
                 case 'C':{
-                    returnType = T_BYTE;
+                    returnType = T_CHAR;
                 }
                 break;
                 case 'D':{
-                    returnType = T_BYTE;
+                    returnType = T_DOUBLE;
                 }
                 break;
                 case 'F':{
-                    returnType = T_BYTE;
+                    returnType = T_FLOAT;
                 }
                 break;
                 case 'I':{
-                    returnType = T_BYTE;
+                    returnType = T_INT;
                 }
                 break;
                 case 'J':{
-                    returnType = T_BYTE;
+                    returnType = T_LONG;
                 }
                 break;
                 case 'S':{
-                    returnType = T_BYTE;
+                    returnType = T_SHORT;
                 }
                 break;
                 case 'Z':{
-                    returnType = T_BYTE;
+                    returnType = T_BOOLEAN;
                 }
                 break;
                 case 'V':{
-                    returnType = T_BYTE;
+                    returnType = T_EXTRA_VOID;
                 }
                 break;
                 case '[': {
-                    returnType = T_BYTE;
+                    returnType = T_EXTRA_ARRAY;
                 }
                 break;
                 case 'L': {
-                    returnType = T_BYTE;
+                    returnType = T_EXTRA_OBJECT;
                 }
                 break;
             }

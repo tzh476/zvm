@@ -173,6 +173,11 @@ public class MethodArea {
                 String descriptorName = TypeUtils.u12String(constant_utf8.bytes);
                 char s = descriptorName.charAt(0);
                 if(s == 'Z' || s == 'B' || s == 'C' || s == 'S' || s == 'I'){
+                    /*hack 如在java/utils/Arrays类中含有assertionsDisabled字段，无值的*/
+                    if(s == 'Z' && constValueIndex == 0){
+                        staticVars.putIntByIndex(slotId, 1);
+                        continue;
+                    }
                     CONSTANT_Integer constant_integer = (CONSTANT_Integer) cp[constValueIndex - 1];
                     int value = TypeUtils.byteArr2Int(constant_integer.bytes.u4);
                     staticVars.putIntByIndex(slotId, value);
@@ -238,6 +243,14 @@ public class MethodArea {
     static public boolean isStatic(u2 access_flags) {
         int flags = TypeUtils.byteArr2Int(access_flags.u2);
         if(0 != (flags & AccessFlag.ACC_STATIC)){
+            return true;
+        }
+        return false;
+    }
+
+    static public boolean isNative(u2 access_flags) {
+        int flags = TypeUtils.byteArr2Int(access_flags.u2);
+        if(0 != (flags & AccessFlag.ACC_NATIVE)){
             return true;
         }
         return false;

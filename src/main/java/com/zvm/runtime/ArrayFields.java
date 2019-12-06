@@ -139,6 +139,9 @@ public class ArrayFields {
     public double getDouble(int index) {
         return ((JDouble) primitiveTypes[index]).value;
     }
+    public char getChar(int index) {
+        return ((JChar) primitiveTypes[index]).value;
+    }
     public byte getByte(int index) {
         return ((JByte) primitiveTypes[index]).value;
     }

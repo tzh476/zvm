@@ -209,6 +209,7 @@ public class Opcode {
     final static int	goto_w			= 0xc8;
     final static int	jsr_w			= 0xc9;
     final static int	breakpoint		= 0xca;
-    final static int	impdep1			= 0xfe;
+    /*final static int	impdep1			= 0xfe;*/
+    final static int	invokenative	= 0xfe;
     final static int	impdep2			= 0xff;
 }

@@ -120,13 +120,15 @@ public class ClassFile {
                 constant_methodType.tag = tag;
                 constant_methodType.descriptor_index = IOUtils.read_u2();
                 constant_pool.cp_info[i] = constant_methodType;
-            }else if(integer_tag == 17){
+            //}else if(integer_tag == 17){
+            }else if(integer_tag == 18){
                 CONSTANT_InvokeDynamic constant_invokeDynamic = new CONSTANT_InvokeDynamic();
                 constant_invokeDynamic.tag = tag;
                 constant_invokeDynamic.bootstrap_method_attr_index = IOUtils.read_u2();
                 constant_invokeDynamic.name_and_type_index = IOUtils.read_u2();
                 constant_pool.cp_info[i] = constant_invokeDynamic;
             }else {
+                System.out.println("constant_pool integer_tag " + integer_tag);
                 return;
             }
         }
@@ -197,6 +199,7 @@ public class ClassFile {
             "Deprecated",
             "RuntimeVisibleAnnotations",
             "RuntimeInvisibleAnnotations",
+            "RuntimeVisibleParameterAnnotations",
             "RuntimeInvisibleParameterAnnotations",
             /*java8增加*/
             "RuntimeVisibleTypeAnnotations",
@@ -434,7 +437,7 @@ public class ClassFile {
             Integer bootstrapMethods_size = TypeUtils.byteArr2Int(bootstrapMethods.num_bootstrap_methods.u2);
             bootstrapMethods.bootstrap_methods = new bootstrap_method[bootstrapMethods_size];
             for(Integer j = 0; j < bootstrapMethods_size; j ++){
-                bootstrap_method bootstrap_method = bootstrapMethods.bootstrap_methods[j];
+                bootstrap_method bootstrap_method = new bootstrap_method();
                 bootstrap_method.bootstrap_method_ref = IOUtils.read_u2();
                 bootstrap_method.num_bootstrap_arguments = IOUtils.read_u2();
                 Integer arguments_size = TypeUtils.byteArr2Int(bootstrap_method.num_bootstrap_arguments.u2);
@@ -442,6 +445,7 @@ public class ClassFile {
                 for(Integer k = 0; k < arguments_size; k ++){
                     bootstrap_method.bootstrap_arguments[k] = IOUtils.read_u2();
                 }
+                bootstrapMethods.bootstrap_methods[j] = bootstrap_method;
             }
             attributes[index] = bootstrapMethods;
 
