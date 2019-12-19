@@ -2,6 +2,10 @@ package com.zvm;
 
 import com.zvm.basestruct.u2;
 import com.zvm.basestruct.u4;
+import com.zvm.classfile.*;
+import com.zvm.classfile.attribute.Attribute_Base;
+import com.zvm.classfile.attribute.ConstantValue_attribute;
+import com.zvm.classfile.constantpool.*;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -105,7 +109,6 @@ public class MethodArea {
         }
         return null;
     }
-
     /**
      * 链接类
      * @param
@@ -198,6 +201,7 @@ public class MethodArea {
                     staticVars.putLong(slotId, TypeUtils.byteArr2Int(highBytes.u4), TypeUtils.byteArr2Int(lowBytes.u4));
                 }else if(s == 'L' || s== '['){
                     /*to do*/
+
                 }
 
             }

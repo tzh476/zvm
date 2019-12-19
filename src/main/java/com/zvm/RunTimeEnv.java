@@ -1,5 +1,6 @@
 package com.zvm;
 
+import com.zvm.gc.ConcurrentGC;
 import com.zvm.jnative.java.lang.CONSTANT;
 
 import java.util.ArrayList;
@@ -13,12 +14,13 @@ public class RunTimeEnv {
     public JavaHeap javaHeap;
     public MethodArea methodArea;
     public List<String> nativeMethods;
-
+    public ConcurrentGC gc;
 
     public RunTimeEnv(){
         methodArea = new MethodArea();
         javaHeap = new JavaHeap();
         nativeMethods = new ArrayList<>();
+        gc = new ConcurrentGC();
     }
 
     public void invokeNativeMethod(String className, String descriptorName, String methodName){

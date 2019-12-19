@@ -1,8 +1,21 @@
-package com.zvm;
+package com.zvm.classfile;
 
+import com.zvm.IOUtils;
+import com.zvm.TypeUtils;
 import com.zvm.basestruct.u1;
 import com.zvm.basestruct.u2;
 import com.zvm.basestruct.u4;
+import com.zvm.classfile.attribute.*;
+import com.zvm.classfile.attribute.LocalVariableTable.local_variable;
+import com.zvm.classfile.attribute.LocalVariableTypeTable.local_variable_type;
+import com.zvm.classfile.attribute.RuntimeVisibleParameterAnnotations.parameter_annotation;
+import com.zvm.classfile.attribute.code.exception_table;
+import com.zvm.classfile.attribute.innerClasses.classes;
+import com.zvm.classfile.attribute.lineNumberTable.line_number;
+import com.zvm.classfile.attribute.runtimeVisibleAnnotations.*;
+import com.zvm.classfile.attribute.stackmaptable.*;
+import com.zvm.classfile.attribute.stackmaptable.verificationtypeinfo.*;
+import com.zvm.classfile.constantpool.*;
 
 public class ClassFile {
     public u4 magic;
@@ -38,7 +51,7 @@ public class ClassFile {
 
         /*读取常量池*/
         for(Integer i = 0; i < pool_size - 1; i++){
-            u1 tag = IOUtils.read_u1();
+        u1 tag = IOUtils.read_u1();
 
             Integer integer_tag = TypeUtils.byteArr2Int(tag.u1);
             if(integer_tag == 1){
@@ -344,11 +357,13 @@ public class ClassFile {
             Integer local_variable_size = TypeUtils.byteArr2Int(localVariableTable_attribute.local_variable_table_length.u2);
             localVariableTable_attribute.local_variable_table = new local_variable[local_variable_size];
             for(Integer j = 0; j < local_variable_size; j ++){
-                localVariableTable_attribute.local_variable_table[j].start_pc = IOUtils.read_u2();
-                localVariableTable_attribute.local_variable_table[j].length = IOUtils.read_u2();
-                localVariableTable_attribute.local_variable_table[j].name_index = IOUtils.read_u2();
-                localVariableTable_attribute.local_variable_table[j].descriptor_index = IOUtils.read_u2();
-                localVariableTable_attribute.local_variable_table[j].index = IOUtils.read_u2();
+                local_variable local_variable = new local_variable();
+                local_variable.start_pc = IOUtils.read_u2();
+                local_variable.length = IOUtils.read_u2();
+                local_variable.name_index = IOUtils.read_u2();
+                local_variable.descriptor_index = IOUtils.read_u2();
+                local_variable.index = IOUtils.read_u2();
+                localVariableTable_attribute.local_variable_table[j] = local_variable;
             }
             attributes[index] = localVariableTable_attribute;
         }else if(TypeUtils.compare(s, attributeStrs[12])){
@@ -359,11 +374,13 @@ public class ClassFile {
             Integer local_variable_type_size = TypeUtils.byteArr2Int(localVariableTypeTable.local_variable_type_table_length.u2);
             localVariableTypeTable.local_variable_type_table = new local_variable_type[local_variable_type_size];
             for(Integer j = 0; j < local_variable_type_size; j ++){
-                localVariableTypeTable.local_variable_type_table[j].start_pc = IOUtils.read_u2();
-                localVariableTypeTable.local_variable_type_table[j].length = IOUtils.read_u2();
-                localVariableTypeTable.local_variable_type_table[j].name_index = IOUtils.read_u2();
-                localVariableTypeTable.local_variable_type_table[j].signature_index = IOUtils.read_u2();
-                localVariableTypeTable.local_variable_type_table[j].index = IOUtils.read_u2();
+                local_variable_type local_variable_type = new local_variable_type();
+                local_variable_type.start_pc = IOUtils.read_u2();
+                local_variable_type.length = IOUtils.read_u2();
+                local_variable_type.name_index = IOUtils.read_u2();
+                local_variable_type.signature_index = IOUtils.read_u2();
+                local_variable_type.index = IOUtils.read_u2();
+                localVariableTypeTable.local_variable_type_table[j] = local_variable_type;
             }
             attributes[index] = localVariableTypeTable;
         }else if(TypeUtils.compare(s, attributeStrs[13])){
@@ -710,111 +727,6 @@ public class ClassFile {
 
 }
 
-class element_value{
-
-}
-
-class const_value_index extends  element_value{
-    u1 tag;
-    u2 const_value_index;
-}
-
-class enum_const_value extends  element_value{
-    u1 tag;
-    u2 type_name_index;
-    u2 const_name_index;
-}
-class class_info_index extends element_value{
-    u1 tag;
-    u2 class_info_index;
-}
-class value_annotation extends element_value{
-    u1 tag;
-    annotation annotation_value;
-}
-class array_value extends element_value{
-    u1 tag;
-    u2 num_values;
-    element_value[] values;
-}
-
-class Attribute_Base{
-
-}
-class ConstantValue_attribute extends Attribute_Base{
-    public u2 attribute_name_index;
-    public u4 attribute_length;
-    public u2 constantvalue_index;
-}
-class Code_attribute extends Attribute_Base{
-    public u2 attribute_name_index;
-    public u4 attribute_length;
-    public u2 max_stack;
-    public u2 max_locals;
-    public u4 code_length;
-    public u1[] code;
-    public u2 exception_table_length;
-    public exception_table[] exception_table;
-    public u2 attribute_count;
-    public Attribute_Base[] attributes;
-}
-class StackMapTable_attribute extends Attribute_Base{
-    public u2 attribute_name_index;
-    public u4 attribute_length;
-    public u2 number_of_entries;
-    public stack_map_frame[] entries;
-}
-
-class  exception_table {
-    u2 start_pc;
-    u2 end_pc;
-    u2 handler_pc;
-    u2 catch_type;
-}
-class stack_map_frame{
-}
-
-
-class same_frame extends stack_map_frame{
-    public u1 SAME = new u1();
-    u1 frame_type = SAME;/* 0-63 */
-}
-class same_locals_1_stack_item_frame  extends stack_map_frame{
-    public u1 SAME_LOCALS_1_STACK_ITEM = new u1();
-    u1 frame_type = SAME_LOCALS_1_STACK_ITEM;/* 64-127 */
-    verification_type_info[] stack;
-}
-class same_locals_1_stack_item_frame_extended  extends stack_map_frame{
-    public u1 SAME_LOCALS_1_STACK_ITEM_EXTENDED = new u1();
-    u1 frame_type = SAME_LOCALS_1_STACK_ITEM_EXTENDED;/* 247 */
-    u2 offset_delta;
-    verification_type_info[] stack;
-}
-class chop_frame  extends stack_map_frame {
-    public u1 CHOP = new u1();
-    u1 frame_type = CHOP; /* 248-250 */
-    u2 offset_delta;
-}
-class same_frame_extended  extends stack_map_frame {
-    public u1 SAME_FRAME_EXTENDED = new u1();
-    u1 frame_type = SAME_FRAME_EXTENDED; /* 251 */
-    u2 offset_delta;
-}
-class append_frame  extends stack_map_frame {
-    public u1 APPEND = new u1();
-    u1 frame_type = APPEND; /* 252-254 */
-    u2 offset_delta;
-    verification_type_info[] locals ;
-}
-class full_frame  extends stack_map_frame {
-    public u1 FULL_FRAME = new u1();
-    u1 frame_type = FULL_FRAME; /* 255 */
-    u2 offset_delta;
-    u2 number_of_locals;
-    verification_type_info[] locals ;
-    u2 number_of_stack_items;
-    verification_type_info[] stack;
-}
 
 //class verification_type_info  {
 //    Top_variable_info top_variable_info;
@@ -826,303 +738,3 @@ class full_frame  extends stack_map_frame {
 //    UninitializedThis_variable_info uninitializedThis_variable_info;
 //}
 
-class verification_type_info  {
-}
-class Top_variable_info extends verification_type_info{
-    public  u1 ITEM_Top = new u1();
-    u1 tag = ITEM_Top; /* 0 */
-}
-class Integer_variable_info extends verification_type_info {
-    public  u1 ITEM_Integer = new u1();
-    u1 tag = ITEM_Integer; /* 1 */
-}
-class Float_variable_info extends verification_type_info{
-    public  u1 ITEM_Float = new u1();
-    u1 tag = ITEM_Float; /* 2 */
-}
-class Long_variable_info extends verification_type_info{
-    public  u1 ITEM_Long = new u1();
-    u1 tag = ITEM_Long; /* 4 */
-}
-class Double_variable_info extends verification_type_info{
-    public  u1 ITEM_Double = new u1();
-    u1 tag = ITEM_Double; /* 3 */
-}
-class Null_variable_info extends verification_type_info{
-    public  u1 ITEM_Null = new u1();
-    u1 tag = ITEM_Null; /* 5 */
-}
-class UninitializedThis_variable_info extends verification_type_info{
-    public  u1 ITEM_UninitializedThis = new u1();
-    u1 tag = ITEM_UninitializedThis; /* 6 */
-}
-class Object_variable_info extends verification_type_info{
-    public  u1 ITEM_Object = new u1();
-    u1 tag = ITEM_Object; /* 7 */
-    u2 cpool_index;
-}
-class Uninitialized_variable_info extends verification_type_info{
-    public  u1 ITEM_Uninitialized = new u1();
-    u1 tag = ITEM_Uninitialized; /* 8 */
-    u2 offset;
-}
-
-class Exceptions_attribute extends Attribute_Base{
-    u2 attribute_name_index;
-    u4 attribute_length;
-    u2 number_of_exceptions;
-    u2[] exception_index_table;
-}
-
-class InnerClasses_attribute  extends Attribute_Base{
-    u2 attribute_name_index;
-    u4 attribute_length;
-    u2 number_of_classes;
-    classes[] classes;
-}
-class  classes{
-    u2 inner_class_info_index;
-    u2 outer_class_info_index;
-    u2 inner_name_index;
-    u2 inner_class_access_flags;
-}
-class EnclosingMethod_attribute  extends Attribute_Base{
-    u2 attribute_name_index;
-    u4 attribute_length;
-    u2 class_index;
-    u2 method_index;
-}
-class Synthetic_attribute extends Attribute_Base {
-    u2 attribute_name_index;
-    u4 attribute_length;
-}
-class Signature_attribute extends Attribute_Base {
-    u2 attribute_name_index;
-    u4 attribute_length;
-    u2 signature_index;
-}
-class SourceFile_attribute extends Attribute_Base {
-    u2 attribute_name_index;
-    u4 attribute_length;
-    u2 sourcefile_index;
-}
-class SourceDebugExtension_attribute extends Attribute_Base {
-    u2 attribute_name_index;
-    u4 attribute_length;
-    u1[] debug_extension;
-}
-class LineNumberTable_attribute extends Attribute_Base {
-    u2 attribute_name_index;
-    u4 attribute_length;
-    u2 line_number_table_length;
-    line_number[] line_number_table;
-}
-class line_number{
-    u2 start_pc;
-    u2 line_number;
-}
-class LocalVariableTable_attribute extends Attribute_Base {
-    u2 attribute_name_index;
-    u4 attribute_length;
-    u2 local_variable_table_length;
-    local_variable[] local_variable_table;
-}
-class local_variable{
-    u2 start_pc;
-    u2 length;
-    u2 name_index;
-    u2 descriptor_index;
-    u2 index;
-}
-class LocalVariableTypeTable_attribute extends Attribute_Base {
-    u2 attribute_name_index;
-    u4 attribute_length;
-    u2 local_variable_type_table_length;
-    local_variable_type[] local_variable_type_table;
-}
-class local_variable_type{
-    u2 start_pc;
-    u2 length;
-    u2 name_index;
-    u2 signature_index;
-    u2 index;
-}
-class Deprecated_attribute extends Attribute_Base {
-    u2 attribute_name_index;
-    u4 attribute_length;
-}
-class RuntimeVisibleAnnotations_attribute extends Attribute_Base {
-    u2 attribute_name_index;
-    u4 attribute_length;
-    u2 num_annotations;
-    annotation[] annotations;
-}
-class annotation {
-        u2 type_index;
-        u2 num_element_value_pairs;
-        element_value_pair[] element_value_pairs;
-}
-class element_value_pair{
-    u2 element_name_index;
-    element_value value;
-}
-class RuntimeInvisibleAnnotations_attribute extends Attribute_Base {
-    u2 attribute_name_index;
-    u4 attribute_length;
-    u2 num_annotations;
-    annotation[] annotations;
-}
-class RuntimeVisibleParameterAnnotations_attribute extends Attribute_Base {
-    u2 attribute_name_index;
-    u4 attribute_length;
-    u1 num_parameters;
-    parameter_annotation[] parameter_annotations;
-}
-class parameter_annotation{
-    u2 num_annotations;
-    annotation[] annotations;
-}
-class RuntimeInvisibleParameterAnnotations_attribute  extends Attribute_Base{
-    u2 attribute_name_index;
-    u4 attribute_length;
-    u1 num_parameters;
-    parameter_annotation[] parameter_annotations;
-}
-class RuntimeVisibleTypeAnnotations_attribute extends Attribute_Base{//java8增加
-    u2 attribute_name_index;
-    u4 attribute_length;
-    u2 num_annotations;
-    type_annotation annotations[];
-}
-class type_annotation{
-
-}
-class RuntimeInvisibleTypeAnnotations_attribute extends Attribute_Base{
-    u2 attribute_name_index;
-    u4 attribute_length;
-    u2 num_annotations;
-    type_annotation annotations[];
-}
-
-class AnnotationDefault_attribute extends Attribute_Base {
-    u2 attribute_name_index;
-    u4 attribute_length;
-    element_value default_value;
-}
-class BootstrapMethods_attribute extends Attribute_Base {
-    u2 attribute_name_index;
-    u4 attribute_length;
-    u2 num_bootstrap_methods;
-    bootstrap_method[] bootstrap_methods;
-}
-class bootstrap_method{
-    u2 bootstrap_method_ref;
-    u2 num_bootstrap_arguments;
-    u2[] bootstrap_arguments;
-}
-class MethodParameters_attribute extends Attribute_Base{
-    u2 attribute_name_index;
-    u4 attribute_length;
-    u1 parameters_count;
-    parameter[] parameters;
-}
-class parameter{
-    u2 name_index;
-    u2 access_flags;
-}
-
-class CONSTANT_Base{
-
-}
-class CONSTANT_Utf8 extends CONSTANT_Base{
-    public u1 tag;
-    public u2 length;
-    public u1[] bytes;
-}
-class CONSTANT_Integer extends CONSTANT_Base{
-    public u1 tag;
-    public u4 bytes;
-}
-class CONSTANT_Float extends CONSTANT_Base{
-    public u1 tag;
-    public u4 bytes;
-}
-class CONSTANT_Long extends CONSTANT_Base{
-    public u1 tag;
-    public u4 high_bytes;
-    public u4 low_bytes;
-}
-class CONSTANT_Double extends CONSTANT_Base{
-    public u1 tag;
-    public u4 high_bytes;
-    public u4 low_bytes;
-}
-class CONSTANT_Class extends CONSTANT_Base{
-    public u1 tag;
-    public u2 name_index;
-}
-class CONSTANT_String extends CONSTANT_Base{
-    public u1 tag;
-    public u2 string_index;
-}
-class CONSTANT_Fieldref extends CONSTANT_Base{
-    public u1 tag;
-    public u2 class_index;
-    public u2 name_and_type_index;
-}
-class CONSTANT_Methodref extends CONSTANT_Base{
-    public u1 tag;
-    public u2 class_index;
-    public u2 name_and_type_index;
-}
-class CONSTANT_InterfaceMethodref extends CONSTANT_Base{
-    public u1 tag;
-    public u2 class_index;
-    public u2 name_and_type_index;
-}
-
-class CONSTANT_NameAndType extends CONSTANT_Base{
-    public u1 tag;
-    public u2 name_index;
-    public u2 descriptor_index;
-}
-
-class CONSTANT_MethodHandle extends CONSTANT_Base{
-    public u1 tag;
-    public u1 reference_kind;
-    public u2 reference_index;
-}
-class CONSTANT_MethodType extends CONSTANT_Base{
-    public u1 tag;
-    public u2 descriptor_index;
-
-}
-class CONSTANT_InvokeDynamic extends CONSTANT_Base{
-    public u1 tag;
-    public u2 bootstrap_method_attr_index;
-    public u2 name_and_type_index;
-}
-
-class cp_info{
-    public CONSTANT_Base[] cp_info;
-}
-class field_info{
-    u2 access_flags;
-    u2 name_index;
-    u2 descriptor_index;
-    u2 attribute_count;
-    Attribute_Base[] attributes;
-
-    int slotId;
-    int constValueIndex;
-}
-class method_info{
-    u2 access_flags;
-    u2 name_index;
-    u2 descriptor_index;
-    u2 attribute_count;
-    Attribute_Base[] attributes;
-
-    int argSlotCount = -1;
-    JavaClass javaClass;
-}

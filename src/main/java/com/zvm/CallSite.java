@@ -3,6 +3,8 @@ package com.zvm;
 import com.zvm.basestruct.u1;
 import com.zvm.basestruct.u2;
 import com.zvm.basestruct.u4;
+import com.zvm.classfile.attribute.Code_attribute;
+import com.zvm.classfile.method_info;
 
 /**
  * 作为方法调用的运行时的具体描述
@@ -16,7 +18,7 @@ public class CallSite {
     public u4 code_length;
     public u1[] code;
     public u2 exception_table_length;
-    public exception_table[] exception_table;
+    public com.zvm.classfile.attribute.code.exception_table[] exception_table;
 
     public CallSite(){
         max_stack = new u2();

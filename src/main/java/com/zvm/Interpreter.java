@@ -1,18 +1,19 @@
 package com.zvm;
 
+import com.alibaba.fastjson.JSON;
 import com.google.gson.Gson;
 import com.zvm.basestruct.u1;
 import com.zvm.basestruct.u2;
 import com.zvm.basestruct.u4;
+import com.zvm.classfile.*;
+import com.zvm.classfile.constantpool.*;
 import com.zvm.draft.Opcode1;
 import com.zvm.runtime.*;
-import com.zvm.runtime.struct.JChar;
 import com.zvm.runtime.struct.JObject;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.zvm.Opcode.arraylength;
 import static com.zvm.Opcode.newarray;
 import static com.zvm.TypeCode.*;
 
@@ -47,12 +48,12 @@ public class Interpreter {
         for (; code.getPc() < codeLength; code.pcAdd(1)) {
             int opcodeInt = TypeUtils.byteArr2Int(codeRaw[code.getPc()].u1);
             Gson gson = new Gson();
-//            System.out.println("pc = " + code.getPc() + " operandStack size "+ operandStack.size);
-//            //System.out.println("pc = " + code.getPc() + " operandStack "+gson.toJson(operandStack));
-//            System.out.println("pc = " + code.getPc() + " localVars size "+ localVars.slots.length);
-//            //System.out.println("pc = " + code.getPc() + " localVars " + gson.toJson(localVars));
-//            System.out.println();
-//            System.out.println("pc = " + code.getPc() + " opcode:" + Opcode1.getMnemonic(opcodeInt));
+            System.out.println("pc = " + code.getPc() + " operandStack size "+ operandStack.size);
+            //System.out.println("pc = " + code.getPc() + " operandStack "+gson.toJson(operandStack));
+            System.out.println("pc = " + code.getPc() + " localVars size "+ localVars.slots.length);
+            //System.out.println("pc = " + code.getPc() + " localVars " + gson.toJson(localVars));
+            System.out.println();
+            System.out.println("pc = " + code.getPc() + " opcode:" + Opcode1.getMnemonic(opcodeInt));
 
             switch (opcodeInt) {
                 case Opcode.nop: {
@@ -1539,6 +1540,7 @@ public class Interpreter {
         ref.className = TypeUtils.u12String(classNameUtf8.bytes);
         ref.descriptorName = TypeUtils.u12String(descriptorNameUtf8.bytes);
         ref.refName = TypeUtils.u12String(methodNameUtf8.bytes);
+        System.out.println(JSON.toJSONString(ref));
         return ref;
     }
 
