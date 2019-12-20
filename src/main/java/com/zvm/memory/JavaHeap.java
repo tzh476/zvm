@@ -1,8 +1,7 @@
-package com.zvm;
+package com.zvm.memory;
 
-import com.zvm.runtime.ArrayFields;
-import com.zvm.runtime.ObjectFields;
-import com.zvm.runtime.struct.JByte;
+import com.zvm.runtime.JavaClass;
+import com.zvm.basestruct.TypeCode;
 import com.zvm.runtime.struct.JObject;
 
 import java.util.HashMap;

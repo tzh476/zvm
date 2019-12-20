@@ -1,6 +1,8 @@
-package com.zvm;
+package com.zvm.runtime;
 
 import com.alibaba.fastjson.JSON;
+import com.zvm.utils.TypeUtils;
+import com.zvm.ZVM;
 import com.zvm.basestruct.u2;
 import com.zvm.classfile.constantpool.CONSTANT_Utf8;
 import com.zvm.classfile.ClassFile;

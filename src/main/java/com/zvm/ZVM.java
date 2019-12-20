@@ -1,6 +1,9 @@
 package com.zvm;
 
+import com.zvm.interpreter.Interpreter;
 import com.zvm.jnative.java.lang.CONSTANT;
+import com.zvm.runtime.JavaClass;
+import com.zvm.runtime.RunTimeEnv;
 
 public class ZVM {
     public static RunTimeEnv zvmEnv;

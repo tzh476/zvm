@@ -1,4 +1,4 @@
-package com.zvm;
+package com.zvm.basestruct;
 
 public class AccessFlag {
     public static Integer ACC_PUBLIC = 0x0001;

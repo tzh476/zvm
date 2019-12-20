@@ -1,4 +1,4 @@
-package com.zvm;
+package com.zvm.interpreter;
 
 import com.alibaba.fastjson.JSON;
 import com.google.gson.Gson;
@@ -8,14 +8,19 @@ import com.zvm.basestruct.u4;
 import com.zvm.classfile.*;
 import com.zvm.classfile.constantpool.*;
 import com.zvm.draft.Opcode1;
+import com.zvm.memory.ArrayFields;
+import com.zvm.memory.MethodArea;
+import com.zvm.memory.ObjectFields;
 import com.zvm.runtime.*;
 import com.zvm.runtime.struct.JObject;
+import com.zvm.basestruct.TypeCode;
+import com.zvm.utils.TypeUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.zvm.Opcode.newarray;
-import static com.zvm.TypeCode.*;
+import static com.zvm.interpreter.Opcode.newarray;
+import static com.zvm.basestruct.TypeCode.*;
 
 public class Interpreter {
 
@@ -145,7 +150,7 @@ public class Interpreter {
                         //    runTimeEnv.methodArea.linkClass(cClassName);
                          //   runTimeEnv.methodArea.initClass(cClassName);
                         }
-                        JObject charArrayJObject = runTimeEnv.javaHeap.createJArray(cClass,TypeCode.T_CHAR,charsLen);
+                        JObject charArrayJObject = runTimeEnv.javaHeap.createJArray(cClass, TypeCode.T_CHAR,charsLen);
                         putCharArrField(charArrayJObject, chars);
 
                         ObjectFields stringFields = runTimeEnv.javaHeap.objectContainer.get(stringObject.offset);

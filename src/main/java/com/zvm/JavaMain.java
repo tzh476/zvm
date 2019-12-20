@@ -1,5 +1,7 @@
 package com.zvm;
 
+import com.zvm.runtime.RunTimeEnv;
+
 public class JavaMain {
     public static void main(String[] args){
         Cmd.processCmd(args);

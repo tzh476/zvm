@@ -1,6 +1,6 @@
 package com.zvm.runtime.struct;
 
-import com.zvm.JavaClass;
+import com.zvm.runtime.JavaClass;
 
 /**
  * 实例对象

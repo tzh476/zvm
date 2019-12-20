@@ -1,4 +1,4 @@
-package com.zvm;
+package com.zvm.classfile;
 
 import com.zvm.basestruct.u1;
 import com.zvm.basestruct.u2;

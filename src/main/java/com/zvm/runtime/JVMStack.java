@@ -1,5 +1,8 @@
 package com.zvm.runtime;
 
+/**
+ * 运行时，表示整个线程的栈，可能存在一连串的方法帧
+ */
 public class JVMStack {
     public Integer maxSize = 10;
     public Integer size;

@@ -1,4 +1,4 @@
-package com.zvm.javaclass.integer;
+package integer;
 
 import java.lang.annotation.*;
 /*

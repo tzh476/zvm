@@ -1,10 +1,13 @@
-package com.zvm;
+package com.zvm.interpreter;
 
+import com.zvm.basestruct.TypeCode;
+import com.zvm.utils.TypeUtils;
 import com.zvm.basestruct.u1;
 import com.zvm.basestruct.u2;
 import com.zvm.basestruct.u4;
 import com.zvm.classfile.attribute.Code_attribute;
 import com.zvm.classfile.method_info;
+import com.zvm.memory.MethodArea;
 
 /**
  * 作为方法调用的运行时的具体描述

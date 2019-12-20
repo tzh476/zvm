@@ -1,6 +1,6 @@
 package com.zvm.classfile;
 
-import com.zvm.JavaClass;
+import com.zvm.runtime.JavaClass;
 import com.zvm.basestruct.u2;
 import com.zvm.classfile.attribute.Attribute_Base;
 

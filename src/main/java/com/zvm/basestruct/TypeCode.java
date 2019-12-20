@@ -1,4 +1,4 @@
-package com.zvm;
+package com.zvm.basestruct;
 
 public class TypeCode {
     public final static Integer T_BOOLEAN = 4;

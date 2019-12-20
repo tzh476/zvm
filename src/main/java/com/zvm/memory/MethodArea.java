@@ -1,11 +1,16 @@
-package com.zvm;
+package com.zvm.memory;
 
+import com.zvm.*;
+import com.zvm.basestruct.AccessFlag;
 import com.zvm.basestruct.u2;
 import com.zvm.basestruct.u4;
 import com.zvm.classfile.*;
 import com.zvm.classfile.attribute.Attribute_Base;
 import com.zvm.classfile.attribute.ConstantValue_attribute;
 import com.zvm.classfile.constantpool.*;
+import com.zvm.runtime.JavaClass;
+import com.zvm.runtime.StaticVars;
+import com.zvm.utils.TypeUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -16,11 +21,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.zvm.JavaClass.CLASS_BYTECODE_FILE_MAX;
+import static com.zvm.runtime.JavaClass.CLASS_BYTECODE_FILE_MAX;
 
 public class MethodArea {
     //public JavaClass[] javaClasses = new JavaClass[10];
-    Map<String,JavaClass> javaClasses = new HashMap<>();
+    Map<String, JavaClass> javaClasses = new HashMap<>();
     List<String> loadedClasses = new ArrayList<>();
     List<String> linkedClasses = new ArrayList<>();
     List<String> initedClasses = new ArrayList<>();

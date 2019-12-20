@@ -1,11 +1,13 @@
 package com.zvm.runtime;
 
 
-import com.zvm.TypeUtils;
-import com.zvm.runtime.struct.JArray;
+import com.zvm.utils.TypeUtils;
 import com.zvm.runtime.struct.JObject;
 import com.zvm.runtime.struct.Slot;
 
+/**
+ * 执行方法时有局部变量表和操作数栈。OperandStack表示操作数栈
+ */
 public class OperandStack {
     public Integer size;
     Slot[] slots;

@@ -1,5 +1,6 @@
-package com.zvm.runtime;
+package com.zvm.memory;
 
+import com.zvm.utils.Vars;
 import com.zvm.runtime.struct.Slot;
 
 /**

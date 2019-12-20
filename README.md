@@ -1,4 +1,4 @@
-java实现jvm
+Java实现简易JVM
 -  主要这几个模块：
 1. 读取class文件
 2. 取opcode，解释执行程序
@@ -61,7 +61,7 @@ invokestatic：调用类方法
 2. 周志明的《深入理解java虚拟机》
 3. java虚拟机规范(java se7)中文版
 4. java虚拟机规范(java se8)中文版
-5. 自己动手写Java虚拟机
+5. 《自己动手写Java虚拟机》
 
 - 代码参考：
 1. c++实现的java虚拟机：https://github.com/kelthuzadx/yvm

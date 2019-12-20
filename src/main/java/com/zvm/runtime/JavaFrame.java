@@ -1,8 +1,11 @@
 package com.zvm.runtime;
 
-import com.zvm.TypeUtils;
+import com.zvm.utils.TypeUtils;
 import com.zvm.basestruct.u2;
 
+/**
+ * 运行时，表示一个方法帧，lowerFrame指向调用者
+ */
 public class JavaFrame {
     JavaFrame lowerFrame;/*保留调用当前帧的帧*/
 

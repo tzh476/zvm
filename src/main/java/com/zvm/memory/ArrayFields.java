@@ -1,6 +1,6 @@
-package com.zvm.runtime;
+package com.zvm.memory;
 
-import com.zvm.JavaClass;
+import com.zvm.runtime.JavaClass;
 import com.zvm.runtime.struct.*;
 
 public class ArrayFields {

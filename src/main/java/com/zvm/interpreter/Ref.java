@@ -1,4 +1,4 @@
-package com.zvm;
+package com.zvm.interpreter;
 
 /**
  * 表示Constant_methodRef/Constant_field解析后的className、descriptorName、methodName/fieldName

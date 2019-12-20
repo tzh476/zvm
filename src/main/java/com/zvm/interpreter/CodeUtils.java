@@ -1,4 +1,4 @@
-package com.zvm;
+package com.zvm.interpreter;
 
 import com.zvm.basestruct.u1;
 

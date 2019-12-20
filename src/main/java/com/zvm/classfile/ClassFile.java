@@ -1,7 +1,6 @@
 package com.zvm.classfile;
 
-import com.zvm.IOUtils;
-import com.zvm.TypeUtils;
+import com.zvm.utils.TypeUtils;
 import com.zvm.basestruct.u1;
 import com.zvm.basestruct.u2;
 import com.zvm.basestruct.u4;

@@ -1,7 +1,9 @@
-package com.zvm;
+package com.zvm.runtime;
 
 import com.zvm.gc.ConcurrentGC;
 import com.zvm.jnative.java.lang.CONSTANT;
+import com.zvm.memory.JavaHeap;
+import com.zvm.memory.MethodArea;
 
 import java.util.ArrayList;
 import java.util.List;
