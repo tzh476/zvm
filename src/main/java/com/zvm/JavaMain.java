@@ -17,5 +17,4 @@ public class JavaMain {
         zvm.callMain("main", "([Ljava/lang/String;)V", curClassName);
     }
 
-
 }

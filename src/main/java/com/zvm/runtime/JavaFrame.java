@@ -7,7 +7,7 @@ import com.zvm.basestruct.u2;
  * 运行时，表示一个方法帧，lowerFrame指向调用者
  */
 public class JavaFrame {
-    JavaFrame lowerFrame;/*保留调用当前帧的帧*/
+    public JavaFrame lowerFrame;/*保留调用当前帧的帧*/
 
     public Integer max_stack;
     public Integer max_locals;

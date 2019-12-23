@@ -1,6 +1,5 @@
 package com.zvm.utils;
 
-import com.zvm.utils.TypeUtils;
 import com.zvm.runtime.struct.JArray;
 import com.zvm.runtime.struct.JObject;
 import com.zvm.runtime.struct.JType;

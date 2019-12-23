@@ -8,7 +8,7 @@ import com.zvm.runtime.struct.Slot;
  */
 public class ObjectFields extends Vars {
     /*保存数组的大小*/
-    public int arraySize;
+    //public int arraySize;
 
     public ObjectFields(Integer num) {
         slots = new Slot[num];

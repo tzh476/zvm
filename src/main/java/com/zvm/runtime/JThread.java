@@ -7,26 +7,26 @@ import com.zvm.basestruct.u2;
 public class JThread {
 
     Integer pc;
-    JVMStack jvmStack;
+    ThreadStack threadStack;
 
 
     public void pushFrame(u2 max_stack, u2 max_locals){
-        if(jvmStack == null){
-            jvmStack = new JVMStack();
+        if(threadStack == null){
+            threadStack = new ThreadStack();
         }
-        jvmStack.put(new JavaFrame(max_stack, max_locals));
+        threadStack.put(new JavaFrame(max_stack, max_locals));
     }
 
     public JavaFrame popFrame(){
-        return jvmStack.pop();
+        return threadStack.pop();
     }
 
     public JavaFrame getTopFrame(){
-        JavaFrame topFrame = jvmStack.topFrame;
+        JavaFrame topFrame = threadStack.topFrame;
         return topFrame;
     }
 
-    public JVMStack getStack(){
-        return jvmStack;
+    public ThreadStack getStack(){
+        return threadStack;
     }
 }

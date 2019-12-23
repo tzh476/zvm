@@ -53,10 +53,10 @@ public class Interpreter {
         for (; code.getPc() < codeLength; code.pcAdd(1)) {
             int opcodeInt = TypeUtils.byteArr2Int(codeRaw[code.getPc()].u1);
             Gson gson = new Gson();
-            System.out.println("pc = " + code.getPc() + " operandStack size "+ operandStack.size);
-            //System.out.println("pc = " + code.getPc() + " operandStack "+gson.toJson(operandStack));
-            System.out.println("pc = " + code.getPc() + " localVars size "+ localVars.slots.length);
-            //System.out.println("pc = " + code.getPc() + " localVars " + gson.toJson(localVars));
+            //System.out.println("pc = " + code.getPc() + " operandStack size "+ operandStack.size);
+            System.out.println("pc = " + code.getPc() + " operandStack "+gson.toJson(operandStack));
+            //System.out.println("pc = " + code.getPc() + " localVars size "+ localVars.slots.length);
+            System.out.println("pc = " + code.getPc() + " localVars " + gson.toJson(localVars));
             System.out.println();
             System.out.println("pc = " + code.getPc() + " opcode:" + Opcode1.getMnemonic(opcodeInt));
 
@@ -142,7 +142,7 @@ public class Interpreter {
                           2.stringObject里面含有char[]对象charArrayJObject(JObject 类型)
                           3.charArrayJObject中的offset指向javaHeap中的arrayContainer，将类似"abc"的值填入
                           4.将stringObject put至operandStack中*/
-                        JObject stringObject = runTimeEnv.javaHeap.createJObject(stringClass);
+                        JObject stringObject = runTimeEnv.javaHeap.createJObject(stringClass, runTimeEnv, jThread);
                         String cClassName = "[C";
                         JavaClass cClass = runTimeEnv.methodArea.findClass(cClassName);
                         if(cClass == null){
@@ -150,7 +150,7 @@ public class Interpreter {
                         //    runTimeEnv.methodArea.linkClass(cClassName);
                          //   runTimeEnv.methodArea.initClass(cClassName);
                         }
-                        JObject charArrayJObject = runTimeEnv.javaHeap.createJArray(cClass, TypeCode.T_CHAR,charsLen);
+                        JObject charArrayJObject = runTimeEnv.javaHeap.createJArray(cClass, TypeCode.T_CHAR,charsLen, runTimeEnv, jThread);
                         putCharArrField(charArrayJObject, chars);
 
                         ObjectFields stringFields = runTimeEnv.javaHeap.objectContainer.get(stringObject.offset);
@@ -1367,6 +1367,11 @@ public class Interpreter {
         executeByteCode(jThread, method_info.javaClass, callSite.code, TypeUtils.byteArr2Int(callSite.code_length.u4));
     }
 
+    /**
+     * 本地方法hack
+     * @param operandStack
+     * @param descriptor
+     */
     private void _println(OperandStack operandStack, String descriptor) {
         if("(Z)V".equals(descriptor)){
             System.out.println(operandStack.popInt() != 0);
@@ -1545,7 +1550,7 @@ public class Interpreter {
         ref.className = TypeUtils.u12String(classNameUtf8.bytes);
         ref.descriptorName = TypeUtils.u12String(descriptorNameUtf8.bytes);
         ref.refName = TypeUtils.u12String(methodNameUtf8.bytes);
-        System.out.println(JSON.toJSONString(ref));
+        //System.out.println(JSON.toJSONString(ref));
         return ref;
     }
 
@@ -1693,13 +1698,13 @@ public class Interpreter {
             runTimeEnv.methodArea.linkClass(className);
             runTimeEnv.methodArea.initClass(className);
         }
-        return runTimeEnv.javaHeap.createJObject(runTimeEnv.methodArea.findClass(className));
+        return runTimeEnv.javaHeap.createJObject(runTimeEnv.methodArea.findClass(className), runTimeEnv, jThread);
     }
 
     private JObject newarray( int arrayType, int count) {
         JavaClass arrayClass = getPrimitiveArrayClass(arrayType, count);
 
-        return runTimeEnv.javaHeap.createJArray(arrayClass,arrayType, count);
+        return runTimeEnv.javaHeap.createJArray(arrayClass,arrayType, count, runTimeEnv, jThread);
     }
 
     /**
@@ -1723,7 +1728,7 @@ public class Interpreter {
 
         className = processClassName(className);
 
-        JObject jObject = runTimeEnv.javaHeap.createJArray(curClass, TypeCode.T_EXTRA_OBJECT, count);
+        JObject jObject = runTimeEnv.javaHeap.createJArray(curClass, TypeCode.T_EXTRA_OBJECT, count, runTimeEnv, jThread);
 
         return jObject;
     }

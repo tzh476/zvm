@@ -6,7 +6,3 @@ package com.zvm.runtime.struct;
 public class JType {
 
 }
-class Void extends JType{
-
-}
-

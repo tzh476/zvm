@@ -5,6 +5,4 @@ public class JByte extends JType{
     public JByte(byte value){
         this.value = value;
     }
-
-
 }
