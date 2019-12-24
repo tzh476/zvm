@@ -12,7 +12,7 @@ public class GCTest1 {
 
 
     private static void test0() {
-        /*字符串会创建22byte的数组*/
+        /*字符串会创建22 byte + 8byte的数组:8byte:为String对象，22byte为char[11]*/
         //System.out.println("test0 start");
         int[] arr = new int[SIZE];
         for (int i = 0; i < SIZE; i++){
