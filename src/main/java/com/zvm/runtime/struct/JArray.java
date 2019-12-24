@@ -1,5 +1,8 @@
 package com.zvm.runtime.struct;
 
+/**
+ * 暂未使用
+ */
 public class JArray extends JType {
 
     /*数组的长度*/

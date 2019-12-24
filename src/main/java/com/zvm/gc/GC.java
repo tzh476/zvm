@@ -4,12 +4,12 @@ import com.zvm.memory.ArrayFields;
 import com.zvm.memory.JavaHeap;
 import com.zvm.memory.ObjectFields;
 import com.zvm.runtime.*;
-import com.zvm.runtime.struct.JArray;
 import com.zvm.runtime.struct.JObject;
 import com.zvm.runtime.struct.JType;
 import com.zvm.runtime.struct.Slot;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -69,26 +69,43 @@ public class GC {
      */
     private static void mark(JType jType, JavaHeap javaHeap) {
         if(jType instanceof JObject){
-            int offset = ((JObject) jType).offset;
-            usedObjectList.add(offset);
-            Map<Integer, ObjectFields> objectContainer = javaHeap.objectContainer;
-            ObjectFields objectFields = objectContainer.get(offset);
-            Slot[] fields = objectFields.slots;
-            for(Slot field:fields){
-                JType jType1 = field.jType;
-                mark(jType1, javaHeap);
-            }
-        }else if (jType instanceof JArray){
-            int offset = ((JObject) jType).offset;
-            usedArrayList.add(offset);
-            Map<Integer, ArrayFields> arrayContainer = javaHeap.arrayContainer;
-            ArrayFields arrayFields = arrayContainer.get(offset);
-            JType[] fields = arrayFields.primitiveTypes;
-            for(JType field:fields){
-                JType jType1 = field;
-                mark(jType1, javaHeap);
+            /*数组也是JObject*/
+            JObject jObject = (JObject) jType;
+            int offset = jObject.offset;
+
+            /*非数组对象*/
+            if(jObject.javaClass != null && !jObject.javaClass.classPath.startsWith("[")){
+                usedObjectList.add(offset);
+                Map<Integer, ObjectFields> objectContainer = javaHeap.objectContainer;
+                ObjectFields objectFields = objectContainer.get(offset);
+                Slot[] fields = objectFields.slots;
+                for(Slot field:fields){
+                    JType jType1 = field.jType;
+                    mark(jType1, javaHeap);
+                }
+                /*数组*/
+            }else{
+                usedArrayList.add(offset);
+                Map<Integer, ArrayFields> arrayContainer = javaHeap.arrayContainer;
+                ArrayFields arrayFields = arrayContainer.get(offset);
+                JType[] fields = arrayFields.primitiveTypes;
+                for(JType field:fields){
+                    JType jType1 = field;
+                    mark(jType1, javaHeap);
+                }
             }
         }
+//        else if (jType instanceof JArray){
+//            int offset = ((JObject) jType).offset;
+//            usedArrayList.add(offset);
+//            Map<Integer, ArrayFields> arrayContainer = javaHeap.arrayContainer;
+//            ArrayFields arrayFields = arrayContainer.get(offset);
+//            JType[] fields = arrayFields.primitiveTypes;
+//            for(JType field:fields){
+//                JType jType1 = field;
+//                mark(jType1, javaHeap);
+//            }
+//        }
     }
 
     /**
@@ -97,16 +114,30 @@ public class GC {
     private static void sweep(JavaHeap javaHeap) {
         Map<Integer, ObjectFields> objectContainer = javaHeap.objectContainer;
         Map<Integer, ArrayFields> arrayContainer = javaHeap.arrayContainer;
+//        for(Map.Entry entry:objectContainer.entrySet()){
+//            if(!usedObjectList.contains(entry.getKey())){
+//                objectContainer.remove(entry.getKey());
+//            }
+//        }
+//        for(Map.Entry entry:objectContainer.entrySet()){
+//            if(!usedArrayList.contains(entry.getKey())){
+//                arrayContainer.remove(entry.getKey());
+//            }
+//        }
 
-        for(Map.Entry entry:objectContainer.entrySet()){
+        Iterator<Map.Entry<Integer, ObjectFields>> objectIterator = objectContainer.entrySet().iterator();
+        while (objectIterator.hasNext()){
+            Map.Entry<Integer,ObjectFields> entry = objectIterator.next();
             if(!usedObjectList.contains(entry.getKey())){
-                objectContainer.remove(entry.getKey());
+                objectIterator.remove();
             }
         }
 
-        for(Map.Entry entry:objectContainer.entrySet()){
+        Iterator<Map.Entry<Integer, ArrayFields>> arrayIterator = arrayContainer.entrySet().iterator();
+        while (arrayIterator.hasNext()){
+            Map.Entry<Integer,ArrayFields> entry = arrayIterator.next();
             if(!usedArrayList.contains(entry.getKey())){
-                arrayContainer.remove(entry.getKey());
+                arrayIterator.remove();
             }
         }
     }

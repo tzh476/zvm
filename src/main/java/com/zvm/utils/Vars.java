@@ -63,13 +63,13 @@ public class Vars {
         return (JObject) slots[index].jType;
     }
 
-    public void putJArray(int index, JArray jArray){
-        slots[index].jType = jArray;
-    }
-
-    public JArray getJArray(int index){
-        return (JArray) slots[index].jType;
-    }
+//    public void putJArray(int index, JArray jArray){
+//        slots[index].jType = jArray;
+//    }
+//
+//    public JArray getJArray(int index){
+//        return (JArray) slots[index].jType;
+//    }
 
 
     public void putJType(int index, JType jType){

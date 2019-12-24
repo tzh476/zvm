@@ -13,7 +13,7 @@ import java.util.Map;
 
 public class JavaHeap {
 
-    public final Integer HEAP_MAX_SIZE = 4 * 100;
+    public final Integer HEAP_MAX_SIZE = 4 * 8;
 
     /**
      * 保存对象
@@ -31,11 +31,13 @@ public class JavaHeap {
 
     public JObject createJObject(JavaClass javaClass, RunTimeEnv runTimeEnv, JThread jThread) {
         Integer heapSize = getHeapSize();
-        if((heapSize + javaClass.instanceFieldSlotCount * 4 ) > HEAP_MAX_SIZE){
+        int needSize = javaClass.instanceFieldSlotCount * 4;
+        if((heapSize +  needSize) > HEAP_MAX_SIZE){
+            System.out.println("堆内存不足,启动垃圾回收");
             GC.gc(runTimeEnv, jThread);
         }
-        if((heapSize  + javaClass.instanceFieldSlotCount * 4 ) > HEAP_MAX_SIZE){
-            System.out.println("堆内存不足");
+        if((getHeapSize()  + needSize ) > HEAP_MAX_SIZE){
+            System.out.println("垃圾回收后，堆内存依旧不足");
             return null;
         }
         JObject jObject = new JObject();
@@ -43,6 +45,7 @@ public class JavaHeap {
         jObject.offset = objectContainer.size();
         ObjectFields objectFields = new ObjectFields(javaClass.instanceFieldSlotCount);
         objectContainer.put(jObject.offset, objectFields);
+        System.out.println("总内存:" + HEAP_MAX_SIZE + " 分配："+needSize+"完成 " + "当前已使用:" + getHeapSize() );
         return jObject;
     }
 
@@ -50,10 +53,11 @@ public class JavaHeap {
         Integer needSize = getCurrentArraySize(arrayType, count);
         Integer heapSize = getHeapSize();
         if(heapSize + needSize > HEAP_MAX_SIZE){
+            System.out.println("总内存:" + HEAP_MAX_SIZE + " 已使用：" + heapSize + " 当前需分配："+needSize+" ");
             GC.gc(runTimeEnv, jThread);
+            System.out.println("总内存:" + HEAP_MAX_SIZE + " 回收情况：" + heapSize + "->" + getHeapSize() + " 当前需分配："+needSize+" ");
         }
-        if(heapSize + needSize > HEAP_MAX_SIZE){
-            System.out.println("堆内存不足");
+        if(getHeapSize() + needSize > HEAP_MAX_SIZE){
             return null;
         }
         JObject jObject = new JObject();
@@ -89,6 +93,7 @@ public class JavaHeap {
             arrayFields = new ArrayFields(new JObject[count],arrayClass );
             arrayContainer.put(jObject.offset, arrayFields);
         }
+        System.out.println("总内存:" + HEAP_MAX_SIZE + " 分配："+needSize+"完成 " + "当前已使用:" + getHeapSize() );
         return jObject;
     }
 
