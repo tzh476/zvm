@@ -13,7 +13,7 @@ import java.util.Map;
 
 public class JavaHeap {
 
-    public final Integer HEAP_MAX_SIZE = 4 * 2228;
+    public final Integer HEAP_MAX_SIZE = 4 * 8;
 
     /**
      * 保存对象

@@ -1,7 +1,6 @@
 package ch08;
 
 public class DoubleBubbleSortTest {
-    
     public static void main(String[] args) {
         double[] arr = {
             22.2, 84.4, 77.5, 11.2, 95.3,  9.2, 78.2, 56.2,
@@ -13,7 +12,6 @@ public class DoubleBubbleSortTest {
         //System.out.println(123456789);
         printArray(arr);
     }
-    
     private static void bubbleSort(double[] arr) {
         boolean swapped = true;
         int j = 0;
@@ -31,11 +29,9 @@ public class DoubleBubbleSortTest {
             }
         }
     }
-    
     private static void printArray(double[] arr) {
         for (double i : arr) {
             System.out.println(i);
         }
     }
-    
 }

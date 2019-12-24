@@ -1,16 +1,11 @@
 package gc;
 public class GCTest1 {
-
     private static final int SIZE = 3;
-
-
     public static void main(String[] args){
         test0();
         test1();
         test2();
     }
-
-
     private static void test0() {
         /*字符串会创建22 byte + 8byte的数组:8byte:为String对象，22byte为char[11]*/
         //System.out.println("test0 start");

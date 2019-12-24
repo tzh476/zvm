@@ -1,7 +1,6 @@
 package ch09;
 
 public class ArrayDemo {
-
     public static void main(String[] args) {
         int[] a1 = new int[10];       // newarray
         String[] a2 = new String[10]; // anewarray
@@ -19,5 +18,4 @@ public class ArrayDemo {
             System.out.println(a2[i] + " stringbuilderTest");
         }
     }
-
 }

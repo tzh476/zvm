@@ -3,11 +3,11 @@ Java实现简易JVM
 <details>
     <summary>1. 读取并解析class文件，如String、Thread等类(支持jdk8及以下)</summary>
     
-    部分类可能在demo运行时用到:
-    + `zvm\bytecode\java\lang\System.class `
-    + `zvm\bytecode\java\io\PrintStream.class  `
-    + `zvm\bytecode\java\lang\Thread.class`
-    + `zvm\bytecode\com\zvm\javaclass\integer\Table1.class`(注解相关)
+部分类可能在demo运行时用到:
++ `zvm\bytecode\java\lang\System.class `
++ `zvm\bytecode\java\io\PrintStream.class  `
++ `zvm\bytecode\java\lang\Thread.class`
++ `zvm\bytecode\com\zvm\javaclass\integer\Table1.class(注解相关)`
 </details>
 <details>
 <summary>2. 取opcode，解释执行程序。循环运算，入栈出栈</summary>
@@ -36,7 +36,7 @@ file path : GaussTest
 <details>
 <summary>3. 方法调用(静态方法、构造方法、实例方法(支持继承多态))</summary>
 
-1. 静态递归方法执行样例(invokestatic)：
+- 静态递归方法执行样例(invokestatic)：
 ```java
 public class FibonacciTest {
     public static void main(String[] args) {
@@ -59,7 +59,7 @@ file path : FibonacciTest
 21
 ```
 
-2. 构造方法调用(invokespecial)
+- 构造方法调用(invokespecial)
 ```java
 public class FibonacciTest {
     public static void main(String[] args) {
@@ -82,7 +82,7 @@ file path : FibonacciTest
 21
 ```
 
-3. 调用实例方法，支持继承多态(invokevirtual)
+- 调用实例方法，支持继承多态(invokevirtual)
 ```java
 public class InvokeVirtualTest {
     public static void main(String[] args) {
@@ -110,18 +110,250 @@ file path : ch07/InvokeVirtualTest
 ```
 </details>
 <details>
-    <summary>4. 方法调用、方法多态调用</summary>
-    
-    部分类可能在demo运行时用到:
-    + `java.lang.String`
-    + `java.lang.StringBuilder`
-    + `java.lang.Throwable`
-    + `java.lang.Math(::random())`
-    + `java.lang.Runnable`
-    + `java.lang.Thread`
-    + 
+<summary>4. 数组</summary>
+
+- 一维int数组冒泡排序：
+```java
+public class BubbleSortTest {
+    public static void main(String[] args) {
+        int[] arr = {
+            22, 84, 77, 11, 95,  9, 78, 56, 
+            36, 97, 65, 36, 10, 24 ,92, 48
+        };
+        //printArray(arr);
+        bubbleSort(arr);
+        //System.out.println(123456789);
+        printArray(arr);
+    }
+    private static void bubbleSort(int[] arr) {
+        boolean swapped = true;
+        int j = 0;
+        int tmp;
+        while (swapped) {
+            swapped = false;
+            j++;
+            for (int i = 0; i < arr.length - j; i++) {
+                if (arr[i] > arr[i + 1]) {
+                    tmp = arr[i];
+                    arr[i] = arr[i + 1];
+                    arr[i + 1] = tmp;
+                    swapped = true;
+                }
+            }
+        }
+    }
+    private static void printArray(int[] arr) {
+        for (int i : arr) {
+            System.out.println(i);
+        }
+    }
+}
+```
+输出结果：
+```java
+file path : ch08/BubbleSortTest
+9
+10
+...
+```
+
+- 一维double数组冒泡排序
+```java
+public class DoubleBubbleSortTest {
+    public static void main(String[] args) {
+        double[] arr = {
+            22.2, 84.4, 77.5, 11.2, 95.3,  9.2, 78.2, 56.2,
+            36.1, 97.1, 65.1, 36.1, 10.3, 24.3 ,92.3, 48.3
+        };
+
+        //printArray(arr);
+        bubbleSort(arr);
+        //System.out.println(123456789);
+        printArray(arr);
+    }
+    private static void bubbleSort(double[] arr) {
+        boolean swapped = true;
+        int j = 0;
+        double tmp;
+        while (swapped) {
+            swapped = false;
+            j++;
+            for (int i = 0; i < arr.length - j; i++) {
+                if (arr[i] > arr[i + 1]) {
+                    tmp = arr[i];
+                    arr[i] = arr[i + 1];
+                    arr[i + 1] = tmp;
+                    swapped = true;
+                }
+            }
+        }
+    }
+    private static void printArray(double[] arr) {
+        for (double i : arr) {
+            System.out.println(i);
+        }
+    }
+}
+
+```
+
+输出结果：
+```java
+file path : ch08/DoubleBubbleSortTest
+9.2
+10.3
+11.2
+22.2
+24.3
+...
+```
+
 </details>
 
+<details>
+<summary>5. 字符串和字符串数组</summary>
+
+- 字符串加法，涉及类有java/lang/StringBuilder、java/lang/AbstractStringBuilder、java/lang/Math
+、java/util/Arrays、java/io/FilterOutputStream、java/io/OutputStream、 java/io/PrintStream、java/lang/String：
+```java
+public class StringBuilderTest {
+    public static void main(String[] args) {
+        String hello = "hello,";
+        String world = "world!";
+        String str = hello + world;
+        System.out.println(str);
+    }
+}
+```
+输出结果：
+```java
+file path : ch09/StringBuilderTest
+总内存:8912 分配：8完成 当前已使用:8
+总内存:8912 分配：12完成 当前已使用:20
+...
+hello,world!
+...
+```
+
+- 字符串数组
+```java
+public class ArrayDemo {
+    public static void main(String[] args) {
+        int[] a1 = new int[10];       // newarray
+        String[] a2 = new String[10]; // anewarray
+        //int[][] a3 = new int[10][10]; // multianewarray
+        int x = a1.length;            // arraylength
+        a1[0] = 100;                  // iastore
+        int y = a1[0];                // iaload
+        a2[0] = "0abc";                // aastore
+        String s = a2[0];             // aaload
+        System.out.println( s);
+        a2[1] = "1xxxxyyxyy";
+        a2[2] = "2xxxxyyxyy";
+
+        for(int i = 0; i < 3; i++){
+            System.out.println(a2[i] + " stringbuilderTest");
+        }
+    }
+}
+```
+
+输出结果：
+```java
+file path : ch09/ArrayDemo
+总内存:8912 分配：40完成 当前已使用:40
+...
+0abc
+总内存:8912 分配：8完成 当前已使用:104
+总内存:8912 分配：20完成 当前已使用:124
+...
+0abc stringbuilderTest
+总内存:8912 分配：8完成 当前已使用:364
+总内存:8912 分配：32完成 当前已使用:396
+...
+1xxxxyyxyy stringbuilderTest
+总内存:8912 分配：8完成 当前已使用:580
+总内存:8912 分配：32完成 当前已使用:612
+...
+2xxxxyyxyy stringbuilderTest
+...
+```
+</details>
+
+<details>
+<summary>6. 调用本地方法</summary>
+
+- 只实现了这个方法println，里面调用了arraycopy
+```java
+public class StringBuilderTest {
+    public static void main(String[] args) {
+        String hello = "hello,";
+        String world = "world!";
+        String str = hello + world;
+        System.out.println(str);
+    }
+}
+```
+输出结果：
+```java
+file path : ch09/StringBuilderTest
+hello,world!
+...
+```
+</details>
+
+<details>
+<summary>7. gc(标记清除算法)</summary>
+
+- 在zvm\src\main\java\com\zvm\memory\JavaHeap.java的HEAP_MAX_SIZE(此例中为32)的大小，
+```java
+public class GCTest1 {
+    private static final int SIZE = 3;
+    public static void main(String[] args){
+        test0();
+        test1();
+        test2();
+    }
+    private static void test0() {
+        /*字符串会创建22 byte + 8byte的数组:8byte:为String对象，22byte为char[11]*/
+        //System.out.println("test0 start");
+        int[] arr = new int[SIZE];
+        for (int i = 0; i < SIZE; i++){
+            arr[i] = 100 + i;
+        }
+        //System.out.println("test0 start");
+    }
+
+    private static void test1() {
+        //System.out.println("test1 start");
+        int[] arr = new int[SIZE];
+        for (int i = 0; i < SIZE; i++){
+            arr[i] = 100 + i;
+        }
+        //System.out.println("test1 start");
+    }
+
+    private static void test2() {
+        //System.out.println("test2 start");
+        int[] arr = new int[SIZE];
+        for (int i = 0; i < SIZE; i++){
+            arr[i] = 100 + i;
+        }
+        //System.out.println("test2 start");
+    }
+}
+```
+输出结果：
+```java
+file path : gc/GCTest1
+总内存:32 分配：12完成 当前已使用:12
+总内存:32 分配：12完成 当前已使用:24
+总内存:32 已使用：24 当前需分配：12 
+总内存:32 回收情况：24->0 当前需分配：12 
+总内存:32 分配：12完成 当前已使用:12
+...
+```
+</details>
 
 # 已实现指令(绝大部分实现了)
 1. 加载(load)、存储(store)指令,将数据在局部变量表和操作数栈中来回传输:  
