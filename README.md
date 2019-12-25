@@ -354,31 +354,46 @@ file path : gc/GCTest1
 </details>
 
 # 怎么运行
-- 环境：
-1. 在Windows10，基于jdk8开发
-2. 打印调试信息，可能需要maven引入Gson或fastjson
-3. 支持解析jdk8及以下版本的类，解释执行demo
+<details>
+<summary>1. 环境 </summary>
 
-- IDEA运行：  
+- 在Windows10，基于jdk8开发
+- 打印调试信息，可能需要maven引入Gson或fastjson
+- 支持解析jdk8及以下版本的类，解释执行demo
+
+</details>
+<details>
+<summary>2. IDEA运行 </summary>   
+
 <img height="60%" width="80%" src="./draft/howtorun.png">
+</details> 
+</details>
+<details>
+<summary>3. cmd运行 </summary>   
 
-- cmd运行：
+
 ```bash
 java -classpath E:\JAVA\Maven\com\alibaba\fastjson\1.2.62\fastjson-1.2.62.jar;E:\JAVA\Maven\com\google\code\gson\gson\2.8.5\gson-2.8.5.jar;F:\projects\zvm\target\classes com.zvm.JavaMain -Xjre F:\LAMP\Java\jdk1.8.0_45\jre -cp F:\projects\zvm\bytecode gc.GCTest1
 ```
 运行结果：  
 <img height="60%" width="80%" src="./draft/howtorun_cmd.png">
+</details> 
 
 # 目录结构
-- 第一级目录  
+<details>
+<sumary>1. 第一级目录</sumary>
 
 ```
 - bytecode\  #编译后的字节文件
 - javaclass\ #测试demo的源文件
 - src\       #源代码
 ```
+注：由jdk1.8.0_45\jre\lib\rt.jar中的java文件夹得到zvm\bytecode\java文件夹
+</details>
 
-- 源代码目录  
+<details>
+<sumary>2. 源代码目录</sumary>
+
 ```bash
 com\zvm
     basestruct\                 #读取字节码为内存中ClassFile时的基本数据结构
@@ -425,50 +440,105 @@ com\zvm
     ZVM.java                    #表示虚拟机
 ```
 
+</details>
+
 # 已实现指令(绝大部分实现了)
-1. 加载(load)、存储(store)指令,将数据在局部变量表和操作数栈中来回传输:  
-局部变量表->操作数栈：dload,dload_n; iload,iload_n; lload,lload_n; aload,aload_n  
-操作数栈->局部变量表：dstore,dstore_n; istore,istore_n; lstore,lstore_n; astore,astore_n  
-常量到操作数栈: bipush,ldc,ldc_w,ldc2_w,iconst_n
+<details>
+<sumary>1. 加载(load)、存储(store)指令,将数据在局部变量表和操作数栈中来回传输</sumary>
 
-2. 运算指令:  
-加法：iadd,ladd  
-减法: lsub  
-乘法: dmul
-自增: iinc  
-比较: lcmp  
+- 局部变量表->操作数栈：dload,dload_n; iload,iload_n; lload,lload_n; aload,aload_n  
+- 操作数栈->局部变量表：dstore,dstore_n; istore,istore_n; lstore,lstore_n; astore,astore_n  
+- 常量到操作数栈: bipush,ldc,ldc_w,ldc2_w,iconst_n
+</details>
 
-3. 对象创建和操作：  
-创建实例: new  
-访问类或实例字段:getstatic,getfield,putfield
+<details>
+<sumary>2. 运算指令</sumary>
+
+- 加法：iadd,ladd  
+- 减法: lsub  
+- 乘法: dmul
+- 自增: iinc  
+- 比较: lcmp  
+</details>
+
+<details>
+<sumary>3. 类型转换指令</sumary>
+
+- 待完成
+</details>
+
+<details>
+
+<details>
+<sumary>4. 对象创建和操作</sumary>
+
+- 创建实例: new  
+- 创建数组：anewarray,newarray
+- 访问类或实例字段:getstatic,getfield,putfield  
+- 将一个数组元素加载到操作数栈：iaload,laload,faload,daload,aaload  
+- 将一个操作数栈的值存储到数组中：iastore, lastore, fastore, dastore, aastore
+- 获得数组的长度：arraylength  
+- 检查类实例类型的指令：instanceof、checkcast待实现  
+</details>
+
+<details>
+<sumary>5. 操作数栈管理</sumary>
+
+- pop, pop2, dup, dup2, dup_x1, dup2_x1, dup_x2, dup2_x2, swap
+</details>
+
+<details>
+<sumary>6. 控制转移</sumary>
+
+- 条件分支：ifeq, ifne, iflt, ifle, ifgt, ifge, ifnull, ifnonnull, if_icmpeq,
+       if_icmpne, if_icmplt, if_icmple, if_icmpgt if_icmpge, if_acmpeq, if_acmpne
+- 复合条件分支：tableswitch, lookupswitch待实现
+- 无条件分支: goto, goto_w, jsr, jsr_w, ret.  
+</details>
+
+<details>
+<sumary>7. 方法调用和返回 </sumary>
+
+- invokevirtual: 调用对象实例方法，根据对象实际类型分派  
+- invokespecial：特殊处理的实例方法：实例初始化方法，父类方法   
+- invokestatic：调用类方法 
+- invokeinterface：待实现 
+- 返回指令： ireturn(used to return values of type  boolean ,  byte ,  char ,  short , or  int ), lreturn, freturn, dreturn, and areturn
+</details>
+
+<details>
+<sumary>8. 抛出异常 </sumary>
  
-4. 操作数栈管理：  
-dup  
-
-5. 控制转移:  
-条件分支: ifeq,ifne,iflt,ifge,ifgt,ifle,if_icmpgt  
-无条件分支: goto_
-
-6. 方法调用和返回  
-invokevirtual: 调用对象实例方法，根据对象实际类型分派  
-invokespecial：特殊处理的实例方法：实例初始化方法，父类方法   
-invokestatic：调用类方法  
+- 待实现
+</details>
+<details>
+<sumary>9. 同步 </sumary>
+ 
+- 待实现
+</details>
 
 # 引用和参考
-- 文档、书籍参考：
-1. java虚拟机规范：https://docs.oracle.com/javase/specs/jvms/se8/jvms8.pdf
-2. 周志明的《深入理解java虚拟机》
-3. java虚拟机规范(java se7)中文版
-4. java虚拟机规范(java se8)中文版
-5. 《自己动手写Java虚拟机》
+<details>
+<sumary>1. 文档、书籍参考 </sumary>
 
-- 代码参考：
-1. c++实现的java虚拟机：https://github.com/kelthuzadx/yvm
-2. go实现jvm：https://github.com/zxh0/jvmgo-book
-3. Hotspot源码：https://github.com/tzh476/Hotspot
+- java虚拟机规范：https://docs.oracle.com/javase/specs/jvms/se8/jvms8.pdf
+- 《自己动手写Java虚拟机》
+- java虚拟机规范(java se7)中文版
+- java虚拟机规范(java se8)中文版
+- 周志明的《深入理解java虚拟机》
+</details>
 
-- 工具
-1. 类解析工具：https://github.com/zxh0/classpy
+<details>
+<sumary>2. 代码参考 </sumary>
 
-- 备注：
-1. 由jdk1.8.0_45\jre\lib\rt.jar中的java文件夹得到zvm\bytecode\java文件夹
+- go实现jvm：https://github.com/zxh0/jvmgo-book
+- c++实现的java虚拟机：https://github.com/kelthuzadx/yvm
+- Hotspot源码：https://github.com/tzh476/Hotspot
+</details>
+
+<details>
+<sumary>3. 工具 </sumary>
+
+- 类解析工具：https://github.com/zxh0/classpy
+</details>
+
