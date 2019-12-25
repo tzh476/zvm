@@ -362,15 +362,15 @@ file path : gc/GCTest1
 - 支持解析jdk8及以下版本的类，解释执行demo
 
 </details>
+
 <details>
 <summary>2. IDEA运行 </summary>   
 
 <img height="60%" width="80%" src="./draft/howtorun.png">
 </details> 
-</details>
+
 <details>
 <summary>3. cmd运行 </summary>   
-
 
 ```bash
 java -classpath E:\JAVA\Maven\com\alibaba\fastjson\1.2.62\fastjson-1.2.62.jar;E:\JAVA\Maven\com\google\code\gson\gson\2.8.5\gson-2.8.5.jar;F:\projects\zvm\target\classes com.zvm.JavaMain -Xjre F:\LAMP\Java\jdk1.8.0_45\jre -cp F:\projects\zvm\bytecode gc.GCTest1
