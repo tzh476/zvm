@@ -1,8 +1,8 @@
 Java实现简易JVM
-#  主要这几个模块：
+#  主要模块和样例：
 <details>
     <summary>1. 读取并解析class文件，如String、Thread等类(支持jdk8及以下)</summary>
-    
+
 部分类可能在demo运行时用到:
 + `zvm\bytecode\java\lang\System.class `
 + `zvm\bytecode\java\io\PrintStream.class  `
@@ -12,7 +12,7 @@ Java实现简易JVM
 <details>
 <summary>2. 取opcode，解释执行程序。循环运算，入栈出栈</summary>
 
-执行样例：
+- 执行样例：
 ```java
 public class GaussTest {
     public GaussTest() {
@@ -117,7 +117,7 @@ file path : ch07/InvokeVirtualTest
 public class BubbleSortTest {
     public static void main(String[] args) {
         int[] arr = {
-            22, 84, 77, 11, 95,  9, 78, 56, 
+            22, 84, 77, 11, 95,  9, 78, 56,
             36, 97, 65, 36, 10, 24 ,92, 48
         };
         //printArray(arr);
@@ -347,8 +347,8 @@ public class GCTest1 {
 file path : gc/GCTest1
 总内存:32 分配：12完成 当前已使用:12
 总内存:32 分配：12完成 当前已使用:24
-总内存:32 已使用：24 当前需分配：12 
-总内存:32 回收情况：24->0 当前需分配：12 
+总内存:32 已使用：24 当前需分配：12
+总内存:32 回收情况：24->0 当前需分配：12
 总内存:32 分配：12完成 当前已使用:12
 ```
 </details>
@@ -367,7 +367,7 @@ file path : gc/GCTest1
 <summary>2. IDEA运行 </summary>   
 
 <img height="60%" width="80%" src="./draft/howtorun.png">
-</details> 
+</details>
 
 <details>
 <summary>3. cmd运行 </summary>   
@@ -376,23 +376,24 @@ file path : gc/GCTest1
 java -classpath E:\JAVA\Maven\com\alibaba\fastjson\1.2.62\fastjson-1.2.62.jar;E:\JAVA\Maven\com\google\code\gson\gson\2.8.5\gson-2.8.5.jar;F:\projects\zvm\target\classes com.zvm.JavaMain -Xjre F:\LAMP\Java\jdk1.8.0_45\jre -cp F:\projects\zvm\bytecode gc.GCTest1
 ```
 运行结果：  
-<img height="60%" width="80%" src="./draft/howtorun_cmd.png">
-</details> 
+<img height="60%" width="80%" src="./draft/howtorun_cmd.png" >
+</details>
 
 # 目录结构
 <details>
-<sumary>1. 第一级目录</sumary>
+<summary>1. 第一级目录</summary>  
 
 ```
-- bytecode\  #编译后的字节文件
-- javaclass\ #测试demo的源文件
-- src\       #源代码
+bytecode\  #编译后的字节文件
+javaclass\ #测试demo的源文件
+src\       #源代码
 ```
-注：由jdk1.8.0_45\jre\lib\rt.jar中的java文件夹得到zvm\bytecode\java文件夹
+
+注：由jdk1.8.0_45\jre\lib\rt.jar中的java文件夹得到zvm\bytecode\java文件夹  
 </details>
 
 <details>
-<sumary>2. 源代码目录</sumary>
+<summary>2. 源代码目录</summary>
 
 ```bash
 com\zvm
@@ -438,13 +439,14 @@ com\zvm
     Cmd.java                    #解析命令行
     JavaMain.java               #启动入口类，含main方法
     ZVM.java                    #表示虚拟机
+
 ```
 
 </details>
 
 # 已实现指令(绝大部分实现了)
 <details>
-<sumary>1. 加载(load)、存储(store)指令,将数据在局部变量表和操作数栈中来回传输</sumary>
+<summary>1. 加载(load)、存储(store)指令,将数据在局部变量表和操作数栈中来回传输</summary>
 
 - 局部变量表->操作数栈：dload,dload_n; iload,iload_n; lload,lload_n; aload,aload_n  
 - 操作数栈->局部变量表：dstore,dstore_n; istore,istore_n; lstore,lstore_n; astore,astore_n  
@@ -452,7 +454,7 @@ com\zvm
 </details>
 
 <details>
-<sumary>2. 运算指令</sumary>
+<summary>2. 运算指令</summary>
 
 - 加法：iadd,ladd  
 - 减法: lsub  
@@ -462,15 +464,13 @@ com\zvm
 </details>
 
 <details>
-<sumary>3. 类型转换指令</sumary>
+<summary>3. 类型转换指令</summary>
 
-- 待完成
+- 待实现
 </details>
 
 <details>
-
-<details>
-<sumary>4. 对象创建和操作</sumary>
+<summary>4. 对象创建和操作</summary>
 
 - 创建实例: new  
 - 创建数组：anewarray,newarray
@@ -482,13 +482,13 @@ com\zvm
 </details>
 
 <details>
-<sumary>5. 操作数栈管理</sumary>
+<summary>5. 操作数栈管理</summary>
 
 - pop, pop2, dup, dup2, dup_x1, dup2_x1, dup_x2, dup2_x2, swap
 </details>
 
 <details>
-<sumary>6. 控制转移</sumary>
+<summary>6. 控制转移</summary>
 
 - 条件分支：ifeq, ifne, iflt, ifle, ifgt, ifge, ifnull, ifnonnull, if_icmpeq,
        if_icmpne, if_icmplt, if_icmple, if_icmpgt if_icmpge, if_acmpeq, if_acmpne
@@ -497,31 +497,31 @@ com\zvm
 </details>
 
 <details>
-<sumary>7. 方法调用和返回 </sumary>
+<summary>7. 方法调用和返回 </summary>
 
 - invokevirtual: 调用对象实例方法，根据对象实际类型分派  
 - invokespecial：特殊处理的实例方法：实例初始化方法，父类方法   
-- invokestatic：调用类方法 
-- invokeinterface：待实现 
+- invokestatic：调用类方法
+- invokeinterface：待实现
 - 返回指令： ireturn(used to return values of type  boolean ,  byte ,  char ,  short , or  int ), lreturn, freturn, dreturn, and areturn
 </details>
 
 <details>
-<sumary>8. 抛出异常 </sumary>
- 
+<summary>8. 抛出异常 </summary>
+
 - 待实现
 </details>
 <details>
-<sumary>9. 同步 </sumary>
- 
+<summary>9. 同步 </summary>
+
 - 待实现
 </details>
 
 # 引用和参考
 <details>
-<sumary>1. 文档、书籍参考 </sumary>
+<summary>1. 文档、书籍参考 </summary>
 
-- java虚拟机规范：https://docs.oracle.com/javase/specs/jvms/se8/jvms8.pdf
+- [java虚拟机规范](https://docs.oracle.com/javase/specs/jvms/se8/jvms8.pdf)
 - 《自己动手写Java虚拟机》
 - java虚拟机规范(java se7)中文版
 - java虚拟机规范(java se8)中文版
@@ -529,16 +529,15 @@ com\zvm
 </details>
 
 <details>
-<sumary>2. 代码参考 </sumary>
+<summary>2. 代码参考 </summary>
 
-- go实现jvm：https://github.com/zxh0/jvmgo-book
-- c++实现的java虚拟机：https://github.com/kelthuzadx/yvm
-- Hotspot源码：https://github.com/tzh476/Hotspot
+- [go实现jvm](https://github.com/zxh0/jvmgo-book)
+- [c++实现的java虚拟机](https://github.com/kelthuzadx/yvm)
+- [Hotspot源码](https://github.com/tzh476/Hotspot)
 </details>
 
 <details>
-<sumary>3. 工具 </sumary>
+<summary>3. 工具 </summary>
 
-- 类解析工具：https://github.com/zxh0/classpy
+- [类解析工具](https://github.com/zxh0/classpy)
 </details>
-
