@@ -298,14 +298,13 @@ public class StringBuilderTest {
 ```java
 file path : ch09/StringBuilderTest
 hello,world!
-...
 ```
 </details>
 
 <details>
 <summary>7. gc(标记清除算法)</summary>
 
-- 在zvm\src\main\java\com\zvm\memory\JavaHeap.java的HEAP_MAX_SIZE(此例中为32)的大小，
+- 在zvm\src\main\java\com\zvm\memory\JavaHeap.java的HEAP_MAX_SIZE(此例中为32)的大小
 ```java
 public class GCTest1 {
     private static final int SIZE = 3;
@@ -351,9 +350,80 @@ file path : gc/GCTest1
 总内存:32 已使用：24 当前需分配：12 
 总内存:32 回收情况：24->0 当前需分配：12 
 总内存:32 分配：12完成 当前已使用:12
-...
 ```
 </details>
+
+# 怎么运行
+- 环境：
+1. 在Windows10，基于jdk8开发
+2. 打印调试信息，可能需要maven引入Gson或fastjson
+3. 支持解析jdk8及以下版本的类，解释执行demo
+
+- IDEA运行：  
+<img height="60%" width="80%" src="./draft/howtorun.png">
+
+- cmd运行：
+```bash
+java -classpath E:\JAVA\Maven\com\alibaba\fastjson\1.2.62\fastjson-1.2.62.jar;E:\JAVA\Maven\com\google\code\gson\gson\2.8.5\gson-2.8.5.jar;F:\projects\zvm\target\classes com.zvm.JavaMain -Xjre F:\LAMP\Java\jdk1.8.0_45\jre -cp F:\projects\zvm\bytecode gc.GCTest1
+```
+运行结果：  
+<img height="60%" width="80%" src="./draft/howtorun_cmd.png">
+
+# 目录结构
+- 第一级目录  
+
+```
+- bytecode\  #编译后的字节文件
+- javaclass\ #测试demo的源文件
+- src\       #源代码
+```
+
+- 源代码目录  
+```bash
+com\zvm
+    basestruct\                 #读取字节码为内存中ClassFile时的基本数据结构
+    classfile\                  #类解析相关
+       attribute\               #属性表：jdk8中的23种属性
+       constantpool\            #常量池：jdk8中10种常量类型
+       ClassFile.java           #解析后的class文件
+       cp_info.java             #ClassFile中的常量池表示
+       field_info.java          #ClassFile中的字段表示
+       IOUtils.java             #解析字节码的工具类
+       method_info.java         #ClassFile中的方法表示
+       ZvmClassLoader.java      #待重构
+    draft\
+    gc\
+       GC.java                  #GC类，目前只有标记清除算法
+    interpreter\                
+       CallSite.java            #调用方法时的入口
+       CodeUtils.java           #控制pc的工具类
+       Descriptor.java          #方法调用时，表示返回数据和入参结构
+       Interpreter.java         #取opcode并执行的类
+       Opcode.java              #指令
+       Ref.java                 #表示methodRef或fieldRef:含类名、描述符、方法名/字段名
+    jnative\java\lang\           #预留实现本地方法
+    memory\
+       ArrayFields.java         #保存堆中的数组
+       JavaHeap.java            #表示堆，对象和数组都分配在这
+       MethodArea.java          #方法区
+       ObjectFields.java        #表示堆中的对象
+    runtime\                    #运行时数据
+       struct\                  #一些基本数据结构
+       JavaClass.java           #运行时表示：ClassFile的入口，加一些类的信息
+       JavaFrame.java           #运行时表示：一个方法所用的帧
+       JThread.java             #运行时表示：一个线程(目前未实现多线程)
+       LocalVars.java           #运行时表示：帧中的局部变量表
+       OperandStack.java        #运行时表示：帧中的操作数栈
+       RunTimeEnv.java          #运行时的环境，包括JavaHeap、MethodMrea等
+       StaticVars.java          #JavaClass中的静态字段分配内存
+       ThreadStack.java         #线程栈：运行时，方法调用帧由底至上组成线程栈
+    utils\
+       TypeUtils.java           #类型转换工具类
+       Vars.java                #供LocalVars、LocalVars、ObjectFields继承使用
+    Cmd.java                    #解析命令行
+    JavaMain.java               #启动入口类，含main方法
+    ZVM.java                    #表示虚拟机
+```
 
 # 已实现指令(绝大部分实现了)
 1. 加载(load)、存储(store)指令,将数据在局部变量表和操作数栈中来回传输:  
@@ -384,10 +454,7 @@ invokevirtual: 调用对象实例方法，根据对象实际类型分派
 invokespecial：特殊处理的实例方法：实例初始化方法，父类方法   
 invokestatic：调用类方法  
 
-
-- 备注：
-1. 由jdk1.8.0_45\jre\lib\rt.jar中的java文件夹得到zvm\bytecode\java文件夹
-
+# 引用和参考
 - 文档、书籍参考：
 1. java虚拟机规范：https://docs.oracle.com/javase/specs/jvms/se8/jvms8.pdf
 2. 周志明的《深入理解java虚拟机》
@@ -402,3 +469,6 @@ invokestatic：调用类方法
 
 - 工具
 1. 类解析工具：https://github.com/zxh0/classpy
+
+- 备注：
+1. 由jdk1.8.0_45\jre\lib\rt.jar中的java文件夹得到zvm\bytecode\java文件夹
