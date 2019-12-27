@@ -302,7 +302,7 @@ hello,world!
 </details>
 
 <details>
-<summary>7. gc(标记清除算法)</summary>
+<summary>7. GC相关：简单实现了标记清除算法</summary>
 
 - 在zvm\src\main\java\com\zvm\memory\JavaHeap.java的HEAP_MAX_SIZE(此例中为32)的大小
 ```java
@@ -360,7 +360,7 @@ file path : gc/GCTest1
 - 在Windows10，基于jdk8开发
 - 打印调试信息，可能需要maven引入Gson或fastjson
 - 支持解析jdk8及以下版本的类，解释执行demo
-
+- 经测试，demo支持在linux,jdk8中运行  
 </details>
 
 <details>
