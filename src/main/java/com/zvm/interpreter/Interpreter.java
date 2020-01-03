@@ -7,7 +7,7 @@ import com.zvm.basestruct.u2;
 import com.zvm.basestruct.u4;
 import com.zvm.classfile.*;
 import com.zvm.classfile.constantpool.*;
-import com.zvm.draft.Opcode1;
+import com.zvm.jnative.NativeUtils;
 import com.zvm.memory.ArrayFields;
 import com.zvm.memory.MethodArea;
 import com.zvm.memory.ObjectFields;
@@ -53,7 +53,7 @@ public class Interpreter {
         for (; code.getPc() < codeLength; code.pcAdd(1)) {
             int opcodeInt = TypeUtils.byteArr2Int(codeRaw[code.getPc()].u1);
             Gson gson = new Gson();
-            //System.out.println("pc = " + code.getPc() + " operandStack size "+ operandStack.size);
+            //.println("pc = " + code.getPc() + " operandStack size "+ operandStack.size);
             //System.out.println("pc = " + code.getPc() + " operandStack "+gson.toJson(operandStack));
             //System.out.println("pc = " + code.getPc() + " localVars size "+ localVars.slots.length);
             //System.out.println("pc = " + code.getPc() + " localVars " + gson.toJson(localVars));
@@ -130,7 +130,7 @@ public class Interpreter {
                         if(stringClass == null){
                             stringClass = runTimeEnv.methodArea.loadClass(className);
                             runTimeEnv.methodArea.linkClass(className);
-                            runTimeEnv.methodArea.initClass(className);
+                            runTimeEnv.methodArea.initClass(className, this);
                         }
 
                         CONSTANT_Utf8 valueUtf8 = (CONSTANT_Utf8) javaClass.getClassFile().constant_pool.cp_info[TypeUtils.byteArr2Int(stringIndex.u2)-1];
@@ -712,7 +712,7 @@ public class Interpreter {
                     int index = operandStack.popInt();
                     JObject arrayObject = operandStack.popJObject();
                     ArrayFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(arrayObject.offset);
-                    operandStack.putLong(((ArrayFields) arrayFields).getLong( index));
+                    operandStack.putLong((arrayFields).getLong( index));
                 }
                 break;
                 case Opcode.astore: {
@@ -1058,7 +1058,10 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.putstatic: {
-
+                    short fieldCpIndex = code.consumeU2();
+                    CONSTANT_Base[] constant_bases = javaClass.getClassFile().constant_pool.cp_info;
+                    CONSTANT_Base constant_fieldref = constant_bases[fieldCpIndex - 1];
+                    putStaticField(javaClass,constant_fieldref);
                 }
                 break;
                 case Opcode.getfield: {
@@ -1086,7 +1089,9 @@ public class Interpreter {
                     short invokeIndex = code.consumeU2();
                     CONSTANT_Base[] constant_bases = javaClass.getClassFile().constant_pool.cp_info;
                     CONSTANT_Base constant_methodref = constant_bases[invokeIndex - 1];
-                    invokeSpecial(javaClass,constant_methodref);
+                    Ref methodRef = processRef(javaClass, constant_methodref);
+
+                    invokeSpecial(methodRef);
 
                 }
                 break;
@@ -1180,6 +1185,9 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.invokenative: {
+//                    short invokeIndex = code.consumeU1();
+//                    CONSTANT_Base[] constant_bases = javaClass.getClassFile().constant_pool.cp_info;
+//                    CONSTANT_Base constant_base = constant_bases[invokeIndex - 1];
                     invokeNative(javaClass);
                 }
                 break;
@@ -1190,21 +1198,12 @@ public class Interpreter {
         }
     }
 
+
+
     private void putCharArrField(JObject charArrayJObject, char[] chars) {
         ArrayFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(charArrayJObject.offset);
         arrayFields.putCharArr(chars);
     }
-
-
-//    private int getArraySize(JavaClass javaClass, int length) {
-//        String className = javaClass.classPath;
-//        int size = length;
-//
-//        if (className.startsWith("[J") || className.startsWith("[D")){
-//            size = size / 2;
-//        }
-//        return size;
-//    }
 
 
     private void getField(JavaClass javaClass, CONSTANT_Base constant_fieldref) {
@@ -1214,7 +1213,7 @@ public class Interpreter {
         if(classOfCurField == null){
             runTimeEnv.methodArea.loadClass(fieldRef.className);
             runTimeEnv.methodArea.linkClass(fieldRef.className);
-            runTimeEnv.methodArea.initClass(fieldRef.className);
+            runTimeEnv.methodArea.initClass(fieldRef.className, this);
         }
         field_info field_info = classOfCurField.findField(fieldRef.refName,fieldRef.descriptorName);
         char s = fieldRef.descriptorName.charAt(0);
@@ -1266,7 +1265,6 @@ public class Interpreter {
             ObjectFields objectFields = runTimeEnv.javaHeap.objectContainer.get(jObject.offset);
             objectFields.putDouble(field_info.slotId, val);
         }else if(s == 'L' ){
-            /*bug*/
             JObject val = operandStack.popJObject();
             JObject jObject = operandStack.popJObject();
             ObjectFields objectFields = runTimeEnv.javaHeap.objectContainer.get(jObject.offset);
@@ -1283,28 +1281,60 @@ public class Interpreter {
         }
     }
 
+    private void putStaticField(JavaClass javaClass, CONSTANT_Base constant_fieldref) {
+        OperandStack operandStack = jThread.getTopFrame().operandStack;
+        Ref fieldRef = processRef(javaClass, constant_fieldref);
+        field_info field_info = javaClass.findField(fieldRef.refName,fieldRef.descriptorName);
+        field_info.javaClass = javaClass;
+        char s = fieldRef.descriptorName.charAt(0);
+        StaticVars staticVars = javaClass.staticVars;
+
+        if(s == 'Z' || s == 'B' || s == 'C' || s == 'S' || s == 'I'){
+            int val = operandStack.popInt();
+            staticVars.putIntByIndex(field_info.slotId, val);
+        }else if ( s == 'J' ){
+            long val = operandStack.popLong();
+            staticVars.putLong(field_info.slotId, val);
+        }else if (s == 'F'){
+            float val = operandStack.popFloat();
+            staticVars.putFloat(field_info.slotId, val);
+        }else if (s == 'D'){
+            double val = operandStack.popDouble();
+            staticVars.putDouble(field_info.slotId, val);
+        }else if(s == 'L' ){
+            JObject val = operandStack.popJObject();
+            staticVars.putJObject(field_info.slotId,val);
+        }
+        else if( s == '['){
+            JObject val = operandStack.popJObject();
+            staticVars.putJObject(field_info.slotId,val);
+        }
+    }
 
     /**
      * 解析字段
      * @param fieldRef
      */
     private field_info parseFieldRef(Ref fieldRef ) {
-       // MethodArea methodArea = runTimeEnv.methodArea;
         JavaClass javaClass = runTimeEnv.methodArea.loadClass(fieldRef.className);
         runTimeEnv.methodArea.linkClass(fieldRef.className);
-        runTimeEnv.methodArea.initClass(fieldRef.className);
+        runTimeEnv.methodArea.initClass(fieldRef.className, this);
         JavaClass javaClass1 = runTimeEnv.methodArea.findClass(fieldRef.className);
         field_info field_info = javaClass1.findField(fieldRef.refName, fieldRef.descriptorName);
         return field_info;
     }
 
-    private void invokeSpecial(JavaClass javaClass, CONSTANT_Base constant_methodref) {
-        Ref methodRef = processRef(javaClass, constant_methodref);
+
+//    private void invokeSpecial(JavaClass javaClass, CONSTANT_Base constant_methodref) {
+//        Ref methodRef = processRef(javaClass, constant_methodref);
+//        invokeSpecial(methodRef);
+//    }
+
+    public void invokeSpecial(Ref methodRef) {
 
         method_info method_info = parseMethodRef(methodRef);
         /*调用传递参数 如(J)J*/
         Descriptor descriptor = processDescriptor(methodRef.descriptorName);
-        JObject jObject = jThread.getTopFrame().operandStack.getJObjectFromTop(method_info.argSlotCount - 1);
 
         CallSite callSite = new CallSite();
         callSite.setCallSite( method_info);
@@ -1319,10 +1349,9 @@ public class Interpreter {
         for(int i = 0; i < slotCount; i++){
             curLocalVars.putSlot(slotCount - 1 - i, invokerStack.popSlot());
         }
-
         executeByteCode(jThread, method_info.javaClass, callSite.code, TypeUtils.byteArr2Int(callSite.code_length.u4));
-
     }
+
 
 
     private void invokeVirtual(JavaClass javaClass, CONSTANT_Base constant_methodref) {
@@ -1408,7 +1437,7 @@ public class Interpreter {
     private method_info parseMethodRef(Ref methodRef) {
         runTimeEnv.methodArea.loadClass(methodRef.className);
         runTimeEnv.methodArea.linkClass(methodRef.className);
-        runTimeEnv.methodArea.initClass(methodRef.className);
+        //runTimeEnv.methodArea.initClass(methodRef.className, this);
         JavaClass javaClass = runTimeEnv.methodArea.findClass(methodRef.className);
         method_info method_info = javaClass.findMethod(methodRef.refName, methodRef.descriptorName);
         method_info.javaClass = javaClass;
@@ -1425,25 +1454,23 @@ public class Interpreter {
     private void invokeStatic(JavaClass javaClass, CONSTANT_Base constant_base) {
 
         Ref ref = processRef(javaClass, constant_base);
-
-       // method_info method_info = javaClass.findMethod(methodName, descriptorName);
-       // method_info method_info = javaClass.findMethod(ref.refName, ref.descriptorName);
         JavaClass curClass = runTimeEnv.methodArea.findClass(ref.className);
         if(curClass == null){
             curClass = runTimeEnv.methodArea.loadClass(ref.className);
             runTimeEnv.methodArea.linkClass(ref.className);
-            runTimeEnv.methodArea.initClass(ref.className);
+            runTimeEnv.methodArea.initClass(ref.className, this);
         }
+
         method_info method_info = curClass.findMethod(ref.refName, ref.descriptorName);
 
         if (method_info == null){
             return ;
         }
 
-//        if(MethodArea.isNative(method_info.access_flags)){
-//            invokeNative(javaClass, ref, method_info);
-//            return;
-//        }
+        /*如System类中的registerNatives直接返回，System的arraycopy*/
+        if(MethodArea.isNative(method_info.access_flags) && ! NativeUtils.hasNativeClass(ref)){
+            return;
+        }
         Descriptor descriptor = processDescriptor(ref.descriptorName);
         CallSite callSite = new CallSite();
         callSite.setCallSiteOrNative( method_info, descriptor.returnType);
@@ -1459,48 +1486,17 @@ public class Interpreter {
             curLocalVars.putSlot(slotCount - 1 - i, invokerStack.popSlot());
         }
 
-        //executeByteCode(jThread, javaClass, callSite.code, TypeUtils.byteArr2Int(callSite.code_length.u4));
         executeByteCode(jThread, curClass, callSite.code, TypeUtils.byteArr2Int(callSite.code_length.u4));
     }
 
     /**
-     * 调用native方法
+     * 调用native方法,暂时只支持arraycopy
      * @param javaClass
      */
     private void invokeNative(JavaClass javaClass) {
+
         JavaFrame javaFrame = jThread.getTopFrame();
         arraycopy(javaFrame);
-
-//        // method_info method_info = javaClass.findMethod(methodName, descriptorName);
-//        // method_info method_info = javaClass.findMethod(ref.refName, ref.descriptorName);
-////        JavaClass curClass = runTimeEnv.methodArea.findClass(ref.className);
-////        method_info method_info = curClass.findMethod(ref.refName, ref.descriptorName);
-//
-////        if (method_info == null){
-////            return ;
-////        }
-//
-////        if(MethodArea.isNative(method_info.access_flags)){
-////            invokeNative(javaClass, ref, method_info);
-////            return;
-////        }
-//        Descriptor descriptor = processDescriptor(ref.descriptorName);
-//        CallSite callSite = new CallSite();
-//        callSite.setCallSiteOrNative( method_info, descriptor.returnType);
-//        OperandStack invokerStack = jThread.getTopFrame().operandStack;
-//        jThread.pushFrame(callSite.max_stack, callSite.max_locals);
-//        JavaFrame curFrame = jThread.getTopFrame();
-//        LocalVars curLocalVars = curFrame.localVars;
-//
-//        /*调用传递参数*/
-//        int slotCount = calParametersSlot(method_info, descriptor.parameters);
-//
-//        for(int i = 0; i < slotCount; i++){
-//            curLocalVars.putSlot(slotCount - 1 - i, invokerStack.popSlot());
-//        }
-//
-//        executeByteCode(jThread, javaClass, callSite.code, TypeUtils.byteArr2Int(callSite.code_length.u4));
-
     }
 
     private void arraycopy(JavaFrame javaFrame) {
@@ -1696,7 +1692,7 @@ public class Interpreter {
         if(runTimeEnv.methodArea.findClass(className) == null){
             runTimeEnv.methodArea.loadClass(className);
             runTimeEnv.methodArea.linkClass(className);
-            runTimeEnv.methodArea.initClass(className);
+            runTimeEnv.methodArea.initClass(className, this);
         }
         return runTimeEnv.javaHeap.createJObject(runTimeEnv.methodArea.findClass(className), runTimeEnv, jThread);
     }
@@ -1723,7 +1719,7 @@ public class Interpreter {
         if(curClass == null){
             curClass = runTimeEnv.methodArea.loadClass(className);
             runTimeEnv.methodArea.linkClass(className);
-            runTimeEnv.methodArea.initClass(className);
+            runTimeEnv.methodArea.initClass(className, this);
         }
 
         className = processClassName(className);

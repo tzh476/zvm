@@ -1,9 +1,9 @@
-package com.zvm.utils;
+package com.zvm.runtime;
 
-import com.zvm.runtime.struct.JArray;
 import com.zvm.runtime.struct.JObject;
 import com.zvm.runtime.struct.JType;
 import com.zvm.runtime.struct.Slot;
+import com.zvm.utils.TypeUtils;
 
 public class Vars {
     public Slot[] slots;

@@ -1,5 +1,6 @@
 package com.zvm.memory;
 
+import com.google.gson.Gson;
 import com.zvm.*;
 import com.zvm.basestruct.AccessFlag;
 import com.zvm.basestruct.u2;
@@ -8,6 +9,8 @@ import com.zvm.classfile.*;
 import com.zvm.classfile.attribute.Attribute_Base;
 import com.zvm.classfile.attribute.ConstantValue_attribute;
 import com.zvm.classfile.constantpool.*;
+import com.zvm.interpreter.Interpreter;
+import com.zvm.interpreter.Ref;
 import com.zvm.runtime.JavaClass;
 import com.zvm.runtime.StaticVars;
 import com.zvm.utils.TypeUtils;
@@ -16,22 +19,20 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.zvm.runtime.JavaClass.CLASS_BYTECODE_FILE_MAX;
 
 public class MethodArea {
-    //public JavaClass[] javaClasses = new JavaClass[10];
     Map<String, JavaClass> javaClasses = new HashMap<>();
     List<String> loadedClasses = new ArrayList<>();
     List<String> linkedClasses = new ArrayList<>();
     List<String> initedClasses = new ArrayList<>();
 
-
     ZvmClassLoader zvmClassLoader = new ZvmClassLoader();
+
+    /*hack，不支持调用<clinit>的类，如Arrays的<clinit>包含断言相关的方法调用*/
+    List<String> unSupportInitClasses = Arrays.asList("java/util/Arrays","java/lang/Math");
 
     /**
      * 加载类 .class结尾的需要时绝对路径。否则需要是类似ch07/Vector2D的类名
@@ -122,10 +123,6 @@ public class MethodArea {
         if(linkedClasses.contains(classPath)){
             return;
         }
-//
-//        if(classPath.startsWith("[")){
-//            linkArrayClass(classPath);
-//        }
 
         JavaClass javaClass = findClass(classPath);
         if(!"java/lang/Object".equals(classPath)){
@@ -140,10 +137,6 @@ public class MethodArea {
         resolved();
         linkedClasses.add(classPath);
     }
-
-//    private void linkArrayClass(String classPath) {
-//
-//    }
 
     /**
      * 验证
@@ -160,6 +153,35 @@ public class MethodArea {
         calcInstanceFieldSlotIds(javaClass);
         calcStaticFieldSlotIds(javaClass);
         allocAndInitStaticVars(javaClass);
+    }
+
+
+    /**
+     * 解析
+     */
+    public void resolved(){
+
+    }
+
+    /**
+     * 初始化类
+     */
+    public void initClass(String classPath, Interpreter interpreter){
+        Ref ref = new Ref();
+        ref.className = classPath;
+        ref.descriptorName = "()V";
+        ref.refName = "<clinit>";
+        JavaClass javaClass = findClass(classPath);
+        /*不存在clinit ，不需要init*/
+        if(javaClass == null || javaClass.findMethod(ref.refName, ref.descriptorName) == null){
+            return;
+        }
+        /*跳过一些不支持的初始化方法*/
+        if(unSupportInitClasses.contains(classPath)){
+            return;
+        }
+        //System.out.println(new Gson().toJson(ref));
+        interpreter.invokeSpecial(ref);
     }
 
     private void allocAndInitStaticVars(JavaClass javaClass) {
@@ -181,7 +203,7 @@ public class MethodArea {
                 String descriptorName = TypeUtils.u12String(constant_utf8.bytes);
                 char s = descriptorName.charAt(0);
                 if(s == 'Z' || s == 'B' || s == 'C' || s == 'S' || s == 'I'){
-                    /*hack 如在java/utils/Arrays类中含有assertionsDisabled字段，无值的*/
+                    /*hack 如在java/util/Arrays类中含有assertionsDisabled字段，无值的*/
                     if(s == 'Z' && constValueIndex == 0){
                         staticVars.putIntByIndex(slotId, 1);
                         continue;
@@ -212,6 +234,7 @@ public class MethodArea {
             }
         }
     }
+
 
     private int getConstValueIndex(Attribute_Base[] attributes) {
         int constValueIndex = 0;
@@ -304,17 +327,4 @@ public class MethodArea {
         return slotId;
     }
 
-    /**
-     * 解析
-     */
-    public void resolved(){
-
-    }
-
-    /**
-     * 初始化类
-     */
-    public void initClass(String classPath){
-
-    }
 }

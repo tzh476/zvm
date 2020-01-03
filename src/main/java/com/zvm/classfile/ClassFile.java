@@ -34,8 +34,10 @@ public class ClassFile {
     public u2 attributes_count;
     public Attribute_Base[] attributes ;
 
-
-
+    /**
+     * 将字节码转换为ClassFile
+     * @param bytecode
+     */
     public void processByteCode(byte[] bytecode){
         IOUtils.bytecode = bytecode;
         IOUtils.index = 0;
@@ -45,12 +47,88 @@ public class ClassFile {
         constant_pool_count = IOUtils.read_u2();
 
         Integer pool_size = TypeUtils.byteArr2Int(constant_pool_count.u2);
-
-        constant_pool.cp_info = new CONSTANT_Base[pool_size];
-
         /*读取常量池*/
+        processConstantPool(constant_pool, pool_size);
+
+        access_flags = IOUtils.read_u2();
+        this_class = IOUtils.read_u2();
+        super_class = IOUtils.read_u2();
+        interface_count = IOUtils.read_u2();
+        Integer interface_count_integer = TypeUtils.byteArr2Int(interface_count.u2);
+        interfaces = new u2[interface_count_integer];
+        for(Integer i = 0; i < interface_count_integer; i ++){
+            interfaces[i] = IOUtils.read_u2();
+        }
+
+        field_count  = IOUtils.read_u2();
+        Integer field_count_integer = TypeUtils.byteArr2Int(field_count.u2);
+        fields = processFields( field_count_integer);
+
+        methods_count  = IOUtils.read_u2();
+        Integer methods_count_integer = TypeUtils.byteArr2Int(methods_count.u2);
+        methods = processMethods( methods_count_integer);
+
+        attributes_count = IOUtils.read_u2();
+        Integer temp_attributes_count = TypeUtils.byteArr2Int(attributes_count.u2);
+        attributes =  new Attribute_Base[temp_attributes_count];
+        for(Integer i = 0; i < temp_attributes_count; i ++){
+            processAttribute( i, attributes);
+        }
+    }
+
+    /**
+     * 解析字节码中的方法
+     * @param methods_count_integer
+     * @return
+     */
+    private method_info[] processMethods(Integer methods_count_integer) {
+        method_info[] method_infos = new method_info[methods_count_integer];
+        for(Integer i = 0; i < methods_count_integer; i ++){
+            method_infos[i] = new method_info();
+            method_infos[i].access_flags = IOUtils.read_u2();
+            method_infos[i].name_index = IOUtils.read_u2();
+            method_infos[i].descriptor_index = IOUtils.read_u2();
+            method_infos[i].attribute_count = IOUtils.read_u2();
+            Integer temp_attributes_count = TypeUtils.byteArr2Int(method_infos[i].attribute_count.u2);
+            method_infos[i].attributes =  new Attribute_Base[temp_attributes_count];
+            for(Integer j = 0; j < temp_attributes_count; j ++){
+                processAttribute( j, method_infos[i].attributes);
+            }
+        }
+        return method_infos;
+    }
+
+    /**
+     * 解析字节码中的字段
+     * @param field_count_integer
+     * @return
+     */
+    private field_info[] processFields( Integer field_count_integer) {
+        field_info[] field_infos = new field_info[field_count_integer];
+        for(Integer i = 0; i < field_count_integer; i ++){
+            field_infos[i] = new field_info();
+            field_infos[i].access_flags = IOUtils.read_u2();
+            field_infos[i].name_index = IOUtils.read_u2();
+            field_infos[i].descriptor_index = IOUtils.read_u2();
+            field_infos[i].attribute_count = IOUtils.read_u2();
+            Integer temp_attributes_count = TypeUtils.byteArr2Int(field_infos[i].attribute_count.u2);
+            field_infos[i].attributes =  new Attribute_Base[temp_attributes_count];
+            for(Integer j = 0; j < temp_attributes_count; j ++){
+                processAttribute( j, field_infos[i].attributes);
+            }
+        }
+        return field_infos;
+    }
+
+    /**
+     * 解析字节码中的常量池
+     * @param constant_pool
+     * @param pool_size
+     */
+    private void processConstantPool(cp_info constant_pool, Integer pool_size) {
+        constant_pool.cp_info = new CONSTANT_Base[pool_size];
         for(Integer i = 0; i < pool_size - 1; i++){
-        u1 tag = IOUtils.read_u1();
+            u1 tag = IOUtils.read_u1();
 
             Integer integer_tag = TypeUtils.byteArr2Int(tag.u1);
             if(integer_tag == 1){
@@ -132,7 +210,7 @@ public class ClassFile {
                 constant_methodType.tag = tag;
                 constant_methodType.descriptor_index = IOUtils.read_u2();
                 constant_pool.cp_info[i] = constant_methodType;
-            //}else if(integer_tag == 17){
+                //}else if(integer_tag == 17){
             }else if(integer_tag == 18){
                 CONSTANT_InvokeDynamic constant_invokeDynamic = new CONSTANT_InvokeDynamic();
                 constant_invokeDynamic.tag = tag;
@@ -144,56 +222,9 @@ public class ClassFile {
                 return;
             }
         }
-
-        access_flags = IOUtils.read_u2();
-        this_class = IOUtils.read_u2();
-        super_class = IOUtils.read_u2();
-        interface_count = IOUtils.read_u2();
-        Integer interface_count_integer = TypeUtils.byteArr2Int(interface_count.u2);
-        interfaces = new u2[interface_count_integer];
-        for(Integer i = 0; i < interface_count_integer; i ++){
-            interfaces[i] = IOUtils.read_u2();
-        }
-
-        field_count  = IOUtils.read_u2();
-        Integer field_count_integer = TypeUtils.byteArr2Int(field_count.u2);
-        fields = new field_info[field_count_integer];
-        for(Integer i = 0; i < field_count_integer; i ++){
-            fields[i] = new field_info();
-            fields[i].access_flags = IOUtils.read_u2();
-            fields[i].name_index = IOUtils.read_u2();
-            fields[i].descriptor_index = IOUtils.read_u2();
-            fields[i].attribute_count = IOUtils.read_u2();
-            Integer temp_attributes_count = TypeUtils.byteArr2Int(fields[i].attribute_count.u2);
-            fields[i].attributes =  new Attribute_Base[temp_attributes_count];
-            for(Integer j = 0; j < temp_attributes_count; j ++){
-                processAttribute( j, fields[i].attributes);
-            }
-        }
-
-        methods_count  = IOUtils.read_u2();
-        Integer methods_count_integer = TypeUtils.byteArr2Int(methods_count.u2);
-        methods = new method_info[methods_count_integer];
-        for(Integer i = 0; i < methods_count_integer; i ++){
-            methods[i] = new method_info();
-            methods[i].access_flags = IOUtils.read_u2();
-            methods[i].name_index = IOUtils.read_u2();
-            methods[i].descriptor_index = IOUtils.read_u2();
-            methods[i].attribute_count = IOUtils.read_u2();
-            Integer temp_attributes_count = TypeUtils.byteArr2Int(methods[i].attribute_count.u2);
-            methods[i].attributes =  new Attribute_Base[temp_attributes_count];
-            for(Integer j = 0; j < temp_attributes_count; j ++){
-                processAttribute( j, methods[i].attributes);
-            }
-        }
-
-        attributes_count = IOUtils.read_u2();
-        Integer temp_attributes_count = TypeUtils.byteArr2Int(attributes_count.u2);
-        attributes =  new Attribute_Base[temp_attributes_count];
-        for(Integer i = 0; i < temp_attributes_count; i ++){
-            processAttribute( i, attributes);
-        }
     }
+
+    /*属性的各种类型，共23个*/
     public static String[] attributeStrs = {
             "ConstantValue",
             "Code",
@@ -222,6 +253,12 @@ public class ClassFile {
             /*java8增加*/
             "MethodParameters"
     };
+
+    /**
+     * 解析字节码中的属性
+     * @param index
+     * @param attributes
+     */
     public void processAttribute( Integer index, Attribute_Base[] attributes){
         u2 attributes_name_index = IOUtils.read_u2();
         Integer tempIndex = TypeUtils.byteArr2Int(attributes_name_index.u2);
@@ -443,7 +480,7 @@ public class ClassFile {
             AnnotationDefault_attribute annotationDefault = new AnnotationDefault_attribute();
             annotationDefault.attribute_name_index = attributes_name_index;
             annotationDefault.attribute_length = IOUtils.read_u4();
-            processElement_value(annotationDefault.default_value);
+            annotationDefault.default_value = processElement_value();
             attributes[index] = annotationDefault;
         }else if(TypeUtils.compare(s, attributeStrs[21])){
             BootstrapMethods_attribute bootstrapMethods = new BootstrapMethods_attribute();
@@ -494,34 +531,14 @@ public class ClassFile {
 
     void processElement_value_pair(element_value_pair element_value_pair){
         element_value_pair.element_name_index = IOUtils.read_u2();
-        processElement_value(element_value_pair.value);
+        element_value_pair.value = processElement_value();
     }
 
-    void processElement_value(element_value element_value ){
+    element_value processElement_value(){
+        element_value element_value = null;
         u1 element_value_tag = IOUtils.read_u1();
         Integer tag_integer = TypeUtils.byteArr2Int(element_value_tag.u1);
-//        if(tag_integer == Integer.valueOf('B')){
-//
-//        }else if(tag_integer == Integer.valueOf('C')){
-//
-//        }else if(tag_integer == Integer.valueOf('D')){
-//
-//        }else if(tag_integer == Integer.valueOf('F')){
-//
-//        }else if(tag_integer == Integer.valueOf('I')){
-//
-//        }else if(tag_integer == Integer.valueOf('J')){
-//
-//        }else if(tag_integer == Integer.valueOf('S')){
-//
-//        }else if(tag_integer == Integer.valueOf('Z')){
-//
-//        }else if(tag_integer == Integer.valueOf('s')){
-//            const_value_index const_value_index =  new const_value_index();
-//            const_value_index.tag = element_value_tag;
-//            const_value_index.const_value_index = IOUtils.read_u2();
-//            element_value = const_value_index;
-//        }
+
         if(tag_integer == Integer.valueOf('B')
                 ||tag_integer == Integer.valueOf('C')
                 ||tag_integer == Integer.valueOf('D')
@@ -560,11 +577,12 @@ public class ClassFile {
             Integer num_value_integer = TypeUtils.byteArr2Int(array_value.num_values.u2);
             element_value[] element_values = new element_value[num_value_integer];
             for(Integer i = 0; i < num_value_integer; i++){
-                processElement_value(element_values[i]);
+                element_values[i] = processElement_value();
             }
             array_value.values = element_values;
             element_value = array_value;
         }
+        return element_value;
 
     }
 

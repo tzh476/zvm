@@ -1,5 +1,6 @@
 package com.zvm;
 
+import com.zvm.jnative.NativeUtils;
 import com.zvm.runtime.RunTimeEnv;
 
 public class JavaMain {
@@ -12,7 +13,8 @@ public class JavaMain {
 
         ZVM zvm = new ZVM(zvmEnv);
 
-        zvm.registerNatives();
+        NativeUtils nativeUtils = new NativeUtils(zvmEnv);
+        nativeUtils.registerNatives();
 
         zvm.callMain("main", "([Ljava/lang/String;)V", curClassName);
     }

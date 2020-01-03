@@ -2,6 +2,7 @@ package com.zvm.classfile;
 
 import com.zvm.basestruct.u2;
 import com.zvm.classfile.attribute.Attribute_Base;
+import com.zvm.runtime.JavaClass;
 
 public class field_info{
     public u2 access_flags;
@@ -12,4 +13,7 @@ public class field_info{
 
     public int slotId;
     public int constValueIndex;
+
+    public JavaClass javaClass;
+
 }

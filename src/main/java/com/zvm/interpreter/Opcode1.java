@@ -1,4 +1,4 @@
-package com.zvm.draft;
+package com.zvm.interpreter;
 
 import com.google.gson.Gson;
 
@@ -215,7 +215,8 @@ public class Opcode1 implements Serializable {
       int	goto_w			= 0xc8;
       int	jsr_w			= 0xc9;
       int	breakpoint		= 0xca;
-      int	impdep1			= 0xfe;
+      /*final static int	impdep1			= 0xfe;*/
+      int	invokenative	= 0xfe;
       int	impdep2			= 0xff;
 
 

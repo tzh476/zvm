@@ -13,6 +13,8 @@ public class Cmd {
     public final static String XJRE = "-Xjre";
     public final static String CP = "-cp";
 
+    public final static Integer HEAP_MAX_SIZE = 4 * 8000;
+
 
     public final static String UNIX_SLASH = "/";
     public final static String WINDOWS_SLASH = "\\";
@@ -40,9 +42,13 @@ public class Cmd {
         }
 
         curClassName = args[len - 1];
-        curClassNamePath = userClassPath + curClassName.replace(".", "\\") + ".class";
-        curClassName = curClassName.replace(".", "/") ;
-
+        if(isWindows()){
+            curClassNamePath = userClassPath + curClassName.replace(".", WINDOWS_SLASH) + ".class";
+            curClassName = curClassName.replace(".", WINDOWS_SLASH) ;
+        }else {
+            curClassNamePath = userClassPath + curClassName.replace(".", UNIX_SLASH) + ".class";
+            curClassName = curClassName.replace(".", UNIX_SLASH) ;
+        }
     }
 
     private static String processOSSlash(String path) {

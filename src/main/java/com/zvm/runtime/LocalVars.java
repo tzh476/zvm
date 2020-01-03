@@ -1,7 +1,6 @@
 package com.zvm.runtime;
 
 import com.zvm.runtime.struct.Slot;
-import com.zvm.utils.Vars;
 
 /**
  * 局部变量表

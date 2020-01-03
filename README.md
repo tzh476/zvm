@@ -353,6 +353,149 @@ file path : gc/GCTest1
 ```
 </details>
 
+### 其他 demo
+<details>
+<summary>1. 嵌套类</summary>
+
+- 执行样例：
+```java
+/**
+ 1. 嵌套类：
+    - 静态嵌套类；
+    - 非静态嵌套类(non-static nested class 又名内部类，inner classes)
+        - 普通内部类(成员内部类)
+        - 局部内部类
+        - 匿名内部类
+ https://docs.oracle.com/javase/tutorial/java/javaOO/nested.html
+ */
+public class T0NestedClass {
+    static class StaticClass{
+        public String staticClassKey = "staticClassVale";
+        public void test(){
+            System.out.println(staticClassKey);
+        }
+    }
+
+    /**
+     * 普通内部类
+     */
+    class GenaralClass{
+        public String genaralClassKey = "genaralClassValue";
+        public void test(){
+            System.out.println(genaralClassKey);
+        }
+    }
+
+    public static void main(String[] args){
+        class LocalClass{
+            public String localClassKey = "LocalClassValue";
+            public void test(){
+                System.out.println(localClassKey);
+            }
+        }
+
+        AnonymousClass anonymousClass = new AnonymousClass(){
+            public String anonymousClassKey = "anonymousClassValue";
+            public void test(){
+                System.out.println(anonymousClassKey);
+            }
+        };
+
+        /*静态类测试*/
+        StaticClass staticClass = new StaticClass();
+        staticClass.test();
+
+        /*普通内部类测试*/
+        new T0NestedClass().generalClassTest();
+
+        /*局部内部类测试*/
+        LocalClass localClass = new LocalClass();
+        localClass.test();
+
+        /*匿名内部类测试*/
+        anonymousClass.test();
+
+    }
+
+    public void generalClassTest(){
+        GenaralClass genaralClass = new GenaralClass();
+        genaralClass.test();
+    }
+}
+class AnonymousClass{
+    public void test() {
+    }
+}
+```
+
+输出结果：
+```java
+file path : nestedclass\T0NestedClass
+总内存:32000 分配：4完成 当前已使用:4
+...
+staticClassVale
+总内存:32000 分配：0完成 当前已使用:92
+总内存:32000 分配：8完成 当前已使用:100
+总内存:32000 分配：8完成 当前已使用:108
+总内存:32000 分配：34完成 当前已使用:142
+genaralClassValue
+总内存:32000 分配：4完成 当前已使用:146
+总内存:32000 分配：8完成 当前已使用:154
+总内存:32000 分配：30完成 当前已使用:184
+LocalClassValue
+anonymousClassValue
+
+```
+</details>
+
+<details>
+<summary>2. 类的加载、链接、初始化</summary>
+
+- 执行样例：
+```java
+public class T1ClassLink {
+    public static String value1 = "abc";
+    public static final String finalValue = "zvm";
+    public static String[] arr = new String[]{"arr0", "arr1", "dsafasfsdafd"};
+    public static final String[] finalArr = new String[]{"final-arr0", "final-arr1", "final-dsafasfsdafd"};
+    public String generalStr = "generalStr";
+
+    public T1ClassLink() {
+    }
+
+    public static void main(String[] var0) {
+        System.out.println(value1);
+        System.out.println("zvm");
+        System.out.println(arr[0]);
+        System.out.println(finalArr[0]);
+        System.out.println((new T1ClassLink()).generalStr);
+    }
+}
+```
+
+输出结果：
+```java
+file path : classlink\T1ClassLink
+总内存:32000 分配：0完成 当前已使用:0
+...
+abc
+总内存:32000 分配：8完成 当前已使用:210
+总内存:32000 分配：6完成 当前已使用:216
+zvm
+总内存:32000 分配：8完成 当前已使用:224
+...
+arr0
+总内存:32000 分配：8完成 当前已使用:426
+...
+final-arr0
+总内存:32000 分配：4完成 当前已使用:624
+...
+generalStr
+
+```
+</details>
+
+
 # 怎么运行
 <details>
 <summary>1. 环境 </summary>
@@ -433,9 +576,9 @@ com\zvm
        RunTimeEnv.java          #运行时的环境，包括JavaHeap、MethodMrea等
        StaticVars.java          #JavaClass中的静态字段分配内存
        ThreadStack.java         #线程栈：运行时，方法调用帧由底至上组成线程栈
+       Vars.java                #供LocalVars、LocalVars、ObjectFields继承使用
     utils\
        TypeUtils.java           #类型转换工具类
-       Vars.java                #供LocalVars、LocalVars、ObjectFields继承使用
     Cmd.java                    #解析命令行
     JavaMain.java               #启动入口类，含main方法
     ZVM.java                    #表示虚拟机
@@ -516,6 +659,8 @@ com\zvm
 
 - 待实现
 </details>
+
+# [wiki](https://github.com/tzh476/zvm/wiki)
 
 # 引用和参考
 <details>

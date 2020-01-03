@@ -1,5 +1,6 @@
 package com.zvm.memory;
 
+import com.zvm.Cmd;
 import com.zvm.gc.GC;
 import com.zvm.runtime.JThread;
 import com.zvm.runtime.JavaClass;
@@ -10,10 +11,11 @@ import com.zvm.runtime.struct.*;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.zvm.Cmd.HEAP_MAX_SIZE;
+
 
 public class JavaHeap {
 
-    public final Integer HEAP_MAX_SIZE = 4 * 8000;
 
     /**
      * 保存对象
@@ -93,6 +95,7 @@ public class JavaHeap {
             arrayFields = new ArrayFields(new JObject[count],arrayClass );
             arrayContainer.put(jObject.offset, arrayFields);
         }
+        //System.out.println(new Gson().toJson(arrayContainer));
         System.out.println("总内存:" + HEAP_MAX_SIZE + " 分配："+needSize+"完成 " + "当前已使用:" + getHeapSize() );
         return jObject;
     }
@@ -124,6 +127,9 @@ public class JavaHeap {
 
         for (Map.Entry<Integer,ArrayFields> entry:arrayContainer.entrySet()){
             ArrayFields arrayFields = entry.getValue();
+            if( arrayFields.primitiveTypes == null || arrayFields.primitiveTypes.length == 0){
+                continue;
+            }
             JType primitiveType = arrayFields.primitiveTypes[0];
             if(primitiveType instanceof JByte  ){
                 heapSize += 1 * arrayFields.arraySize;

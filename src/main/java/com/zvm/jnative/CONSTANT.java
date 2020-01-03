@@ -1,4 +1,4 @@
-package com.zvm.jnative.java.lang;
+package com.zvm.jnative;
 
 public class CONSTANT {
     //registerNative("", "(Ljava/lang/Object;ILjava/lang/Object;II)V", "arraycopy");

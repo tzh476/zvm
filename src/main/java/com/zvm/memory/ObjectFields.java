@@ -1,21 +1,21 @@
 package com.zvm.memory;
 
-import com.zvm.utils.Vars;
+import com.zvm.runtime.Vars;
 import com.zvm.runtime.struct.Slot;
 
 /**
  * 保存对象的所有字段
  */
 public class ObjectFields extends Vars {
-    /*保存数组的大小*/
-    //public int arraySize;
-
     public ObjectFields(Integer num) {
         slots = new Slot[num];
         for(Integer i = 0; i < num; i++){
             slots[i] = new Slot();
         }
     }
+
+    /*保存数组的大小*/
+    //public int arraySize;
 
 //    public long getLongInArray(int index){
 //        /*long数组中，一个long占2个slot，定位是，偏移*2*/

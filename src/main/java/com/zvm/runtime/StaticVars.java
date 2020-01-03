@@ -1,7 +1,6 @@
 package com.zvm.runtime;
 
 
-import com.zvm.utils.Vars;
 import com.zvm.runtime.struct.Slot;
 
 public class StaticVars extends Vars {
