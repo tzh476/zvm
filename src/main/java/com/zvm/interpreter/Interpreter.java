@@ -2,9 +2,9 @@ package com.zvm.interpreter;
 
 import com.alibaba.fastjson.JSON;
 import com.google.gson.Gson;
-import com.zvm.basestruct.u1;
-import com.zvm.basestruct.u2;
-import com.zvm.basestruct.u4;
+import com.zvm.basestruct.U1;
+import com.zvm.basestruct.U2;
+import com.zvm.basestruct.U4;
 import com.zvm.classfile.*;
 import com.zvm.classfile.constantpool.*;
 import com.zvm.jnative.NativeUtils;
@@ -19,7 +19,7 @@ import com.zvm.utils.TypeUtils;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.zvm.interpreter.Opcode.newarray;
+import static com.zvm.interpreter.Opcode.NEWARRAY;
 import static com.zvm.basestruct.TypeCode.*;
 
 public class Interpreter {
@@ -34,18 +34,18 @@ public class Interpreter {
     }
 
     public void invokeByName(JavaClass javaClass, String name, String descriptor){
-        method_info method_info = javaClass.findMethod(name, descriptor);
+        MethodInfo method_info = javaClass.findMethod(name, descriptor);
         if (method_info == null){
             return ;
         }
         CallSite callSite = new CallSite();
         callSite.setCallSite( method_info);
 
-        jThread.pushFrame(callSite.max_stack, callSite.max_locals);
-        executeByteCode(jThread, javaClass, callSite.code, TypeUtils.byteArr2Int(callSite.code_length.u4));
+        jThread.pushFrame(callSite.maxStack, callSite.maxLocals);
+        executeByteCode(jThread, javaClass, callSite.code, TypeUtils.byteArr2Int(callSite.codeLength.u4));
     }
 
-    public void executeByteCode(JThread jThread, JavaClass javaClass, u1[] codeRaw, int codeLength) {
+    public void executeByteCode(JThread jThread, JavaClass javaClass, U1[] codeRaw, int codeLength) {
         JavaFrame javaFrame = jThread.getTopFrame();
         OperandStack operandStack = javaFrame.operandStack;
         LocalVars localVars = javaFrame.localVars;
@@ -53,78 +53,78 @@ public class Interpreter {
         for (; code.getPc() < codeLength; code.pcAdd(1)) {
             int opcodeInt = TypeUtils.byteArr2Int(codeRaw[code.getPc()].u1);
             Gson gson = new Gson();
-            //.println("pc = " + code.getPc() + " operandStack size "+ operandStack.size);
+            System.out.println("pc = " + code.getPc() + " operandStack size "+ operandStack.size);
             //System.out.println("pc = " + code.getPc() + " operandStack "+gson.toJson(operandStack));
-            //System.out.println("pc = " + code.getPc() + " localVars size "+ localVars.slots.length);
+            System.out.println("pc = " + code.getPc() + " localVars size "+ localVars.slots.length);
             //System.out.println("pc = " + code.getPc() + " localVars " + gson.toJson(localVars));
-            //System.out.println();
-            //System.out.println("pc = " + code.getPc() + " opcode:" + Opcode1.getMnemonic(opcodeInt));
+            System.out.println();
+            System.out.println("pc = " + code.getPc() + " opcode:" + Opcode1.getMnemonic(opcodeInt));
 
             switch (opcodeInt) {
-                case Opcode.nop: {
+                case Opcode.NOP: {
 
                 }
                 break;
-                case Opcode.aconst_null: {
+                case Opcode.ACONST_NULL: {
                     operandStack.putJObject(null);
                 }
                 break;
-                case Opcode.iconst_m1: {
+                case Opcode.ICONST_M1: {
                 }
                 break;
-                case Opcode.iconst_0: {
+                case Opcode.ICONST_0: {
                     operandStack.putInt(0);
                 }
                 break;
-                case Opcode.iconst_1: {
+                case Opcode.ICONST_1: {
                     operandStack.putInt(1);
                 }
                 break;
-                case Opcode.iconst_2: {
+                case Opcode.ICONST_2: {
                     operandStack.putInt(2);
 
                 }
                 break;
-                case Opcode.iconst_3: {
+                case Opcode.ICONST_3: {
                     operandStack.putInt(3);
                 }
                 break;
-                case Opcode.iconst_4: {
+                case Opcode.ICONST_4: {
                     operandStack.putInt(4);
                 }
                 break;
-                case Opcode.iconst_5: {
+                case Opcode.ICONST_5: {
                     operandStack.putInt(5);
                 }
                 break;
-                case Opcode.lconst_0: {
+                case Opcode.LCONST_0: {
                     operandStack.putLong(0);
                 }
                 break;
-                case Opcode.bipush: {
+                case Opcode.BIPUSH: {
                     byte byteConstant = code.consumeU1();
                     operandStack.putByte(byteConstant);
                 }
                 break;
-                case Opcode.sipush: {
+                case Opcode.SIPUSH: {
                     short shortConstant = code.consumeU2();
                     operandStack.putInt(shortConstant);
                 }
                 break;
-                case Opcode.ldc: {
+                case Opcode.LDC: {
                     /*从常量池取值到frame顶*/
                     byte cpIndex = code.consumeU1();
-                    CONSTANT_Base constant_base = javaClass.getClassFile().constant_pool.cp_info[TypeUtils.byte2Int(cpIndex)-1];
-                    if(constant_base instanceof CONSTANT_Integer){
-                        u4 ldcBytes = ((CONSTANT_Integer) constant_base).bytes;
+                    ConstantBase constant_base = javaClass.getClassFile().constantPool.cpInfo[TypeUtils.byte2Int(cpIndex)-1];
+                    if(constant_base instanceof ConstantInteger){
+                        U4 ldcBytes = ((ConstantInteger) constant_base).bytes;
                         Integer ldcValue = TypeUtils.byteArr2Int(ldcBytes.u4);
                         operandStack.putInt(ldcValue);
-                    }else if(constant_base instanceof CONSTANT_Float){
-                        u4 ldcBytes = ((CONSTANT_Float) constant_base).bytes;
+                    }else if(constant_base instanceof ConstantFloat){
+                        U4 ldcBytes = ((ConstantFloat) constant_base).bytes;
                         float ldcValue = TypeUtils.byteArr2Float(ldcBytes.u4);
                         operandStack.putFloat(ldcValue);
-                    }else if(constant_base instanceof CONSTANT_String){
-                        u2 stringIndex = ((CONSTANT_String) constant_base).string_index;
+                    }else if(constant_base instanceof ConstantString){
+                        U2 stringIndex = ((ConstantString) constant_base).stringIndex;
                         String className = "java/lang/String";
                         JavaClass stringClass = runTimeEnv.methodArea.findClass(className);
                         if(stringClass == null){
@@ -133,7 +133,7 @@ public class Interpreter {
                             runTimeEnv.methodArea.initClass(className, this);
                         }
 
-                        CONSTANT_Utf8 valueUtf8 = (CONSTANT_Utf8) javaClass.getClassFile().constant_pool.cp_info[TypeUtils.byteArr2Int(stringIndex.u2)-1];
+                        ConstantUtf8 valueUtf8 = (ConstantUtf8) javaClass.getClassFile().constantPool.cpInfo[TypeUtils.byteArr2Int(stringIndex.u2)-1];
                         String value = TypeUtils.u12String(valueUtf8.bytes);
                         char[] chars = value.toCharArray();
 
@@ -157,214 +157,218 @@ public class Interpreter {
                         int slotId = stringClass.findField("value", cClassName).slotId;
                         stringFields.putJObject(slotId, charArrayJObject);
                         operandStack.putJObject(stringObject);
+                    }else if(constant_base instanceof ConstantClass){
+                        U2 nameIndex = ((ConstantClass) constant_base).nameIndex;
+
+                        //operandStack.putFloat(ldcValue);
                     }
 
                 }
                 break;
-                case Opcode.ldc_w: {
+                case Opcode.LDC_W: {
                     /*从常量池取值到frame顶*/
                     short cpIndex = code.consumeU2();
-                    CONSTANT_Base constant_base = javaClass.getClassFile().constant_pool.cp_info[cpIndex - 1];
-                    if(constant_base instanceof CONSTANT_Integer){
-                        u4 ldcBytes = ((CONSTANT_Integer) constant_base).bytes;
+                    ConstantBase constant_base = javaClass.getClassFile().constantPool.cpInfo[cpIndex - 1];
+                    if(constant_base instanceof ConstantInteger){
+                        U4 ldcBytes = ((ConstantInteger) constant_base).bytes;
                         Integer ldcValue = TypeUtils.byteArr2Int(ldcBytes.u4);
                         operandStack.putInt(ldcValue);
-                    }else if(constant_base instanceof CONSTANT_Float){
-                        u4 ldcBytes = ((CONSTANT_Float) constant_base).bytes;
+                    }else if(constant_base instanceof ConstantFloat){
+                        U4 ldcBytes = ((ConstantFloat) constant_base).bytes;
                         float ldcValue = TypeUtils.byteArr2Float(ldcBytes.u4);
                         operandStack.putFloat(ldcValue);
                     }
                 }
                 break;
-                case Opcode.ldc2_w: {
+                case Opcode.LDC2_W: {
                     /*从常量池取值到frame顶*/
                     short cpIndex = code.consumeU2();
-                    CONSTANT_Base constant_base = javaClass.getClassFile().constant_pool.cp_info[cpIndex - 1];
-                    if(constant_base instanceof CONSTANT_Long){
-                        u4 highBytes = ((CONSTANT_Long) constant_base).high_bytes;
-                        u4 lowBytes = ((CONSTANT_Long) constant_base).low_bytes;
+                    ConstantBase constant_base = javaClass.getClassFile().constantPool.cpInfo[cpIndex - 1];
+                    if(constant_base instanceof ConstantLong){
+                        U4 highBytes = ((ConstantLong) constant_base).highBytes;
+                        U4 lowBytes = ((ConstantLong) constant_base).lowBytes;
                         operandStack.putLong(TypeUtils.byteArr2Int(highBytes.u4), TypeUtils.byteArr2Int(lowBytes.u4));
-                    }else if(constant_base instanceof CONSTANT_Double){
-                        u4 highBytes = ((CONSTANT_Double) constant_base).high_bytes;
-                        u4 lowBytes = ((CONSTANT_Double) constant_base).low_bytes;
+                    }else if(constant_base instanceof ConstantDouble){
+                        U4 highBytes = ((ConstantDouble) constant_base).highBytes;
+                        U4 lowBytes = ((ConstantDouble) constant_base).lowBytes;
                         byte[] doubleByte = TypeUtils.appendByte(highBytes.u4, lowBytes.u4);
                         double ldcValue = TypeUtils.byteArr2Double(doubleByte);
                         operandStack.putDouble(ldcValue);
                     }
                 }
                 break;
-                case Opcode.iload: {
+                case Opcode.ILOAD: {
                     int index = TypeUtils.byte2Int(code.consumeU1());
                     int loadValue = localVars.getIntByIndex(index);
                     operandStack.putInt(loadValue);
                 }
                 break;
-                case Opcode.lload: {
+                case Opcode.LLOAD: {
                     int index = TypeUtils.byte2Int(code.consumeU1());
                     long loadValue = localVars.getLongByIndex(index);
                     operandStack.putLong(loadValue);
                 }
                 break;
-                case Opcode.fload: {
+                case Opcode.FLOAD: {
                     int index = TypeUtils.byte2Int(code.consumeU1());
                     float loadValue = localVars.getFloat(index);
                     operandStack.putFloat(loadValue);
                 }
                 break;
-                case Opcode.dload: {
+                case Opcode.DLOAD: {
                     int index = TypeUtils.byte2Int(code.consumeU1());
                     double loadValue = localVars.getDouble(index);
                     operandStack.putDouble(loadValue);
                 }
                 break;
-                case Opcode.aload: {
+                case Opcode.ALOAD: {
                     int index = TypeUtils.byte2Int(code.consumeU1());
                     JObject jObject = localVars.getJObject(index);
                     operandStack.putJObject(jObject);
                 }
                 break;
-                case Opcode.lload_2: {
+                case Opcode.LLOAD_2: {
                     long loadValue = localVars.getLongByIndex(2);
                     operandStack.putLong(loadValue);
                 }
                 break;
-                case Opcode.lload_3: {
+                case Opcode.LLOAD_3: {
                     long loadValue = localVars.getLongByIndex(3);
                     operandStack.putLong(loadValue);
                 }
                 break;
-                case Opcode.fload_0: {
+                case Opcode.FLOAD_0: {
                     float loadValue = localVars.getFloat(0);
                     operandStack.putFloat(loadValue);
                 }
                 break;
-                case Opcode.fload_1: {
+                case Opcode.FLOAD_1: {
                     float loadValue = localVars.getFloat(1);
                     operandStack.putFloat(loadValue);
                 }
                 break;
-                case Opcode.fload_2: {
+                case Opcode.FLOAD_2: {
                     float loadValue = localVars.getFloat(2);
                     operandStack.putFloat(loadValue);
                 }
                 break;
-                case Opcode.fload_3: {
+                case Opcode.FLOAD_3: {
                     float loadValue = localVars.getFloat(3);
                     operandStack.putFloat(loadValue);
                 }
                 break;
-                case Opcode.dload_0: {
+                case Opcode.DLOAD_0: {
                     double loadValue = localVars.getDouble(0);
                     operandStack.putDouble(loadValue);
                 }
                 break;
-                case Opcode.dload_1: {
+                case Opcode.DLOAD_1: {
                     double loadValue = localVars.getDouble(1);
                     operandStack.putDouble(loadValue);
                 }
                 break;
-                case Opcode.dload_2: {
+                case Opcode.DLOAD_2: {
                     double loadValue = localVars.getDouble(2);
                     operandStack.putDouble(loadValue);
                 }
                 break;
-                case Opcode.dload_3: {
+                case Opcode.DLOAD_3: {
                     double loadValue = localVars.getDouble(3);
                     operandStack.putDouble(loadValue);
                 }
                 break;
-                case Opcode.faload: {
+                case Opcode.FALOAD: {
                     int index = operandStack.popInt();
                     JObject arrayObject = operandStack.popJObject();
                     ArrayFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(arrayObject.offset);
                     operandStack.putFloat(arrayFields.getFloat(index));
                 }
                 break;
-                case Opcode.daload: {
+                case Opcode.DALOAD: {
                     int index = operandStack.popInt();
                     JObject arrayObject = operandStack.popJObject();
                     ArrayFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(arrayObject.offset);
                     operandStack.putDouble(arrayFields.getDouble(index));
                 }
                 break;
-                case Opcode.aaload: {
+                case Opcode.AALOAD: {
                     int index = operandStack.popInt();
                     JObject arrayObject = operandStack.popJObject();
                     ArrayFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(arrayObject.offset);
                     operandStack.putJObject(arrayFields.getJObject(index));
                 }
                 break;
-                case Opcode.baload: {
+                case Opcode.BALOAD: {
                 }
                 break;
-                case Opcode.caload: {
+                case Opcode.CALOAD: {
 
                 }
                 break;
-                case Opcode.saload: {
+                case Opcode.SALOAD: {
                 }
                 break;
-                case Opcode.istore: {
+                case Opcode.ISTORE: {
                     int index = code.consumeU1();
                     localVars.putIntByIndex(index, operandStack.popInt());
                 }
                 break;
-                case Opcode.lstore: {
+                case Opcode.LSTORE: {
                     int index = code.consumeU1();
                     localVars.putLong(index, operandStack.popLong());
                 }
                 break;
-                case Opcode.fstore: {
+                case Opcode.FSTORE: {
                     int index = code.consumeU1();
                     localVars.putFloat(index, operandStack.popFloat());
                 }
                 break;
-                case Opcode.dstore: {
+                case Opcode.DSTORE: {
                     int index = code.consumeU1();
                     localVars.putDouble(index, operandStack.popDouble());
                 }
                 break;
-                case Opcode.lstore_1: {
+                case Opcode.LSTORE_1: {
                     localVars.putLong(1, operandStack.popLong());
                 }
                 break;
-                case Opcode.lstore_2: {
+                case Opcode.LSTORE_2: {
                     localVars.putLong(2, operandStack.popLong());
                 }
                 break;
-                case Opcode.lstore_3: {
+                case Opcode.LSTORE_3: {
                     localVars.putLong(3, operandStack.popLong());
                 }
                 break;
-                case Opcode.fstore_0: {
+                case Opcode.FSTORE_0: {
                     localVars.putFloat(0, operandStack.popFloat());
                 }
                 break;
-                case Opcode.fstore_1: {
+                case Opcode.FSTORE_1: {
                     localVars.putFloat(1, operandStack.popFloat());
                 }
                 break;
-                case Opcode.fstore_2: {
+                case Opcode.FSTORE_2: {
                     localVars.putFloat(2, operandStack.popFloat());
                 }
                 break;
-                case Opcode.fstore_3: {
+                case Opcode.FSTORE_3: {
                     localVars.putFloat(3, operandStack.popFloat());
                 }
                 break;
-                case Opcode.dstore_0: {
+                case Opcode.DSTORE_0: {
                     localVars.putDouble(0, operandStack.popDouble());
                 }
                 break;
-                case Opcode.dstore_1: {
+                case Opcode.DSTORE_1: {
                     localVars.putDouble(1, operandStack.popDouble());
                 }
                 break;
-                case Opcode.dstore_2: {
+                case Opcode.DSTORE_2: {
                     localVars.putDouble(2, operandStack.popDouble());
                 }
                 break;
-                case Opcode.lastore: {
+                case Opcode.LASTORE: {
                     long value = operandStack.popLong();
                     int index = operandStack.popInt();
                     JObject arrayObject = operandStack.popJObject();
@@ -372,7 +376,7 @@ public class Interpreter {
                     arrayFields.putLong(index, value);
                 }
                 break;
-                case Opcode.fastore: {
+                case Opcode.FASTORE: {
                     float value = operandStack.popFloat();
                     int index = operandStack.popInt();
                     JObject arrayObject = operandStack.popJObject();
@@ -380,7 +384,7 @@ public class Interpreter {
                     arrayFields.putFloat(index, value);
                 }
                 break;
-                case Opcode.dastore: {
+                case Opcode.DASTORE: {
                     double value = operandStack.popDouble();
                     int index = operandStack.popInt();
                     JObject arrayObject = operandStack.popJObject();
@@ -388,7 +392,7 @@ public class Interpreter {
                     arrayFields.putDouble( index, value);
                 }
                 break;
-                case Opcode.aastore: {
+                case Opcode.AASTORE: {
                     JObject value = operandStack.popJObject();
                     int index = operandStack.popInt();
                     JObject arrayObject = operandStack.popJObject();
@@ -396,171 +400,171 @@ public class Interpreter {
                     arrayFields.putJOject( index, value);
                 }
                 break;
-                case Opcode.bastore: {
+                case Opcode.BASTORE: {
                 }
                 break;
-                case Opcode.castore: {
+                case Opcode.CASTORE: {
                 }
                 break;
-                case Opcode.sastore: {
+                case Opcode.SASTORE: {
                 }
                 break;
-                case Opcode.pop: {
+                case Opcode.POP: {
                 }
                 break;
-                case Opcode.pop2: {
+                case Opcode.POP2: {
                 }
                 break;
-                case Opcode.dup: {
+                case Opcode.DUP: {
                     operandStack.putSlot(operandStack.getSlot());
                 }
                 break;
-                case Opcode.iadd: {
+                case Opcode.IADD: {
                     int var1 = operandStack.popInt();
                     int var0 = operandStack.popInt();
                     int sum = var0 + var1;
                     operandStack.putInt(sum);
                 }
                 break;
-                case Opcode.ladd: {
+                case Opcode.LADD: {
                     long var1 = operandStack.popLong();
                     long var0 = operandStack.popLong();
                     long addValue = var0 + var1;
                     operandStack.putLong(addValue);
                 }
                 break;
-                case Opcode.fadd: {
+                case Opcode.FADD: {
                     float var1 = operandStack.popFloat();
                     float var0 = operandStack.popFloat();
                     float addValue = var0 + var1;
                     operandStack.putFloat(addValue);
                 }
                 break;
-                case Opcode.dadd: {
+                case Opcode.DADD: {
                     double var1 = operandStack.popDouble();
                     double var0 = operandStack.popDouble();
                     double addValue = var0 + var1;
                     operandStack.putDouble(addValue);
                 }
                 break;
-                case Opcode.isub: {
+                case Opcode.ISUB: {
                     int var1 = operandStack.popInt();
                     int var0 = operandStack.popInt();
                     int subValue = var0 - var1;
                     operandStack.putInt(subValue);
                 }
                 break;
-                case Opcode.lsub: {
+                case Opcode.LSUB: {
                     long var1 = operandStack.popLong();
                     long var0 = operandStack.popLong();
                     long subValue = var0 - var1;
                     operandStack.putLong(subValue);
                 }
                 break;
-                case Opcode.fsub: {
+                case Opcode.FSUB: {
                     float var1 = operandStack.popFloat();
                     float var0 = operandStack.popFloat();
                     float subValue = var0 - var1;
                     operandStack.putFloat(subValue);
                 }
                 break;
-                case Opcode.dsub: {
+                case Opcode.DSUB: {
                     double var1 = operandStack.popLong();
                     double var0 = operandStack.popLong();
                     double subValue = var0 - var1;
                     operandStack.putDouble(subValue);
                 }
                 break;
-                case Opcode.imul: {
+                case Opcode.IMUL: {
                     int var1 = operandStack.popInt();
                     int var0 = operandStack.popInt();
                     int sum = var0 * var1;
                     operandStack.putInt(sum);
                 }
                 break;
-                case Opcode.lmul: {
+                case Opcode.LMUL: {
                 }
                 break;
-                case Opcode.irem: {
+                case Opcode.IREM: {
                 }
                 break;
-                case Opcode.lrem: {
+                case Opcode.LREM: {
                 }
                 break;
-                case Opcode.frem: {
+                case Opcode.FREM: {
                 }
                 break;
-                case Opcode.drem: {
+                case Opcode.DREM: {
                 }
                 break;
-                case Opcode.ineg: {
+                case Opcode.INEG: {
                 }
                 break;
-                case Opcode.lneg: {
+                case Opcode.LNEG: {
                 }
                 break;
-                case Opcode.fneg: {
+                case Opcode.FNEG: {
                 }
                 break;
-                case Opcode.dneg: {
+                case Opcode.DNEG: {
                 }
                 break;
-                case Opcode.ishl: {
+                case Opcode.ISHL: {
                 }
                 break;
-                case Opcode.lshl: {
+                case Opcode.LSHL: {
                 }
                 break;
-                case Opcode.ior: {
+                case Opcode.IOR: {
                 }
                 break;
-                case Opcode.lor: {
+                case Opcode.LOR: {
                 }
                 break;
-                case Opcode.ixor: {
+                case Opcode.IXOR: {
                 }
                 break;
-                case Opcode.lxor: {
+                case Opcode.LXOR: {
                 }
                 break;
-                case Opcode.iinc: {
+                case Opcode.IINC: {
                     byte localVarIndex = code.consumeU1();
                     byte constValue = code.consumeU1();
                     int localVar = localVars.getIntByIndex(localVarIndex);
                     localVars.putIntByIndex(localVarIndex, localVar + constValue);
                 }
                 break;
-                case Opcode.i2l: {
+                case Opcode.I2L: {
                 }
                 break;
-                case Opcode.i2f: {
+                case Opcode.I2F: {
                 }
                 break;
-                case Opcode.i2d: {
+                case Opcode.I2D: {
                     int iValue = operandStack.popInt();
                     double dValue = iValue + 0.0;
                     operandStack.putDouble(dValue);
                 }
                 break;
-                case Opcode.l2i: {
+                case Opcode.L2I: {
                 }
                 break;
-                case Opcode.l2f: {
+                case Opcode.L2F: {
                 }
                 break;
-                case Opcode.d2f: {
+                case Opcode.D2F: {
                 }
                 break;
-                case Opcode.i2b: {
+                case Opcode.I2B: {
                 }
                 break;
-                case Opcode.i2c: {
+                case Opcode.I2C: {
                 }
                 break;
-                case Opcode.i2s: {
+                case Opcode.I2S: {
                 }
                 break;
-                case Opcode.lcmp: {
+                case Opcode.LCMP: {
                     long var1 = operandStack.popLong();
                     long var0 = operandStack.popLong();
                     int cmpRes = 0;
@@ -572,7 +576,7 @@ public class Interpreter {
                     operandStack.putInt(cmpRes);
                 }
                 break;
-                case Opcode.fcmpl: {
+                case Opcode.FCMPL: {
                     /*未考虑出现NaN的情况*/
                     float var1 = operandStack.popFloat();
                     float var0 = operandStack.popFloat();
@@ -585,7 +589,7 @@ public class Interpreter {
                     operandStack.putInt(cmpRes);
                 }
                 break;
-                case Opcode.fcmpg: {
+                case Opcode.FCMPG: {
                     /*未考虑出现NaN的情况*/
                     float var1 = operandStack.popFloat();
                     float var0 = operandStack.popFloat();
@@ -598,7 +602,7 @@ public class Interpreter {
                     operandStack.putInt(cmpRes);
                 }
                 break;
-                case Opcode.dcmpl: {
+                case Opcode.DCMPL: {
                     /*未考虑出现NaN的情况*/
                     double var1 = operandStack.popDouble();
                     double var0 = operandStack.popDouble();
@@ -611,7 +615,7 @@ public class Interpreter {
                     operandStack.putInt(cmpRes);
                 }
                 break;
-                case Opcode.dcmpg: {
+                case Opcode.DCMPG: {
                     /*未考虑出现NaN的情况*/
                     double var1 = operandStack.popDouble();
                     double var0 = operandStack.popDouble();
@@ -624,7 +628,7 @@ public class Interpreter {
                     operandStack.putInt(cmpRes);
                 }
                 break;
-                case Opcode.ifeq: {
+                case Opcode.IFEQ: {
                     int ifeqValue = operandStack.popInt();
                     if(ifeqValue == 0){
                         int offset = code.readU2();
@@ -635,132 +639,132 @@ public class Interpreter {
 
                 }
                 break;
-                case Opcode.lconst_1: {
+                case Opcode.LCONST_1: {
                     operandStack.putLong(1L);
                 }
                 break;
-                case Opcode.fconst_0: {
+                case Opcode.FCONST_0: {
                     operandStack.putFloat(0.0f);
                 }
                 break;
-                case Opcode.fconst_1: {
+                case Opcode.FCONST_1: {
                     operandStack.putFloat(1.0f);
                 }
                 break;
-                case Opcode.fconst_2: {
+                case Opcode.FCONST_2: {
                     operandStack.putFloat(2.0f);
                 }
                 break;
-                case Opcode.dconst_0: {
+                case Opcode.DCONST_0: {
                     operandStack.putDouble(0.0);
                 }
                 break;
-                case Opcode.dconst_1: {
+                case Opcode.DCONST_1: {
                     operandStack.putDouble(1.0);
                 }
                 break;
-                case Opcode.iload_0: {
+                case Opcode.ILOAD_0: {
                     operandStack.putInt(localVars.getIntByIndex(0));
                 }
                 break;
-                case Opcode.iload_1: {
+                case Opcode.ILOAD_1: {
                     operandStack.putInt(localVars.getIntByIndex(1));
                 }
                 break;
-                case Opcode.iload_2: {
+                case Opcode.ILOAD_2: {
                     operandStack.putInt(localVars.getIntByIndex(2));
                 }
                 break;
-                case Opcode.iload_3: {
+                case Opcode.ILOAD_3: {
                     operandStack.putInt(localVars.getIntByIndex(3));
                 }
                 break;
-                case Opcode.lload_0: {
+                case Opcode.LLOAD_0: {
                     long loadValue = localVars.getLongByIndex(0);
                     operandStack.putLong(loadValue);
                 }
                 break;
-                case Opcode.lload_1: {
+                case Opcode.LLOAD_1: {
                     long loadValue = localVars.getLongByIndex(1);
                     operandStack.putLong(loadValue);
                 }
                 break;
-                case Opcode.aload_0: {
+                case Opcode.ALOAD_0: {
                     operandStack.putJObject(localVars.getJObject(0));
                 }
                 break;
-                case Opcode.aload_1: {
+                case Opcode.ALOAD_1: {
                     operandStack.putJObject(localVars.getJObject(1));
                 }
                 break;
-                case Opcode.aload_2: {
+                case Opcode.ALOAD_2: {
                     operandStack.putJObject(localVars.getJObject(2));
                 }
                 break;
-                case Opcode.aload_3: {
+                case Opcode.ALOAD_3: {
                     operandStack.putJObject(localVars.getJObject(3));
                 }
                 break;
-                case Opcode.iaload: {
+                case Opcode.IALOAD: {
                     int index = operandStack.popInt();
                     JObject arrayObject = operandStack.popJObject();
                     ArrayFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(arrayObject.offset);
                     operandStack.putInt(arrayFields.getInt(index));
                 }
                 break;
-                case Opcode.laload: {
+                case Opcode.LALOAD: {
                     int index = operandStack.popInt();
                     JObject arrayObject = operandStack.popJObject();
                     ArrayFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(arrayObject.offset);
                     operandStack.putLong((arrayFields).getLong( index));
                 }
                 break;
-                case Opcode.astore: {
+                case Opcode.ASTORE: {
                     int index = code.consumeU1();
                     localVars.putJObject(index, operandStack.popJObject());
                 }
                 break;
-                case Opcode.istore_0: {
+                case Opcode.ISTORE_0: {
                     localVars.putIntByIndex(0, operandStack.popInt());
                 }
                 break;
-                case Opcode.istore_1: {
+                case Opcode.ISTORE_1: {
                     localVars.putIntByIndex(1, operandStack.popInt());
                 }
                 break;
-                case Opcode.istore_2: {
+                case Opcode.ISTORE_2: {
                     localVars.putIntByIndex(2, operandStack.popInt());
                 }
                 break;
-                case Opcode.istore_3: {
+                case Opcode.ISTORE_3: {
                     localVars.putIntByIndex(3, operandStack.popInt());
                 }
                 break;
-                case Opcode.lstore_0: {
+                case Opcode.LSTORE_0: {
                     localVars.putLong(0, operandStack.popLong());
                 }
                 break;
-                case Opcode.dstore_3: {
+                case Opcode.DSTORE_3: {
                     localVars.putDouble(3, operandStack.popDouble());
                 }
                 break;
-                case Opcode.astore_0: {
+                case Opcode.ASTORE_0: {
                     localVars.putJObject(0, operandStack.popJObject());
                 }
                 break;
-                case Opcode.astore_1: {
+                case Opcode.ASTORE_1: {
                     localVars.putJObject(1, operandStack.popJObject());
                 }
                 break;
-                case Opcode.astore_2: {
+                case Opcode.ASTORE_2: {
                     localVars.putJObject(2, operandStack.popJObject());
                 }
                 break;
-                case Opcode.astore_3: {
+                case Opcode.ASTORE_3: {
                     localVars.putJObject(3, operandStack.popJObject());
                 }
                 break;
-                case Opcode.iastore: {
+                case Opcode.IASTORE: {
                     int value = operandStack.popInt();
                     int index = operandStack.popInt();
                     JObject arrayObject = operandStack.popJObject();
@@ -768,83 +772,83 @@ public class Interpreter {
                     arrayFields.putInt(index, value);
                 }
                 break;
-                case Opcode.dup_x1: {
+                case Opcode.DUP_X1: {
                 }
                 break;
-                case Opcode.dup_x2: {
+                case Opcode.DUP_X2: {
                 }
                 break;
-                case Opcode.dup2: {
+                case Opcode.DUP2: {
                 }
                 break;
-                case Opcode.dup2_x1: {
+                case Opcode.DUP2_X1: {
                 }
                 break;
-                case Opcode.dup2_x2: {
+                case Opcode.DUP2_X2: {
                 }
                 break;
-                case Opcode.swap: {
+                case Opcode.SWAP: {
                 }
                 break;
-                case Opcode.fmul: {
+                case Opcode.FMUL: {
                 }
                 break;
-                case Opcode.dmul: {
+                case Opcode.DMUL: {
                     double var1 = operandStack.popDouble();
                     double var0 = operandStack.popDouble();
                     double sum = var0 * var1;
                     operandStack.putDouble(sum);
                 }
                 break;
-                case Opcode.idiv: {
+                case Opcode.IDIV: {
                 }
                 break;
-                case Opcode.ldiv: {
+                case Opcode.LDIV: {
                 }
                 break;
-                case Opcode.fdiv: {
+                case Opcode.FDIV: {
                 }
                 break;
-                case Opcode.ddiv: {
+                case Opcode.DDIV: {
                 }
                 break;
-                case Opcode.ishr: {
+                case Opcode.ISHR: {
                 }
                 break;
-                case Opcode.lshr: {
+                case Opcode.LSHR: {
                 }
                 break;
-                case Opcode.iushr: {
+                case Opcode.IUSHR: {
                 }
                 break;
-                case Opcode.lushr: {
+                case Opcode.LUSHR: {
                 }
                 break;
-                case Opcode.iand: {
+                case Opcode.IAND: {
                 }
                 break;
-                case Opcode.land: {
+                case Opcode.LAND: {
                 }
                 break;
-                case Opcode.l2d: {
+                case Opcode.L2D: {
                 }
                 break;
-                case Opcode.f2i: {
+                case Opcode.F2I: {
                 }
                 break;
-                case Opcode.f2l: {
+                case Opcode.F2L: {
                 }
                 break;
-                case Opcode.f2d: {
+                case Opcode.F2D: {
                 }
                 break;
-                case Opcode.d2i: {
+                case Opcode.D2I: {
                 }
                 break;
-                case Opcode.d2l: {
+                case Opcode.D2L: {
                 }
                 break;
-                case Opcode.ifne: {
+                case Opcode.IFNE: {
                     int var0 = operandStack.popInt();
                     short offset = code.readU2();
                     if(var0 != 0){
@@ -854,7 +858,7 @@ public class Interpreter {
                     }
                 }
                 break;
-                case Opcode.iflt: {
+                case Opcode.IFLT: {
                     int var0 = operandStack.popInt();
                     short offset = code.readU2();
                     if(var0 < 0){
@@ -864,7 +868,7 @@ public class Interpreter {
                     }
                 }
                 break;
-                case Opcode.ifge: {
+                case Opcode.IFGE: {
                     int var0 = operandStack.popInt();
                     short offset = code.readU2();
                     if(var0 >= 0){
@@ -874,7 +878,7 @@ public class Interpreter {
                     }
                 }
                 break;
-                case Opcode.ifgt: {
+                case Opcode.IFGT: {
                     int var0 = operandStack.popInt();
                     short offset = code.readU2();
                     if(var0 > 0){
@@ -884,7 +888,7 @@ public class Interpreter {
                     }
                 }
                 break;
-                case Opcode.ifle: {
+                case Opcode.IFLE: {
                     int var0 = operandStack.popInt();
                     short offset = code.readU2();
                     if(var0 <= 0){
@@ -894,7 +898,7 @@ public class Interpreter {
                     }
                 }
                 break;
-                case Opcode.if_icmpeq: {
+                case Opcode.IF_ICMPEQ: {
                     int var1 = operandStack.popInt();
                     int var0 = operandStack.popInt();
                     short offset = code.readU2();
@@ -906,7 +910,7 @@ public class Interpreter {
                     }
                 }
                 break;
-                case Opcode.if_icmpne: {
+                case Opcode.IF_ICMPNE: {
                     int var1 = operandStack.popInt();
                     int var0 = operandStack.popInt();
                     short offset = code.readU2();
@@ -918,7 +922,7 @@ public class Interpreter {
                     }
                 }
                 break;
-                case Opcode.if_icmplt: {
+                case Opcode.IF_ICMPLT: {
                     int var1 = operandStack.popInt();
                     int var0 = operandStack.popInt();
                     short offset = code.readU2();
@@ -930,7 +934,7 @@ public class Interpreter {
                     }
                 }
                 break;
-                case Opcode.if_icmpge: {
+                case Opcode.IF_ICMPGE: {
                     int var1 = operandStack.popInt();
                     int var0 = operandStack.popInt();
                     short offset = code.readU2();
@@ -942,7 +946,7 @@ public class Interpreter {
                     }
                 }
                 break;
-                case Opcode.if_icmpgt: {
+                case Opcode.IF_ICMPGT: {
                     int var1 = operandStack.popInt();
                     int var0 = operandStack.popInt();
                     short offset = code.readU2();
@@ -954,7 +958,7 @@ public class Interpreter {
                     }
                 }
                 break;
-                case Opcode.if_icmple: {
+                case Opcode.IF_ICMPLE: {
                     int var1 = operandStack.popInt();
                     int var0 = operandStack.popInt();
                     short offset = code.readU2();
@@ -966,78 +970,78 @@ public class Interpreter {
                     }
                 }
                 break;
-                case Opcode.if_acmpeq: {
+                case Opcode.IF_ACMPEQ: {
 
                 }
                 break;
-                case Opcode.if_acmpne: {
+                case Opcode.IF_ACMPNE: {
 
                 }
                 break;
-                case Opcode.goto_: {
+                case Opcode.GOTO_: {
                     short offset = code.readU2();
                     code.pcAddBackOne(offset );
                 }
                 break;
-                case Opcode.jsr: {
+                case Opcode.JSR: {
                 }
                 break;
-                case Opcode.ret: {
+                case Opcode.RET: {
                 }
                 break;
-                case Opcode.tableswitch: {
+                case Opcode.TABLESWITCH: {
                 }
                 break;
-                case Opcode.lookupswitch: {
+                case Opcode.LOOKUPSWITCH: {
                 }
                 break;
-                case Opcode.ireturn: {
+                case Opcode.IRETURN: {
                     jThread.popFrame();
                     JavaFrame invokerFrame = jThread.getTopFrame();
                     int val = operandStack.popInt();
                     invokerFrame.operandStack.putInt(val);
                     return;
                 }
-                case Opcode.lreturn: {
+                case Opcode.LRETURN: {
                     jThread.popFrame();
                     JavaFrame invokerFrame = jThread.getTopFrame();
                     long val = operandStack.popLong();
                     invokerFrame.operandStack.putLong(val);
                     return;
                 }
-                case Opcode.freturn: {
+                case Opcode.FRETURN: {
                     jThread.popFrame();
                     JavaFrame invokerFrame = jThread.getTopFrame();
                     float val = operandStack.popFloat();
                     invokerFrame.operandStack.putFloat(val);
                     return;
                 }
-                case Opcode.dreturn: {
+                case Opcode.DRETURN: {
                     jThread.popFrame();
                     JavaFrame invokerFrame = jThread.getTopFrame();
                     double val = operandStack.popDouble();
                     invokerFrame.operandStack.putDouble(val);
                     return;
                 }
-                case Opcode.areturn: {
+                case Opcode.ARETURN: {
                     jThread.popFrame();
                     JavaFrame invokerFrame = jThread.getTopFrame();
                     JObject val = operandStack.popJObject();
                     invokerFrame.operandStack.putJObject(val);
                     return;
                 }
-                case Opcode.return_: {
+                case Opcode.RETURN_: {
                     jThread.popFrame();
                     return;
                 }
-                case Opcode.getstatic: {
+                case Opcode.GETSTATIC: {
                     short staticIndex = code.consumeU2();
                     ClassFile classFile = javaClass.getClassFile();
-                    CONSTANT_Base[] constant_bases = classFile.constant_pool.cp_info;
-                    CONSTANT_Base constant_base = constant_bases[staticIndex - 1];
+                    ConstantBase[] constant_bases = classFile.constantPool.cpInfo;
+                    ConstantBase constant_base = constant_bases[staticIndex - 1];
                     Ref fieldRef = processRef(javaClass, constant_base);
 
-                    field_info field_info = parseFieldRef(fieldRef);
+                    FieldInfo field_info = parseFieldRef(fieldRef);
                     int slotId = field_info.slotId;
                     JavaClass javaClass1 = runTimeEnv.methodArea.findClass(fieldRef.className);
                     StaticVars staticVars = javaClass1.staticVars;
@@ -1057,115 +1061,115 @@ public class Interpreter {
 
                 }
                 break;
-                case Opcode.putstatic: {
+                case Opcode.PUTSTATIC: {
                     short fieldCpIndex = code.consumeU2();
-                    CONSTANT_Base[] constant_bases = javaClass.getClassFile().constant_pool.cp_info;
-                    CONSTANT_Base constant_fieldref = constant_bases[fieldCpIndex - 1];
+                    ConstantBase[] constant_bases = javaClass.getClassFile().constantPool.cpInfo;
+                    ConstantBase constant_fieldref = constant_bases[fieldCpIndex - 1];
                     putStaticField(javaClass,constant_fieldref);
                 }
                 break;
-                case Opcode.getfield: {
+                case Opcode.GETFIELD: {
                     short fieldCpIndex = code.consumeU2();
-                    CONSTANT_Base[] constant_bases = javaClass.getClassFile().constant_pool.cp_info;
-                    CONSTANT_Base constant_fieldref = constant_bases[fieldCpIndex - 1];
+                    ConstantBase[] constant_bases = javaClass.getClassFile().constantPool.cpInfo;
+                    ConstantBase constant_fieldref = constant_bases[fieldCpIndex - 1];
                     getField(javaClass,constant_fieldref);
                 }
                 break;
-                case Opcode.putfield: {
+                case Opcode.PUTFIELD: {
                     short fieldCpIndex = code.consumeU2();
-                    CONSTANT_Base[] constant_bases = javaClass.getClassFile().constant_pool.cp_info;
-                    CONSTANT_Base constant_fieldref = constant_bases[fieldCpIndex - 1];
+                    ConstantBase[] constant_bases = javaClass.getClassFile().constantPool.cpInfo;
+                    ConstantBase constant_fieldref = constant_bases[fieldCpIndex - 1];
                     putField(javaClass,constant_fieldref);
                 }
                 break;
-                case Opcode.invokevirtual: {
+                case Opcode.INVOKEVIRTUAL: {
                     short invokeIndex = code.consumeU2();
-                    CONSTANT_Base[] constant_bases = javaClass.getClassFile().constant_pool.cp_info;
-                    CONSTANT_Base constant_methodref = constant_bases[invokeIndex - 1];
+                    ConstantBase[] constant_bases = javaClass.getClassFile().constantPool.cpInfo;
+                    ConstantBase constant_methodref = constant_bases[invokeIndex - 1];
                     invokeVirtual(javaClass,constant_methodref);
                 }
                 break;
-                case Opcode.invokespecial: {
+                case Opcode.INVOKESPECIAL: {
                     short invokeIndex = code.consumeU2();
-                    CONSTANT_Base[] constant_bases = javaClass.getClassFile().constant_pool.cp_info;
-                    CONSTANT_Base constant_methodref = constant_bases[invokeIndex - 1];
+                    ConstantBase[] constant_bases = javaClass.getClassFile().constantPool.cpInfo;
+                    ConstantBase constant_methodref = constant_bases[invokeIndex - 1];
                     Ref methodRef = processRef(javaClass, constant_methodref);
 
                     invokeSpecial(methodRef);
 
                 }
                 break;
-                case Opcode.invokestatic: {
+                case Opcode.INVOKESTATIC: {
                     short invokeIndex = code.consumeU2();
-                    CONSTANT_Base[] constant_bases = javaClass.getClassFile().constant_pool.cp_info;
-                    CONSTANT_Base constant_base = constant_bases[invokeIndex - 1];
+                    ConstantBase[] constant_bases = javaClass.getClassFile().constantPool.cpInfo;
+                    ConstantBase constant_base = constant_bases[invokeIndex - 1];
                     invokeStatic(javaClass,constant_base);
 
                 }
                 break;
-                case Opcode.invokeinterface: {
+                case Opcode.INVOKEINTERFACE: {
                 }
                 break;
-                case Opcode.xxxunusedxxx: {
+                case Opcode.XXXUNUSEDXXX: {
                 }
                 break;
-                case Opcode.new_: {
+                case Opcode.NEW_: {
                     int newIndex = code.consumeU2();
-                    CONSTANT_Base[] constant_bases = javaClass.getClassFile().constant_pool.cp_info;
-                    CONSTANT_Base constant_base = constant_bases[newIndex - 1];
-                    int name_index = TypeUtils.byteArr2Int(((CONSTANT_Class) constant_base).name_index.u2);
-                    CONSTANT_Utf8 constant_utf8 = (CONSTANT_Utf8) constant_bases[name_index - 1];
+                    ConstantBase[] constant_bases = javaClass.getClassFile().constantPool.cpInfo;
+                    ConstantBase constant_base = constant_bases[newIndex - 1];
+                    int name_index = TypeUtils.byteArr2Int(((ConstantClass) constant_base).nameIndex.u2);
+                    ConstantUtf8 constant_utf8 = (ConstantUtf8) constant_bases[name_index - 1];
                     JObject jObject = execNew(javaClass,constant_utf8);
                     operandStack.putJObject(jObject);
                 }
                 break;
-                case newarray: {
+                case NEWARRAY: {
                     int arrayType = code.consumeU1();
                     int count = operandStack.popInt();
                     JObject jArray = newarray(arrayType,count);
                     operandStack.putJObject(jArray);
                 }
                 break;
-                case Opcode.anewarray: {
+                case Opcode.ANEWARRAY: {
                     int classIndex = code.consumeU2();
                     int count = operandStack.popInt();
                     JObject jArray = anewarray(classIndex, javaClass,count);
                     operandStack.putJObject(jArray);
                 }
                 break;
-                case Opcode.arraylength: {
+                case Opcode.ARRAYLENGTH: {
                     JObject arrayJObject = operandStack.popJObject();
                     ArrayFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(arrayJObject.offset);
                     int size = arrayFields.arraySize;
                     operandStack.putInt(size);
                 }
                 break;
-                case Opcode.athrow: {
+                case Opcode.ATHROW: {
                 }
                 break;
-                case Opcode.checkcast: {
+                case Opcode.CHECKCAST: {
                     code.consumeU2();
                 }
                 break;
-                case Opcode.instanceof_: {
+                case Opcode.INSTANCEOF_: {
                 }
                 break;
-                case Opcode.monitorenter: {
+                case Opcode.MONITORENTER: {
                 }
                 break;
-                case Opcode.monitorexit: {
+                case Opcode.MONITOREXIT: {
                 }
                 break;
-                case Opcode.wide: {
+                case Opcode.WIDE: {
                 }
                 break;
-                case Opcode.multianewarray: {
+                case Opcode.MULTIANEWARRAY: {
                 }
                 break;
-                case Opcode.ifnull: {
+                case Opcode.IFNULL: {
                 }
                 break;
-                case Opcode.ifnonnull: {
+                case Opcode.IFNONNULL: {
                     JObject jObject = operandStack.popJObject();
                     if(jObject != null){
                         int offset = code.readU2();
@@ -1175,23 +1179,23 @@ public class Interpreter {
                     }
                 }
                 break;
-                case Opcode.goto_w: {
+                case Opcode.GOTO_W: {
                 }
                 break;
-                case Opcode.jsr_w: {
+                case Opcode.JSR_W: {
                 }
                 break;
-                case Opcode.breakpoint: {
+                case Opcode.BREAKPOINT: {
                 }
                 break;
-                case Opcode.invokenative: {
+                case Opcode.INVOKENATIVE: {
 //                    short invokeIndex = code.consumeU1();
-//                    CONSTANT_Base[] constant_bases = javaClass.getClassFile().constant_pool.cp_info;
-//                    CONSTANT_Base constant_base = constant_bases[invokeIndex - 1];
+//                    ConstantBase[] constant_bases = javaClass.getClassFile().constantPool.CpInfo;
+//                    ConstantBase constant_base = constant_bases[invokeIndex - 1];
                     invokeNative(javaClass);
                 }
                 break;
-                case Opcode.impdep2: {
+                case Opcode.IMPDEP2: {
                 }
                 break;
             }
@@ -1206,7 +1210,7 @@ public class Interpreter {
     }
 
 
-    private void getField(JavaClass javaClass, CONSTANT_Base constant_fieldref) {
+    private void getField(JavaClass javaClass, ConstantBase constant_fieldref) {
         OperandStack operandStack = jThread.getTopFrame().operandStack;
         Ref fieldRef = processRef(javaClass, constant_fieldref);
         JavaClass classOfCurField = runTimeEnv.methodArea.findClass(fieldRef.className);
@@ -1215,7 +1219,7 @@ public class Interpreter {
             runTimeEnv.methodArea.linkClass(fieldRef.className);
             runTimeEnv.methodArea.initClass(fieldRef.className, this);
         }
-        field_info field_info = classOfCurField.findField(fieldRef.refName,fieldRef.descriptorName);
+        FieldInfo field_info = classOfCurField.findField(fieldRef.refName,fieldRef.descriptorName);
         char s = fieldRef.descriptorName.charAt(0);
         JObject jObject = operandStack.popJObject();
         ObjectFields objectFields = runTimeEnv.javaHeap.objectContainer.get(jObject.offset);
@@ -1238,10 +1242,10 @@ public class Interpreter {
      * @param javaClass
      * @param constant_fieldref
      */
-    private void putField(JavaClass javaClass, CONSTANT_Base constant_fieldref) {
+    private void putField(JavaClass javaClass, ConstantBase constant_fieldref) {
         OperandStack operandStack = jThread.getTopFrame().operandStack;
         Ref fieldRef = processRef(javaClass, constant_fieldref);
-        field_info field_info = javaClass.findField(fieldRef.refName,fieldRef.descriptorName);
+        FieldInfo field_info = javaClass.findField(fieldRef.refName,fieldRef.descriptorName);
         char s = fieldRef.descriptorName.charAt(0);
 
         if(s == 'Z' || s == 'B' || s == 'C' || s == 'S' || s == 'I'){
@@ -1275,16 +1279,16 @@ public class Interpreter {
             JObject val = operandStack.popJObject();
             /*将数组对象引用放入这个对象中*/
             JObject jObject = operandStack.popJObject();
-            field_info concreteFieldInfo = jObject.javaClass.findField(fieldRef.refName, fieldRef.descriptorName);
+            FieldInfo concreteFieldInfo = jObject.javaClass.findField(fieldRef.refName, fieldRef.descriptorName);
             ObjectFields objectFields = runTimeEnv.javaHeap.objectContainer.get(jObject.offset);
             objectFields.putJObject(concreteFieldInfo.slotId, val);
         }
     }
 
-    private void putStaticField(JavaClass javaClass, CONSTANT_Base constant_fieldref) {
+    private void putStaticField(JavaClass javaClass, ConstantBase constant_fieldref) {
         OperandStack operandStack = jThread.getTopFrame().operandStack;
         Ref fieldRef = processRef(javaClass, constant_fieldref);
-        field_info field_info = javaClass.findField(fieldRef.refName,fieldRef.descriptorName);
+        FieldInfo field_info = javaClass.findField(fieldRef.refName,fieldRef.descriptorName);
         field_info.javaClass = javaClass;
         char s = fieldRef.descriptorName.charAt(0);
         StaticVars staticVars = javaClass.staticVars;
@@ -1315,31 +1319,31 @@ public class Interpreter {
      * 解析字段
      * @param fieldRef
      */
-    private field_info parseFieldRef(Ref fieldRef ) {
+    private FieldInfo parseFieldRef(Ref fieldRef ) {
         JavaClass javaClass = runTimeEnv.methodArea.loadClass(fieldRef.className);
         runTimeEnv.methodArea.linkClass(fieldRef.className);
         runTimeEnv.methodArea.initClass(fieldRef.className, this);
         JavaClass javaClass1 = runTimeEnv.methodArea.findClass(fieldRef.className);
-        field_info field_info = javaClass1.findField(fieldRef.refName, fieldRef.descriptorName);
+        FieldInfo field_info = javaClass1.findField(fieldRef.refName, fieldRef.descriptorName);
         return field_info;
     }
 
 
-//    private void invokeSpecial(JavaClass javaClass, CONSTANT_Base constant_methodref) {
+//    private void invokeSpecial(JavaClass javaClass, ConstantBase constant_methodref) {
 //        Ref methodRef = processRef(javaClass, constant_methodref);
 //        invokeSpecial(methodRef);
 //    }
 
     public void invokeSpecial(Ref methodRef) {
 
-        method_info method_info = parseMethodRef(methodRef);
+        MethodInfo method_info = parseMethodRef(methodRef);
         /*调用传递参数 如(J)J*/
         Descriptor descriptor = processDescriptor(methodRef.descriptorName);
 
         CallSite callSite = new CallSite();
         callSite.setCallSite( method_info);
         OperandStack invokerStack = jThread.getTopFrame().operandStack;
-        jThread.pushFrame(callSite.max_stack, callSite.max_locals);
+        jThread.pushFrame(callSite.maxStack, callSite.maxLocals);
         JavaFrame curFrame = jThread.getTopFrame();
         LocalVars curLocalVars = curFrame.localVars;
 
@@ -1349,15 +1353,15 @@ public class Interpreter {
         for(int i = 0; i < slotCount; i++){
             curLocalVars.putSlot(slotCount - 1 - i, invokerStack.popSlot());
         }
-        executeByteCode(jThread, method_info.javaClass, callSite.code, TypeUtils.byteArr2Int(callSite.code_length.u4));
+        executeByteCode(jThread, method_info.javaClass, callSite.code, TypeUtils.byteArr2Int(callSite.codeLength.u4));
     }
 
 
 
-    private void invokeVirtual(JavaClass javaClass, CONSTANT_Base constant_methodref) {
+    private void invokeVirtual(JavaClass javaClass, ConstantBase constant_methodref) {
         Ref methodRef = processRef(javaClass, constant_methodref);
 
-        method_info method_info = parseMethodRef(methodRef);
+        MethodInfo method_info = parseMethodRef(methodRef);
         /*调用传递参数 如(J)J*/
         Descriptor descriptor = processDescriptor(methodRef.descriptorName);
 
@@ -1370,9 +1374,9 @@ public class Interpreter {
                 return;
             }
         }
-        /*类似 Father object = new Son();son 存在方法时，需要调用son的方法，而不是father的*/
+        /*类似 Father object = new Son();Son 存在方法时，需要调用son的方法，而不是father的*/
         if(!methodRef.className.equals(jObject.javaClass.classPath) ){
-            method_info concreteClassMethod = jObject.javaClass.findMethod(methodRef.refName, methodRef.descriptorName);
+            MethodInfo concreteClassMethod = jObject.javaClass.findMethod(methodRef.refName, methodRef.descriptorName);
             if(concreteClassMethod != null){
                 methodRef.className = jObject.javaClass.classPath;
                 method_info = parseMethodRef(methodRef);
@@ -1382,7 +1386,7 @@ public class Interpreter {
         CallSite callSite = new CallSite();
         callSite.setCallSite( method_info);
         OperandStack invokerStack = jThread.getTopFrame().operandStack;
-        jThread.pushFrame(callSite.max_stack, callSite.max_locals);
+        jThread.pushFrame(callSite.maxStack, callSite.maxLocals);
         JavaFrame curFrame = jThread.getTopFrame();
         LocalVars curLocalVars = curFrame.localVars;
 
@@ -1393,7 +1397,7 @@ public class Interpreter {
             curLocalVars.putSlot(slotCount - 1 - i, invokerStack.popSlot());
         }
 
-        executeByteCode(jThread, method_info.javaClass, callSite.code, TypeUtils.byteArr2Int(callSite.code_length.u4));
+        executeByteCode(jThread, method_info.javaClass, callSite.code, TypeUtils.byteArr2Int(callSite.codeLength.u4));
     }
 
     /**
@@ -1418,7 +1422,7 @@ public class Interpreter {
         }else if("(Ljava/lang/String;)V".equals(descriptor)) {
             JObject jObject = operandStack.popJObject();
             ObjectFields objectFields = runTimeEnv.javaHeap.objectContainer.get(jObject.offset);
-            field_info field_info = jObject.javaClass.findField("value","[C");
+            FieldInfo field_info = jObject.javaClass.findField("value","[C");
             JObject charArrObject = objectFields.getJObject(field_info.slotId);
             ArrayFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(charArrObject.offset);
             char[] chars = arrayFields.trans2CharArr();
@@ -1434,12 +1438,12 @@ public class Interpreter {
      * 解析方法:将方法的argSlotCount和javaClass赋值
      * @param methodRef
      */
-    private method_info parseMethodRef(Ref methodRef) {
+    private MethodInfo parseMethodRef(Ref methodRef) {
         runTimeEnv.methodArea.loadClass(methodRef.className);
         runTimeEnv.methodArea.linkClass(methodRef.className);
         //runTimeEnv.methodArea.initClass(methodRef.className, this);
         JavaClass javaClass = runTimeEnv.methodArea.findClass(methodRef.className);
-        method_info method_info = javaClass.findMethod(methodRef.refName, methodRef.descriptorName);
+        MethodInfo method_info = javaClass.findMethod(methodRef.refName, methodRef.descriptorName);
         method_info.javaClass = javaClass;
         /*argSlotCount未赋值过，则赋值*/
         if(method_info.argSlotCount == -1){
@@ -1451,7 +1455,7 @@ public class Interpreter {
         return method_info;
     }
 
-    private void invokeStatic(JavaClass javaClass, CONSTANT_Base constant_base) {
+    private void invokeStatic(JavaClass javaClass, ConstantBase constant_base) {
 
         Ref ref = processRef(javaClass, constant_base);
         JavaClass curClass = runTimeEnv.methodArea.findClass(ref.className);
@@ -1461,21 +1465,21 @@ public class Interpreter {
             runTimeEnv.methodArea.initClass(ref.className, this);
         }
 
-        method_info method_info = curClass.findMethod(ref.refName, ref.descriptorName);
+        MethodInfo method_info = curClass.findMethod(ref.refName, ref.descriptorName);
 
         if (method_info == null){
             return ;
         }
 
         /*如System类中的registerNatives直接返回，System的arraycopy*/
-        if(MethodArea.isNative(method_info.access_flags) && ! NativeUtils.hasNativeClass(ref)){
+        if(MethodArea.isNative(method_info.accessFlags) && ! NativeUtils.hasNativeClass(ref)){
             return;
         }
         Descriptor descriptor = processDescriptor(ref.descriptorName);
         CallSite callSite = new CallSite();
         callSite.setCallSiteOrNative( method_info, descriptor.returnType);
         OperandStack invokerStack = jThread.getTopFrame().operandStack;
-        jThread.pushFrame(callSite.max_stack, callSite.max_locals);
+        jThread.pushFrame(callSite.maxStack, callSite.maxLocals);
         JavaFrame curFrame = jThread.getTopFrame();
         LocalVars curLocalVars = curFrame.localVars;
 
@@ -1486,7 +1490,7 @@ public class Interpreter {
             curLocalVars.putSlot(slotCount - 1 - i, invokerStack.popSlot());
         }
 
-        executeByteCode(jThread, curClass, callSite.code, TypeUtils.byteArr2Int(callSite.code_length.u4));
+        executeByteCode(jThread, curClass, callSite.code, TypeUtils.byteArr2Int(callSite.codeLength.u4));
     }
 
     /**
@@ -1518,35 +1522,35 @@ public class Interpreter {
     }
 
     /**
-     * 传入CONSTANT_Base(子类：CONSTANT_Fieldref、CONSTANT_Methodref)，返回className，descriptorName，methodName(或fieldName)
+     * 传入CONSTANT_Base(子类：ConstantFieldref、ConstantMethodref)，返回className，descriptorName，methodName(或fieldName)
      */
-    public Ref processRef(JavaClass javaClass, CONSTANT_Base constant_base){
+    public Ref processRef(JavaClass javaClass, ConstantBase constant_base){
         Ref ref = new Ref();
-        CONSTANT_Base[] constant_bases = javaClass.getClassFile().constant_pool.cp_info;
+        ConstantBase[] constant_bases = javaClass.getClassFile().constantPool.cpInfo;
 
         int class_index = 0;
         int name_and_type_index = 0;
-        if(constant_base instanceof CONSTANT_Methodref){
-            CONSTANT_Methodref methodref  = (CONSTANT_Methodref) constant_base;
-            class_index = TypeUtils.byteArr2Int(methodref.class_index.u2);
-            name_and_type_index = TypeUtils.byteArr2Int(methodref.name_and_type_index.u2);
-        }else if(constant_base instanceof CONSTANT_Fieldref){
-            CONSTANT_Fieldref fieldref  = (CONSTANT_Fieldref) constant_base;
-            class_index = TypeUtils.byteArr2Int(fieldref.class_index.u2);
-            name_and_type_index = TypeUtils.byteArr2Int(fieldref.name_and_type_index.u2);
+        if(constant_base instanceof ConstantMethodref){
+            ConstantMethodref methodref  = (ConstantMethodref) constant_base;
+            class_index = TypeUtils.byteArr2Int(methodref.classIndex.u2);
+            name_and_type_index = TypeUtils.byteArr2Int(methodref.nameAndTypeIndex.u2);
+        }else if(constant_base instanceof ConstantFieldref){
+            ConstantFieldref fieldref  = (ConstantFieldref) constant_base;
+            class_index = TypeUtils.byteArr2Int(fieldref.classIndex.u2);
+            name_and_type_index = TypeUtils.byteArr2Int(fieldref.nameAndTypeIndex.u2);
         }
 
-        CONSTANT_Class constant_class = (CONSTANT_Class) constant_bases[class_index - 1];
-        CONSTANT_NameAndType constant_nameAndType = (CONSTANT_NameAndType)constant_bases[name_and_type_index - 1];
+        ConstantClass constant_class = (ConstantClass) constant_bases[class_index - 1];
+        ConstantNameandtype constant_nameAndType = (ConstantNameandtype)constant_bases[name_and_type_index - 1];
 
-        CONSTANT_Utf8 methodNameUtf8 = (CONSTANT_Utf8)constant_bases[TypeUtils.byteArr2Int(constant_nameAndType.name_index.u2) - 1];
-        CONSTANT_Utf8 descriptorNameUtf8 = (CONSTANT_Utf8)constant_bases[TypeUtils.byteArr2Int(constant_nameAndType.descriptor_index.u2) - 1];
-        CONSTANT_Utf8 classNameUtf8 = (CONSTANT_Utf8)constant_bases[TypeUtils.byteArr2Int(constant_class.name_index.u2) - 1];
+        ConstantUtf8 methodNameUtf8 = (ConstantUtf8)constant_bases[TypeUtils.byteArr2Int(constant_nameAndType.nameIndex.u2) - 1];
+        ConstantUtf8 descriptorNameUtf8 = (ConstantUtf8)constant_bases[TypeUtils.byteArr2Int(constant_nameAndType.descriptorIndex.u2) - 1];
+        ConstantUtf8 classNameUtf8 = (ConstantUtf8)constant_bases[TypeUtils.byteArr2Int(constant_class.nameIndex.u2) - 1];
 
         ref.className = TypeUtils.u12String(classNameUtf8.bytes);
         ref.descriptorName = TypeUtils.u12String(descriptorNameUtf8.bytes);
         ref.refName = TypeUtils.u12String(methodNameUtf8.bytes);
-        //System.out.println(JSON.toJSONString(ref));
+        System.out.println(JSON.toJSONString(ref));
         return ref;
     }
 
@@ -1671,7 +1675,7 @@ public class Interpreter {
         return descriptor;
     }
 
-    private int calParametersSlot(method_info method_info, List<Integer> parameters){
+    private int calParametersSlot(MethodInfo method_info, List<Integer> parameters){
         int parametersCount = parameters.size();
 
         int slotCount = parametersCount;
@@ -1681,13 +1685,13 @@ public class Interpreter {
                 slotCount ++;
             }
         }
-        if(!MethodArea.isStatic(method_info.access_flags)){
+        if(!MethodArea.isStatic(method_info.accessFlags)){
             slotCount ++;/*'this' 引用*/
         }
         return slotCount;
     }
 
-    private JObject execNew(JavaClass javaClass,CONSTANT_Utf8 constant_utf8) {
+    private JObject execNew(JavaClass javaClass, ConstantUtf8 constant_utf8) {
         String className = TypeUtils.u12String(constant_utf8.bytes);
         if(runTimeEnv.methodArea.findClass(className) == null){
             runTimeEnv.methodArea.loadClass(className);
@@ -1711,9 +1715,9 @@ public class Interpreter {
      * @return
      */
     private JObject anewarray(int classIndex, JavaClass javaClass, int count) {
-        CONSTANT_Base[] constant_bases = javaClass.getClassFile().constant_pool.cp_info;
-        CONSTANT_Class constant_class = (CONSTANT_Class) constant_bases[classIndex - 1];
-        CONSTANT_Utf8 classNameUtf8 = (CONSTANT_Utf8)constant_bases[TypeUtils.byteArr2Int(constant_class.name_index.u2) - 1];
+        ConstantBase[] constant_bases = javaClass.getClassFile().constantPool.cpInfo;
+        ConstantClass constant_class = (ConstantClass) constant_bases[classIndex - 1];
+        ConstantUtf8 classNameUtf8 = (ConstantUtf8)constant_bases[TypeUtils.byteArr2Int(constant_class.nameIndex.u2) - 1];
         String className = TypeUtils.u12String(classNameUtf8.bytes);
         JavaClass curClass = runTimeEnv.methodArea.findClass(className);
         if(curClass == null){

@@ -14,9 +14,11 @@ public class GCTest {
     }
     public void halfGC(){
         strings = new String[MAX/2];
-        for(int i=0;i<MAX;i++)
-            if(i%2==0)
-                strings[cnt++] = "This is "+ i +" times to say hello to you\n";
+        for(int i=0;i<MAX;i++) {
+            if (i % 2 == 0){
+                strings[cnt++] = "This is " + i + " times to say hello to you\n";
+            }
+        }
         cnt=0;
     }
     public void print(){

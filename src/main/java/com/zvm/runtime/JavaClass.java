@@ -1,13 +1,13 @@
 package com.zvm.runtime;
 
 import com.alibaba.fastjson.JSON;
+import com.zvm.classfile.constantpool.ConstantUtf8;
 import com.zvm.utils.TypeUtils;
 import com.zvm.ZVM;
-import com.zvm.basestruct.u2;
-import com.zvm.classfile.constantpool.CONSTANT_Utf8;
+import com.zvm.basestruct.U2;
 import com.zvm.classfile.ClassFile;
-import com.zvm.classfile.field_info;
-import com.zvm.classfile.method_info;
+import com.zvm.classfile.FieldInfo;
+import com.zvm.classfile.MethodInfo;
 
 
 /**
@@ -30,13 +30,13 @@ public class JavaClass {
         this.classPath = classPath;
     }
 
-    public method_info findMethod(String methodName, String methodDescriptor){
+    public MethodInfo findMethod(String methodName, String methodDescriptor){
 
-        Integer methodSize = TypeUtils.byteArr2Int(classFile.methods_count.u2);
+        Integer methodSize = TypeUtils.byteArr2Int(classFile.methodsCount.u2);
         for(Integer i = 0; i < methodSize; i++){
 
-            String cpMethodName = getString(classFile.methods[i].name_index);
-            String cpMethodDescriptor = getString(classFile.methods[i].descriptor_index);
+            String cpMethodName = getString(classFile.methods[i].nameIndex);
+            String cpMethodDescriptor = getString(classFile.methods[i].descriptorIndex);
 
             if(TypeUtils.compare(cpMethodName, methodName) && TypeUtils.compare(cpMethodDescriptor, methodDescriptor)){
                 return classFile.methods[i];
@@ -45,13 +45,13 @@ public class JavaClass {
         return null;
     }
 
-    public field_info findField(String fieldName, String fieldDescriptor){
+    public FieldInfo findField(String fieldName, String fieldDescriptor){
 
-        Integer fieldSize = TypeUtils.byteArr2Int(classFile.field_count.u2);
+        Integer fieldSize = TypeUtils.byteArr2Int(classFile.fieldCount.u2);
         for(Integer i = 0; i < fieldSize; i++){
 
-            String cpFieldName = getString(classFile.fields[i].name_index);
-            String cpFieldDescriptor = getString(classFile.fields[i].descriptor_index);
+            String cpFieldName = getString(classFile.fields[i].nameIndex);
+            String cpFieldDescriptor = getString(classFile.fields[i].descriptorIndex);
             if(TypeUtils.compare(cpFieldName, fieldName) && TypeUtils.compare(cpFieldDescriptor, fieldDescriptor)){
                 return classFile.fields[i];
             }
@@ -81,9 +81,9 @@ public class JavaClass {
     }
 
 
-    public String getString(u2 index){
-        CONSTANT_Utf8 constant_utf8 = (CONSTANT_Utf8) classFile.constant_pool.cp_info[TypeUtils.byteArr2Int(index.u2) - 1];
-        return TypeUtils.u12String(constant_utf8.bytes);
+    public String getString(U2 index){
+        ConstantUtf8 constantUtf8 = (ConstantUtf8) classFile.constantPool.cpInfo[TypeUtils.byteArr2Int(index.u2) - 1];
+        return TypeUtils.u12String(constantUtf8.bytes);
     }
 
     public void setClassFile(ClassFile classFile){

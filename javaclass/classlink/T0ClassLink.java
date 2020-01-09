@@ -13,15 +13,15 @@ package classlink;
  */
 public class T0ClassLink {
     public static int value1 = 132;
-    public final static int finalValue = 168;
+    public final static int FINAL_VALUE = 168;
     public static int[] arr = {1,3,5};
-    public final static int[] finalArr = {1,6,8};
+    public final static int[] FINAL_ARR = {1,6,8};
 
     public static void main(String[] args){
         System.out.println(value1);
-        System.out.println(finalValue);
+        System.out.println(FINAL_VALUE);
         System.out.println(arr[0]);
-        System.out.println(finalArr[0]);
+        System.out.println(FINAL_ARR[0]);
 
     }
 }

@@ -1,6 +1,6 @@
 
 public class Test implements TestInterface{
-    final static Integer i = 10;
+    final static Integer I = 10;
     final Integer j = 10;
     final String k = "kkkk";
     String l = "hellolll";

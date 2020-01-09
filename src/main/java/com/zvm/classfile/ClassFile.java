@@ -1,38 +1,39 @@
 package com.zvm.classfile;
 
+import com.zvm.basestruct.U1;
+import com.zvm.basestruct.U2;
+import com.zvm.classfile.attribute.innerClasses.Classes;
 import com.zvm.utils.TypeUtils;
-import com.zvm.basestruct.u1;
-import com.zvm.basestruct.u2;
-import com.zvm.basestruct.u4;
+import com.zvm.basestruct.U4;
 import com.zvm.classfile.attribute.*;
-import com.zvm.classfile.attribute.LocalVariableTable.local_variable;
-import com.zvm.classfile.attribute.LocalVariableTypeTable.local_variable_type;
-import com.zvm.classfile.attribute.RuntimeVisibleParameterAnnotations.parameter_annotation;
-import com.zvm.classfile.attribute.code.exception_table;
-import com.zvm.classfile.attribute.innerClasses.classes;
-import com.zvm.classfile.attribute.lineNumberTable.line_number;
+import com.zvm.classfile.attribute.LocalVariableTable.LocalVariable;
+import com.zvm.classfile.attribute.LocalVariableTypeTable.LocalVariableType;
+import com.zvm.classfile.attribute.RuntimeVisibleParameterAnnotations.ParameterAnnotation;
+import com.zvm.classfile.attribute.code.ExceptionTable;
+import com.zvm.classfile.attribute.lineNumberTable.LineNumber;
 import com.zvm.classfile.attribute.runtimeVisibleAnnotations.*;
 import com.zvm.classfile.attribute.stackmaptable.*;
 import com.zvm.classfile.attribute.stackmaptable.verificationtypeinfo.*;
 import com.zvm.classfile.constantpool.*;
 
+@SuppressWarnings("AlibabaCommentsMustBeJavadocFormat")
 public class ClassFile {
-    public u4 magic;
-    public u2 minor_version;
-    public u2 major_version;
-    public u2 constant_pool_count;
-    public cp_info constant_pool = new cp_info();
-    public u2 access_flags;
-    public u2 this_class;
-    public u2 super_class;
-    public u2 interface_count;
-    public u2[] interfaces;
-    public u2 field_count;
-    public field_info[] fields ;
-    public u2 methods_count;
-    public method_info[] methods ;
-    public u2 attributes_count;
-    public Attribute_Base[] attributes ;
+    public U4 magic;
+    public U2 minorVersion;
+    public U2 majorVersion;
+    public U2 constantPoolCount;
+    public CpInfo constantPool = new CpInfo();
+    public U2 accessFlags;
+    public U2 thisClass;
+    public U2 superClass;
+    public U2 interfaceCount;
+    public U2[] interfaces;
+    public U2 fieldCount;
+    public FieldInfo[] fields ;
+    public U2 methodsCount;
+    public MethodInfo[] methods ;
+    public U2 attributesCount;
+    public AttributeBase[] attributes ;
 
     /**
      * 将字节码转换为ClassFile
@@ -41,190 +42,191 @@ public class ClassFile {
     public void processByteCode(byte[] bytecode){
         IOUtils.bytecode = bytecode;
         IOUtils.index = 0;
-        magic = IOUtils.read_u4();
-        minor_version = IOUtils.read_u2();
-        major_version = IOUtils.read_u2();
-        constant_pool_count = IOUtils.read_u2();
+        magic = IOUtils.readU4();
+        minorVersion = IOUtils.readU2();
+        majorVersion = IOUtils.readU2();
+        constantPoolCount = IOUtils.readU2();
 
-        Integer pool_size = TypeUtils.byteArr2Int(constant_pool_count.u2);
+        Integer poolSize = TypeUtils.byteArr2Int(constantPoolCount.u2);
         /*读取常量池*/
-        processConstantPool(constant_pool, pool_size);
+        processConstantPool(constantPool, poolSize);
 
-        access_flags = IOUtils.read_u2();
-        this_class = IOUtils.read_u2();
-        super_class = IOUtils.read_u2();
-        interface_count = IOUtils.read_u2();
-        Integer interface_count_integer = TypeUtils.byteArr2Int(interface_count.u2);
-        interfaces = new u2[interface_count_integer];
-        for(Integer i = 0; i < interface_count_integer; i ++){
-            interfaces[i] = IOUtils.read_u2();
+        accessFlags = IOUtils.readU2();
+        thisClass = IOUtils.readU2();
+        superClass = IOUtils.readU2();
+        interfaceCount = IOUtils.readU2();
+        Integer interfaceCountInteger = TypeUtils.byteArr2Int(interfaceCount.u2);
+        interfaces = new U2[interfaceCountInteger];
+        for(Integer i = 0; i < interfaceCountInteger; i ++){
+            interfaces[i] = IOUtils.readU2();
         }
 
-        field_count  = IOUtils.read_u2();
-        Integer field_count_integer = TypeUtils.byteArr2Int(field_count.u2);
-        fields = processFields( field_count_integer);
+        fieldCount = IOUtils.readU2();
+        Integer fieldCountInteger = TypeUtils.byteArr2Int(fieldCount.u2);
+        fields = processFields( fieldCountInteger);
 
-        methods_count  = IOUtils.read_u2();
-        Integer methods_count_integer = TypeUtils.byteArr2Int(methods_count.u2);
-        methods = processMethods( methods_count_integer);
+        methodsCount = IOUtils.readU2();
+        Integer methodsCountInteger = TypeUtils.byteArr2Int(methodsCount.u2);
+        methods = processMethods( methodsCountInteger);
 
-        attributes_count = IOUtils.read_u2();
-        Integer temp_attributes_count = TypeUtils.byteArr2Int(attributes_count.u2);
-        attributes =  new Attribute_Base[temp_attributes_count];
-        for(Integer i = 0; i < temp_attributes_count; i ++){
+        attributesCount = IOUtils.readU2();
+        Integer tempAttributesCount = TypeUtils.byteArr2Int(attributesCount.u2);
+        attributes =  new AttributeBase[tempAttributesCount];
+        for(Integer i = 0; i < tempAttributesCount; i ++){
             processAttribute( i, attributes);
         }
     }
 
     /**
      * 解析字节码中的方法
-     * @param methods_count_integer
+     * @param methodsCountInteger
      * @return
      */
-    private method_info[] processMethods(Integer methods_count_integer) {
-        method_info[] method_infos = new method_info[methods_count_integer];
-        for(Integer i = 0; i < methods_count_integer; i ++){
-            method_infos[i] = new method_info();
-            method_infos[i].access_flags = IOUtils.read_u2();
-            method_infos[i].name_index = IOUtils.read_u2();
-            method_infos[i].descriptor_index = IOUtils.read_u2();
-            method_infos[i].attribute_count = IOUtils.read_u2();
-            Integer temp_attributes_count = TypeUtils.byteArr2Int(method_infos[i].attribute_count.u2);
-            method_infos[i].attributes =  new Attribute_Base[temp_attributes_count];
-            for(Integer j = 0; j < temp_attributes_count; j ++){
-                processAttribute( j, method_infos[i].attributes);
+    private MethodInfo[] processMethods(Integer methodsCountInteger) {
+        MethodInfo[] methodInfos = new MethodInfo[methodsCountInteger];
+        for(Integer i = 0; i < methodsCountInteger; i ++){
+            methodInfos[i] = new MethodInfo();
+            methodInfos[i].accessFlags = IOUtils.readU2();
+            methodInfos[i].nameIndex = IOUtils.readU2();
+            methodInfos[i].descriptorIndex = IOUtils.readU2();
+            methodInfos[i].attributeCount = IOUtils.readU2();
+            Integer tempAttributesCount = TypeUtils.byteArr2Int(methodInfos[i].attributeCount.u2);
+            methodInfos[i].attributes =  new AttributeBase[tempAttributesCount];
+            for(Integer j = 0; j < tempAttributesCount; j ++){
+                processAttribute( j, methodInfos[i].attributes);
             }
         }
-        return method_infos;
+        return methodInfos;
     }
 
     /**
      * 解析字节码中的字段
-     * @param field_count_integer
+     * @param fieldCountInteger
      * @return
      */
-    private field_info[] processFields( Integer field_count_integer) {
-        field_info[] field_infos = new field_info[field_count_integer];
-        for(Integer i = 0; i < field_count_integer; i ++){
-            field_infos[i] = new field_info();
-            field_infos[i].access_flags = IOUtils.read_u2();
-            field_infos[i].name_index = IOUtils.read_u2();
-            field_infos[i].descriptor_index = IOUtils.read_u2();
-            field_infos[i].attribute_count = IOUtils.read_u2();
-            Integer temp_attributes_count = TypeUtils.byteArr2Int(field_infos[i].attribute_count.u2);
-            field_infos[i].attributes =  new Attribute_Base[temp_attributes_count];
-            for(Integer j = 0; j < temp_attributes_count; j ++){
-                processAttribute( j, field_infos[i].attributes);
+    private FieldInfo[] processFields(Integer fieldCountInteger) {
+        FieldInfo[] fieldInfos = new FieldInfo[fieldCountInteger];
+        for(Integer i = 0; i < fieldCountInteger; i ++){
+            fieldInfos[i] = new FieldInfo();
+            fieldInfos[i].accessFlags = IOUtils.readU2();
+            fieldInfos[i].nameIndex = IOUtils.readU2();
+            fieldInfos[i].descriptorIndex = IOUtils.readU2();
+            fieldInfos[i].attributeCount = IOUtils.readU2();
+            Integer tempAttributesCount = TypeUtils.byteArr2Int(fieldInfos[i].attributeCount.u2);
+            fieldInfos[i].attributes =  new AttributeBase[tempAttributesCount];
+            for(Integer j = 0; j < tempAttributesCount; j ++){
+                processAttribute( j, fieldInfos[i].attributes);
             }
         }
-        return field_infos;
+        return fieldInfos;
     }
 
     /**
      * 解析字节码中的常量池
-     * @param constant_pool
-     * @param pool_size
+     * @param constantPool
+     * @param poolSize
      */
-    private void processConstantPool(cp_info constant_pool, Integer pool_size) {
-        constant_pool.cp_info = new CONSTANT_Base[pool_size];
-        for(Integer i = 0; i < pool_size - 1; i++){
-            u1 tag = IOUtils.read_u1();
+    private void processConstantPool(CpInfo constantPool, Integer poolSize) {
+        constantPool.cpInfo = new ConstantBase[poolSize];
+        for(Integer i = 0; i < poolSize - 1; i++){
+            U1 tag = IOUtils.readU1();
 
-            Integer integer_tag = TypeUtils.byteArr2Int(tag.u1);
-            if(integer_tag == 1){
-                CONSTANT_Utf8 constant_utf8 = new CONSTANT_Utf8();
-                constant_utf8.tag = tag;
-                constant_utf8.length = IOUtils.read_u2();
-                Integer utf8_len = TypeUtils.byteArr2Int( constant_utf8.length.u2);
-                constant_utf8.bytes = new u1[utf8_len];
-                for(Integer j = 0; j < utf8_len; j ++){
-                    constant_utf8.bytes[j] = IOUtils.read_u1();
+            Integer integerTag = TypeUtils.byteArr2Int(tag.u1);
+            if(integerTag == 1){
+                ConstantUtf8 constantUtf8 = new ConstantUtf8();
+                constantUtf8.tag = tag;
+                constantUtf8.length = IOUtils.readU2();
+                Integer utf8Len = TypeUtils.byteArr2Int( constantUtf8.length.u2);
+                constantUtf8.bytes = new U1[utf8Len];
+                for(Integer j = 0; j < utf8Len; j ++){
+                    constantUtf8.bytes[j] = IOUtils.readU1();
                 }
-                constant_pool.cp_info[i] = constant_utf8;
-            } else if(integer_tag == 3){
-                CONSTANT_Integer constant_integer = new CONSTANT_Integer();
-                constant_integer.tag = tag;
-                constant_integer.bytes = IOUtils.read_u4();
-                constant_pool.cp_info[i] = constant_integer;
-            } else if(integer_tag == 4){
-                CONSTANT_Float constant_float = new CONSTANT_Float();
-                constant_float.tag = tag;
-                constant_float.bytes = IOUtils.read_u4();
-                constant_pool.cp_info[i] = constant_float;
-            }else if (integer_tag == 5){
-                CONSTANT_Long constant_long = new CONSTANT_Long();
-                constant_long.tag = tag;
-                constant_long.high_bytes = IOUtils.read_u4();
-                constant_long.low_bytes = IOUtils.read_u4();
+                constantPool.cpInfo[i] = constantUtf8;
+            } else if(integerTag == 3){
+                ConstantInteger constantInteger = new ConstantInteger();
+                constantInteger.tag = tag;
+                constantInteger.bytes = IOUtils.readU4();
+                constantPool.cpInfo[i] = constantInteger;
+            } else if(integerTag == 4){
+                ConstantFloat constantFloat = new ConstantFloat();
+                constantFloat.tag = tag;
+                constantFloat.bytes = IOUtils.readU4();
+                constantPool.cpInfo[i] = constantFloat;
+            }else if (integerTag == 5){
+                ConstantLong constantLong = new ConstantLong();
+                constantLong.tag = tag;
+                constantLong.highBytes = IOUtils.readU4();
+                constantLong.lowBytes = IOUtils.readU4();
                 /*double和long类型会跳过一个常量标识*/
-                constant_pool.cp_info[i ++] = constant_long;
-            }else if(integer_tag == 6){
-                CONSTANT_Double constant_double = new CONSTANT_Double();
-                constant_double.tag = tag;
-                constant_double.high_bytes = IOUtils.read_u4();
-                constant_double.low_bytes = IOUtils.read_u4();
+                constantPool.cpInfo[i ++] = constantLong;
+            }else if(integerTag == 6){
+                ConstantDouble constantDouble = new ConstantDouble();
+                constantDouble.tag = tag;
+                constantDouble.highBytes = IOUtils.readU4();
+                constantDouble.lowBytes = IOUtils.readU4();
                 /*double和long类型会跳过一个常量标识*/
-                constant_pool.cp_info[i ++] = constant_double;
-            }else if(integer_tag == 7){
-                CONSTANT_Class constant_class = new CONSTANT_Class();
-                constant_class.tag = tag;
-                constant_class.name_index = IOUtils.read_u2();
-                constant_pool.cp_info[i] = constant_class;
-            }else if(integer_tag == 8){
-                CONSTANT_String constant_string = new CONSTANT_String();
-                constant_string.tag = tag;
-                constant_string.string_index = IOUtils.read_u2();
-                constant_pool.cp_info[i] = constant_string;
-            }else if(integer_tag == 9){
-                CONSTANT_Fieldref constant_fieldref = new CONSTANT_Fieldref();
-                constant_fieldref.tag = tag;
-                constant_fieldref.class_index = IOUtils.read_u2();
-                constant_fieldref.name_and_type_index = IOUtils.read_u2();
-                constant_pool.cp_info[i] = constant_fieldref;
-            }else if(integer_tag == 10){
-                CONSTANT_Methodref constant_methodref = new CONSTANT_Methodref();
-                constant_methodref.tag = tag;
-                constant_methodref.class_index = IOUtils.read_u2();
-                constant_methodref.name_and_type_index = IOUtils.read_u2();
-                constant_pool.cp_info[i] = constant_methodref;
-            }else if(integer_tag == 11){
-                CONSTANT_InterfaceMethodref constant_interface_methodref = new CONSTANT_InterfaceMethodref();
-                constant_interface_methodref.tag = tag;
-                constant_interface_methodref.class_index = IOUtils.read_u2();
-                constant_interface_methodref.name_and_type_index = IOUtils.read_u2();
-                constant_pool.cp_info[i] = constant_interface_methodref;
-            }else if(integer_tag == 12){
-                CONSTANT_NameAndType constant_nameAndType = new CONSTANT_NameAndType();
-                constant_nameAndType.tag = tag;
-                constant_nameAndType.name_index = IOUtils.read_u2();
-                constant_nameAndType.descriptor_index = IOUtils.read_u2();
-                constant_pool.cp_info[i] = constant_nameAndType;
-            }else if(integer_tag == 15){
-                CONSTANT_MethodHandle constant_methodHandle = new CONSTANT_MethodHandle();
-                constant_methodHandle.tag = tag;
-                constant_methodHandle.reference_kind = IOUtils.read_u1();
-                constant_methodHandle.reference_index = IOUtils.read_u2();
-                constant_pool.cp_info[i] = constant_methodHandle;
-            }else if(integer_tag == 16){
-                CONSTANT_MethodType constant_methodType = new CONSTANT_MethodType();
-                constant_methodType.tag = tag;
-                constant_methodType.descriptor_index = IOUtils.read_u2();
-                constant_pool.cp_info[i] = constant_methodType;
+                constantPool.cpInfo[i ++] = constantDouble;
+            }else if(integerTag == 7){
+                ConstantClass constantClass = new ConstantClass();
+                constantClass.tag = tag;
+                constantClass.nameIndex = IOUtils.readU2();
+                constantPool.cpInfo[i] = constantClass;
+            }else if(integerTag == 8){
+                ConstantString constantString = new ConstantString();
+                constantString.tag = tag;
+                constantString.stringIndex = IOUtils.readU2();
+                constantPool.cpInfo[i] = constantString;
+            }else if(integerTag == 9){
+                ConstantFieldref constantFieldref = new ConstantFieldref();
+                constantFieldref.tag = tag;
+                constantFieldref.classIndex = IOUtils.readU2();
+                constantFieldref.nameAndTypeIndex = IOUtils.readU2();
+                constantPool.cpInfo[i] = constantFieldref;
+            }else if(integerTag == 10){
+                ConstantMethodref constantMethodref = new ConstantMethodref();
+                constantMethodref.tag = tag;
+                constantMethodref.classIndex = IOUtils.readU2();
+                constantMethodref.nameAndTypeIndex = IOUtils.readU2();
+                constantPool.cpInfo[i] = constantMethodref;
+            }else if(integerTag == 11){
+                ConstantInterfacemethodref constantInterfaceMethodref = new ConstantInterfacemethodref();
+                constantInterfaceMethodref.tag = tag;
+                constantInterfaceMethodref.classIndex = IOUtils.readU2();
+                constantInterfaceMethodref.nameAndTypeIndex = IOUtils.readU2();
+                constantPool.cpInfo[i] = constantInterfaceMethodref;
+            }else if(integerTag == 12){
+                ConstantNameandtype constantNameAndType = new ConstantNameandtype();
+                constantNameAndType.tag = tag;
+                constantNameAndType.nameIndex = IOUtils.readU2();
+                constantNameAndType.descriptorIndex = IOUtils.readU2();
+                constantPool.cpInfo[i] = constantNameAndType;
+            }else if(integerTag == 15){
+                ConstantMethodhandle constantMethodHandle = new ConstantMethodhandle();
+                constantMethodHandle.tag = tag;
+                constantMethodHandle.referenceKind = IOUtils.readU1();
+                constantMethodHandle.referenceIndex = IOUtils.readU2();
+                constantPool.cpInfo[i] = constantMethodHandle;
+            }else if(integerTag == 16){
+                ConstantMethodtype constantMethodType = new ConstantMethodtype();
+                constantMethodType.tag = tag;
+                constantMethodType.descriptorIndex = IOUtils.readU2();
+                constantPool.cpInfo[i] = constantMethodType;
                 //}else if(integer_tag == 17){
-            }else if(integer_tag == 18){
-                CONSTANT_InvokeDynamic constant_invokeDynamic = new CONSTANT_InvokeDynamic();
-                constant_invokeDynamic.tag = tag;
-                constant_invokeDynamic.bootstrap_method_attr_index = IOUtils.read_u2();
-                constant_invokeDynamic.name_and_type_index = IOUtils.read_u2();
-                constant_pool.cp_info[i] = constant_invokeDynamic;
+            }else if(integerTag == 18){
+                ConstantInvokedynamic constantInvokeDynamic = new ConstantInvokedynamic();
+                constantInvokeDynamic.tag = tag;
+                constantInvokeDynamic.bootstrapMethodAttrIndex = IOUtils.readU2();
+                constantInvokeDynamic.nameAndTypeIndex = IOUtils.readU2();
+                constantPool.cpInfo[i] = constantInvokeDynamic;
             }else {
-                System.out.println("constant_pool integer_tag " + integer_tag);
+                System.out.println("constantPool integer_tag " + integerTag);
                 return;
             }
         }
     }
 
     /*属性的各种类型，共23个*/
+    @SuppressWarnings("AlibabaCommentsMustBeJavadocFormat")
     public static String[] attributeStrs = {
             "ConstantValue",
             "Code",
@@ -259,480 +261,480 @@ public class ClassFile {
      * @param index
      * @param attributes
      */
-    public void processAttribute( Integer index, Attribute_Base[] attributes){
-        u2 attributes_name_index = IOUtils.read_u2();
-        Integer tempIndex = TypeUtils.byteArr2Int(attributes_name_index.u2);
-        CONSTANT_Base constant_base = constant_pool.cp_info[tempIndex - 1];
-        CONSTANT_Utf8 constant_utf8 = (CONSTANT_Utf8)constant_base;
-        if(constant_utf8.tag.u1[0] != 0x1){
+    public void processAttribute( Integer index, AttributeBase[] attributes){
+        U2 attributesNameIndex = IOUtils.readU2();
+        Integer tempIndex = TypeUtils.byteArr2Int(attributesNameIndex.u2);
+        ConstantBase constantBase = constantPool.cpInfo[tempIndex - 1];
+        ConstantUtf8 constantUtf8 = (ConstantUtf8)constantBase;
+        if(constantUtf8.tag.u1[0] != 0x1){
             return ;
         }
 
-        String s = TypeUtils.u12String(constant_utf8.bytes);
+        String s = TypeUtils.u12String(constantUtf8.bytes);
         if(TypeUtils.compare(s, attributeStrs[0])){
-            ConstantValue_attribute constantValue = new ConstantValue_attribute();
-            constantValue.attribute_name_index = attributes_name_index;
+            ConstantValueAttribute constantValue = new ConstantValueAttribute();
+            constantValue.attributeNameIndex = attributesNameIndex;
             /*恒等于2*/
-            constantValue.attribute_length = IOUtils.read_u4();
-            constantValue.constantvalue_index = IOUtils.read_u2();
+            constantValue.attributeLength = IOUtils.readU4();
+            constantValue.constantvalueIndex = IOUtils.readU2();
             attributes[index] = constantValue;
         }else if(TypeUtils.compare(s, attributeStrs[1])){
-            Code_attribute code_attribute = new Code_attribute();
-            code_attribute.attribute_name_index = attributes_name_index;
-            code_attribute.attribute_length = IOUtils.read_u4();
-            code_attribute.max_stack = IOUtils.read_u2();
-            code_attribute.max_locals = IOUtils.read_u2();
-            code_attribute.code_length = IOUtils.read_u4();
-            Integer len = TypeUtils.byteArr2Int(code_attribute.code_length.u4);
-            code_attribute.code = new u1[len];
+            CodeAttribute codeAttribute = new CodeAttribute();
+            codeAttribute.attributeNameIndex = attributesNameIndex;
+            codeAttribute.attributeLength = IOUtils.readU4();
+            codeAttribute.maxStack = IOUtils.readU2();
+            codeAttribute.maxLocals = IOUtils.readU2();
+            codeAttribute.codeLength = IOUtils.readU4();
+            Integer len = TypeUtils.byteArr2Int(codeAttribute.codeLength.u4);
+            codeAttribute.code = new U1[len];
             for(Integer i = 0; i < len; i++){
-                code_attribute.code[i] = IOUtils.read_u1();
+                codeAttribute.code[i] = IOUtils.readU1();
             }
-            code_attribute.exception_table_length = IOUtils.read_u2();
-            len = TypeUtils.byteArr2Int(code_attribute.exception_table_length.u2);
-            code_attribute.exception_table = new exception_table[len];
+            codeAttribute.exceptionTableLength = IOUtils.readU2();
+            len = TypeUtils.byteArr2Int(codeAttribute.exceptionTableLength.u2);
+            codeAttribute.exceptionTables = new ExceptionTable[len];
             for(Integer i = 0; i < len; i ++){
-                code_attribute.exception_table[i] = new exception_table();
-                code_attribute.exception_table[i].start_pc = IOUtils.read_u2();
-                code_attribute.exception_table[i].end_pc = IOUtils.read_u2();
-                code_attribute.exception_table[i].handler_pc = IOUtils.read_u2();
-                code_attribute.exception_table[i].catch_type = IOUtils.read_u2();
+                codeAttribute.exceptionTables[i] = new ExceptionTable();
+                codeAttribute.exceptionTables[i].startPc = IOUtils.readU2();
+                codeAttribute.exceptionTables[i].endPc = IOUtils.readU2();
+                codeAttribute.exceptionTables[i].handlerPc = IOUtils.readU2();
+                codeAttribute.exceptionTables[i].catchType = IOUtils.readU2();
             }
-            code_attribute.attribute_count = IOUtils.read_u2();
-            Integer temp_attributes_count = TypeUtils.byteArr2Int(code_attribute.attribute_count.u2);
-            code_attribute.attributes =  new Attribute_Base[temp_attributes_count];
-            for(Integer i = 0; i < temp_attributes_count; i ++){
+            codeAttribute.attributeCount = IOUtils.readU2();
+            Integer tempAttributesCount = TypeUtils.byteArr2Int(codeAttribute.attributeCount.u2);
+            codeAttribute.attributes =  new AttributeBase[tempAttributesCount];
+            for(Integer i = 0; i < tempAttributesCount; i ++){
 
-                processAttribute(i, code_attribute.attributes);
+                processAttribute(i, codeAttribute.attributes);
             }
-            attributes[index] = code_attribute;
+            attributes[index] = codeAttribute;
         }else if(TypeUtils.compare(s, attributeStrs[2])){
             /* https://hllvm-group.iteye.com/group/topic/26545 */
-            StackMapTable_attribute stackMapTable_attribute = new StackMapTable_attribute();
-            stackMapTable_attribute.attribute_name_index = attributes_name_index;
-            processStackMapTable(stackMapTable_attribute);
-            attributes[index] = stackMapTable_attribute;
+            StackMapTableAttribute stackMapTableAttribute = new StackMapTableAttribute();
+            stackMapTableAttribute.attributeNameIndex = attributesNameIndex;
+            processStackMapTable(stackMapTableAttribute);
+            attributes[index] = stackMapTableAttribute;
         }else if(TypeUtils.compare(s, attributeStrs[3])){
-            Exceptions_attribute exceptions_attribute = new Exceptions_attribute();
-            exceptions_attribute.attribute_name_index = attributes_name_index;
-            exceptions_attribute.attribute_length = IOUtils.read_u4();
-            exceptions_attribute.number_of_exceptions = IOUtils.read_u2();
-            Integer exception_size = TypeUtils.byteArr2Int(exceptions_attribute.number_of_exceptions.u2);
-            exceptions_attribute.exception_index_table = new u2[exception_size];
-            for(Integer j = 0; j < exception_size; j ++){
-                exceptions_attribute.exception_index_table[j] = IOUtils.read_u2();
+            ExceptionsAttribute exceptionsAttribute = new ExceptionsAttribute();
+            exceptionsAttribute.attributeNameIndex = attributesNameIndex;
+            exceptionsAttribute.attributeLength = IOUtils.readU4();
+            exceptionsAttribute.numberOfExceptions = IOUtils.readU2();
+            Integer exceptionSize = TypeUtils.byteArr2Int(exceptionsAttribute.numberOfExceptions.u2);
+            exceptionsAttribute.exceptionIndexTable = new U2[exceptionSize];
+            for(Integer j = 0; j < exceptionSize; j ++){
+                exceptionsAttribute.exceptionIndexTable[j] = IOUtils.readU2();
             }
-            attributes[index] = exceptions_attribute;
+            attributes[index] = exceptionsAttribute;
         }else if(TypeUtils.compare(s, attributeStrs[4])){
-            InnerClasses_attribute innerClasses_attribute = new InnerClasses_attribute();
-            innerClasses_attribute.attribute_name_index = attributes_name_index;
-            innerClasses_attribute.attribute_length = IOUtils.read_u4();
-            innerClasses_attribute.number_of_classes = IOUtils.read_u2();
-            Integer classes_size = TypeUtils.byteArr2Int(innerClasses_attribute.number_of_classes.u2);
-            innerClasses_attribute.classes = new classes[classes_size];
-            for(Integer j = 0; j < classes_size; j ++){
-                innerClasses_attribute.classes[j] = new classes();
-                innerClasses_attribute.classes[j].inner_class_info_index = IOUtils.read_u2();
-                innerClasses_attribute.classes[j].outer_class_info_index = IOUtils.read_u2();
-                innerClasses_attribute.classes[j].inner_name_index = IOUtils.read_u2();
-                innerClasses_attribute.classes[j].inner_class_access_flags = IOUtils.read_u2();
+            InnerClassesAttribute innerClassesAttribute = new InnerClassesAttribute();
+            innerClassesAttribute.attributeNameIndex = attributesNameIndex;
+            innerClassesAttribute.attributeLength = IOUtils.readU4();
+            innerClassesAttribute.numberOfClasses = IOUtils.readU2();
+            Integer classesSize = TypeUtils.byteArr2Int(innerClassesAttribute.numberOfClasses.u2);
+            innerClassesAttribute.classes = new Classes[classesSize];
+            for(Integer j = 0; j < classesSize; j ++){
+                innerClassesAttribute.classes[j] = new Classes();
+                innerClassesAttribute.classes[j].innerClassInfoIndex = IOUtils.readU2();
+                innerClassesAttribute.classes[j].outerClassInfoIndex = IOUtils.readU2();
+                innerClassesAttribute.classes[j].innerNameIndex = IOUtils.readU2();
+                innerClassesAttribute.classes[j].innerClassAccessFlags = IOUtils.readU2();
             }
-            attributes[index] = innerClasses_attribute;
+            attributes[index] = innerClassesAttribute;
         }else if(TypeUtils.compare(s, attributeStrs[5])){
-            EnclosingMethod_attribute enclosingMethod_attribute = new EnclosingMethod_attribute();
-            enclosingMethod_attribute.attribute_name_index = attributes_name_index;
-            enclosingMethod_attribute.attribute_length = IOUtils.read_u4();
-            enclosingMethod_attribute.class_index = IOUtils.read_u2();
-            enclosingMethod_attribute.class_index = IOUtils.read_u2();
-            attributes[index] = enclosingMethod_attribute;
+            EnclosingMethodAttribute enclosingMethodAttribute = new EnclosingMethodAttribute();
+            enclosingMethodAttribute.attributeNameIndex = attributesNameIndex;
+            enclosingMethodAttribute.attributeLength = IOUtils.readU4();
+            enclosingMethodAttribute.classIndex = IOUtils.readU2();
+            enclosingMethodAttribute.classIndex = IOUtils.readU2();
+            attributes[index] = enclosingMethodAttribute;
         }else if(TypeUtils.compare(s, attributeStrs[6])){
-            Synthetic_attribute synthetic_attribute = new Synthetic_attribute();
-            synthetic_attribute.attribute_name_index = attributes_name_index;
-            synthetic_attribute.attribute_length = IOUtils.read_u4();
-            attributes[index] = synthetic_attribute;
+            SyntheticAttribute syntheticAttribute = new SyntheticAttribute();
+            syntheticAttribute.attributeNameIndex = attributesNameIndex;
+            syntheticAttribute.attributeLength = IOUtils.readU4();
+            attributes[index] = syntheticAttribute;
         }else if(TypeUtils.compare(s, attributeStrs[7])){
-            Signature_attribute signature_attribute = new Signature_attribute();
-            signature_attribute.attribute_name_index = attributes_name_index;
-            signature_attribute.attribute_length = IOUtils.read_u4();
-            signature_attribute.signature_index = IOUtils.read_u2();
-            attributes[index] = signature_attribute;
+            SignatureAttribute signatureAttribute = new SignatureAttribute();
+            signatureAttribute.attributeNameIndex = attributesNameIndex;
+            signatureAttribute.attributeLength = IOUtils.readU4();
+            signatureAttribute.signatureIndex = IOUtils.readU2();
+            attributes[index] = signatureAttribute;
         }else if(TypeUtils.compare(s, attributeStrs[8])){
-            SourceFile_attribute sourceFile_attribute = new SourceFile_attribute();
-            sourceFile_attribute.attribute_name_index = attributes_name_index;
-            sourceFile_attribute.attribute_length = IOUtils.read_u4();
-            sourceFile_attribute.sourcefile_index = IOUtils.read_u2();
-            attributes[index] = sourceFile_attribute;
+            SourceFileAttribute sourceFileAttribute = new SourceFileAttribute();
+            sourceFileAttribute.attributeNameIndex = attributesNameIndex;
+            sourceFileAttribute.attributeLength = IOUtils.readU4();
+            sourceFileAttribute.sourcefileIndex = IOUtils.readU2();
+            attributes[index] = sourceFileAttribute;
         }else if(TypeUtils.compare(s, attributeStrs[9])){
-            SourceDebugExtension_attribute sourceDebugExtension_attribute = new SourceDebugExtension_attribute();
-            sourceDebugExtension_attribute.attribute_name_index = attributes_name_index;
-            sourceDebugExtension_attribute.attribute_length = IOUtils.read_u4();
-            Integer debug_size = TypeUtils.byteArr2Int(sourceDebugExtension_attribute.attribute_length.u4);
-            sourceDebugExtension_attribute.debug_extension = new u1[debug_size];
-            for(Integer j = 0; j < debug_size; j ++){
-                sourceDebugExtension_attribute.debug_extension[j] = IOUtils.read_u1();
+            SourceDebugExtensionAttribute sourceDebugExtensionAttribute = new SourceDebugExtensionAttribute();
+            sourceDebugExtensionAttribute.attributeNameIndex = attributesNameIndex;
+            sourceDebugExtensionAttribute.attributeLength = IOUtils.readU4();
+            Integer debugSize = TypeUtils.byteArr2Int(sourceDebugExtensionAttribute.attributeLength.u4);
+            sourceDebugExtensionAttribute.debugExtension = new U1[debugSize];
+            for(Integer j = 0; j < debugSize; j ++){
+                sourceDebugExtensionAttribute.debugExtension[j] = IOUtils.readU1();
             }
-            attributes[index] = sourceDebugExtension_attribute;
+            attributes[index] = sourceDebugExtensionAttribute;
         }else if(TypeUtils.compare(s, attributeStrs[10])){
-            LineNumberTable_attribute lineNumberTable_attribute = new LineNumberTable_attribute();
-            lineNumberTable_attribute.attribute_name_index = attributes_name_index;
-            lineNumberTable_attribute.attribute_length = IOUtils.read_u4();
-            lineNumberTable_attribute.line_number_table_length = IOUtils.read_u2();
-            Integer line_number_size = TypeUtils.byteArr2Int(lineNumberTable_attribute.line_number_table_length.u2);
-            lineNumberTable_attribute.line_number_table = new line_number[line_number_size];
-            for(Integer j = 0; j < line_number_size; j ++){
-                lineNumberTable_attribute.line_number_table[j] = new line_number();
-                lineNumberTable_attribute.line_number_table[j].start_pc = IOUtils.read_u2();
-                lineNumberTable_attribute.line_number_table[j].line_number = IOUtils.read_u2();
+            LineNumberTableAttribute lineNumberTableAttribute = new LineNumberTableAttribute();
+            lineNumberTableAttribute.attributeNameIndex = attributesNameIndex;
+            lineNumberTableAttribute.attributeLength = IOUtils.readU4();
+            lineNumberTableAttribute.lineNumberTableLength = IOUtils.readU2();
+            Integer lineNumberSize = TypeUtils.byteArr2Int(lineNumberTableAttribute.lineNumberTableLength.u2);
+            lineNumberTableAttribute.lineNumbers = new LineNumber[lineNumberSize];
+            for(Integer j = 0; j < lineNumberSize; j ++){
+                lineNumberTableAttribute.lineNumbers[j] = new LineNumber();
+                lineNumberTableAttribute.lineNumbers[j].startPc = IOUtils.readU2();
+                lineNumberTableAttribute.lineNumbers[j].lineNumber = IOUtils.readU2();
             }
-            attributes[index] = lineNumberTable_attribute;
+            attributes[index] = lineNumberTableAttribute;
         }else if(TypeUtils.compare(s, attributeStrs[11])){
-            LocalVariableTable_attribute localVariableTable_attribute = new LocalVariableTable_attribute();
-            localVariableTable_attribute.attribute_name_index = attributes_name_index;
-            localVariableTable_attribute.attribute_length = IOUtils.read_u4();
-            localVariableTable_attribute.local_variable_table_length = IOUtils.read_u2();
-            Integer local_variable_size = TypeUtils.byteArr2Int(localVariableTable_attribute.local_variable_table_length.u2);
-            localVariableTable_attribute.local_variable_table = new local_variable[local_variable_size];
-            for(Integer j = 0; j < local_variable_size; j ++){
-                local_variable local_variable = new local_variable();
-                local_variable.start_pc = IOUtils.read_u2();
-                local_variable.length = IOUtils.read_u2();
-                local_variable.name_index = IOUtils.read_u2();
-                local_variable.descriptor_index = IOUtils.read_u2();
-                local_variable.index = IOUtils.read_u2();
-                localVariableTable_attribute.local_variable_table[j] = local_variable;
+            LocalVariableTableAttribute localVariableTableAttribute = new LocalVariableTableAttribute();
+            localVariableTableAttribute.attributeNameIndex = attributesNameIndex;
+            localVariableTableAttribute.attributeLength = IOUtils.readU4();
+            localVariableTableAttribute.localVariableTableLength = IOUtils.readU2();
+            Integer localVariableSize = TypeUtils.byteArr2Int(localVariableTableAttribute.localVariableTableLength.u2);
+            localVariableTableAttribute.localVariables = new LocalVariable[localVariableSize];
+            for(Integer j = 0; j < localVariableSize; j ++){
+                LocalVariable localVariable = new LocalVariable();
+                localVariable.startPc = IOUtils.readU2();
+                localVariable.length = IOUtils.readU2();
+                localVariable.nameIndex = IOUtils.readU2();
+                localVariable.descriptorIndex = IOUtils.readU2();
+                localVariable.index = IOUtils.readU2();
+                localVariableTableAttribute.localVariables[j] = localVariable;
             }
-            attributes[index] = localVariableTable_attribute;
+            attributes[index] = localVariableTableAttribute;
         }else if(TypeUtils.compare(s, attributeStrs[12])){
-            LocalVariableTypeTable_attribute localVariableTypeTable = new LocalVariableTypeTable_attribute();
-            localVariableTypeTable.attribute_name_index = attributes_name_index;
-            localVariableTypeTable.attribute_length = IOUtils.read_u4();
-            localVariableTypeTable.local_variable_type_table_length = IOUtils.read_u2();
-            Integer local_variable_type_size = TypeUtils.byteArr2Int(localVariableTypeTable.local_variable_type_table_length.u2);
-            localVariableTypeTable.local_variable_type_table = new local_variable_type[local_variable_type_size];
-            for(Integer j = 0; j < local_variable_type_size; j ++){
-                local_variable_type local_variable_type = new local_variable_type();
-                local_variable_type.start_pc = IOUtils.read_u2();
-                local_variable_type.length = IOUtils.read_u2();
-                local_variable_type.name_index = IOUtils.read_u2();
-                local_variable_type.signature_index = IOUtils.read_u2();
-                local_variable_type.index = IOUtils.read_u2();
-                localVariableTypeTable.local_variable_type_table[j] = local_variable_type;
+            LocalVariableTypeTableAttribute localVariableTypeTable = new LocalVariableTypeTableAttribute();
+            localVariableTypeTable.attributeNameIndex = attributesNameIndex;
+            localVariableTypeTable.attributeLength = IOUtils.readU4();
+            localVariableTypeTable.localVariableTypeTableLength = IOUtils.readU2();
+            Integer localVariableTypeSize = TypeUtils.byteArr2Int(localVariableTypeTable.localVariableTypeTableLength.u2);
+            localVariableTypeTable.localVariableTypes = new LocalVariableType[localVariableTypeSize];
+            for(Integer j = 0; j < localVariableTypeSize; j ++){
+                LocalVariableType localVariableType = new LocalVariableType();
+                localVariableType.startPc = IOUtils.readU2();
+                localVariableType.length = IOUtils.readU2();
+                localVariableType.nameIndex = IOUtils.readU2();
+                localVariableType.signatureIndex = IOUtils.readU2();
+                localVariableType.index = IOUtils.readU2();
+                localVariableTypeTable.localVariableTypes[j] = localVariableType;
             }
             attributes[index] = localVariableTypeTable;
         }else if(TypeUtils.compare(s, attributeStrs[13])){
-            Deprecated_attribute deprecated_attribute = new Deprecated_attribute();
-            deprecated_attribute.attribute_name_index = attributes_name_index;
-            deprecated_attribute.attribute_length = IOUtils.read_u4();
-            attributes[index] = deprecated_attribute;
+            DeprecatedAttribute deprecatedAttribute = new DeprecatedAttribute();
+            deprecatedAttribute.attributeNameIndex = attributesNameIndex;
+            deprecatedAttribute.attributeLength = IOUtils.readU4();
+            attributes[index] = deprecatedAttribute;
         }else if(TypeUtils.compare(s, attributeStrs[14])){
-            RuntimeVisibleAnnotations_attribute runtimeVisibleAnnotations = new RuntimeVisibleAnnotations_attribute();
-            runtimeVisibleAnnotations.attribute_name_index = attributes_name_index;
-            runtimeVisibleAnnotations.attribute_length = IOUtils.read_u4();
-            runtimeVisibleAnnotations.num_annotations = IOUtils.read_u2();
-            Integer annotations_size = TypeUtils.byteArr2Int(runtimeVisibleAnnotations.num_annotations.u2);
-            runtimeVisibleAnnotations.annotations = new annotation[annotations_size];
-            for(Integer j = 0; j < annotations_size; j ++){
-                annotation annotation = runtimeVisibleAnnotations.annotations[j] = new annotation();
+            RuntimeVisibleAnnotationsAttribute runtimeVisibleAnnotations = new RuntimeVisibleAnnotationsAttribute();
+            runtimeVisibleAnnotations.attributeNameIndex = attributesNameIndex;
+            runtimeVisibleAnnotations.attributeLength = IOUtils.readU4();
+            runtimeVisibleAnnotations.numAnnotations = IOUtils.readU2();
+            Integer annotationsSize = TypeUtils.byteArr2Int(runtimeVisibleAnnotations.numAnnotations.u2);
+            runtimeVisibleAnnotations.annotations = new Annotation[annotationsSize];
+            for(Integer j = 0; j < annotationsSize; j ++){
+                Annotation annotation = runtimeVisibleAnnotations.annotations[j] = new Annotation();
                 processAnnotation(annotation);
             }
             attributes[index] = runtimeVisibleAnnotations;
         }else if(TypeUtils.compare(s, attributeStrs[15])){
-            RuntimeInvisibleAnnotations_attribute runtimeInvisibleAnnotations = new RuntimeInvisibleAnnotations_attribute();
-            runtimeInvisibleAnnotations.attribute_name_index = attributes_name_index;
-            runtimeInvisibleAnnotations.attribute_length = IOUtils.read_u4();
-            runtimeInvisibleAnnotations.num_annotations = IOUtils.read_u2();
-            Integer annotations_size = TypeUtils.byteArr2Int(runtimeInvisibleAnnotations.num_annotations.u2);
-            for(Integer j = 0; j < annotations_size; j ++){
-                annotation annotation = runtimeInvisibleAnnotations.annotations[j];
+            RuntimeInvisibleAnnotationsAttribute runtimeInvisibleAnnotations = new RuntimeInvisibleAnnotationsAttribute();
+            runtimeInvisibleAnnotations.attributeNameIndex = attributesNameIndex;
+            runtimeInvisibleAnnotations.attributeLength = IOUtils.readU4();
+            runtimeInvisibleAnnotations.numAnnotations = IOUtils.readU2();
+            Integer annotationsSize = TypeUtils.byteArr2Int(runtimeInvisibleAnnotations.numAnnotations.u2);
+            for(Integer j = 0; j < annotationsSize; j ++){
+                Annotation annotation = runtimeInvisibleAnnotations.annotations[j];
                 processAnnotation(annotation);
             }
             attributes[index] = runtimeInvisibleAnnotations;
         }else if(TypeUtils.compare(s, attributeStrs[16])){
-            RuntimeVisibleParameterAnnotations_attribute runtimeVisibleParameterAnnotations = new RuntimeVisibleParameterAnnotations_attribute();
-            runtimeVisibleParameterAnnotations.attribute_name_index = attributes_name_index;
-            runtimeVisibleParameterAnnotations.attribute_length = IOUtils.read_u4();
-            runtimeVisibleParameterAnnotations.num_parameters = IOUtils.read_u1();
-            Integer parameters_size = TypeUtils.byteArr2Int(runtimeVisibleParameterAnnotations.num_parameters.u1);
-            for(Integer j = 0; j < parameters_size; j ++){
-                parameter_annotation parameter_annotation = runtimeVisibleParameterAnnotations.parameter_annotations[j];
-                processParameter_annotation(parameter_annotation);
+            RuntimeVisibleParameterAnnotationsAttribute runtimeVisibleParameterAnnotations = new RuntimeVisibleParameterAnnotationsAttribute();
+            runtimeVisibleParameterAnnotations.attributeNameIndex = attributesNameIndex;
+            runtimeVisibleParameterAnnotations.attributeLength = IOUtils.readU4();
+            runtimeVisibleParameterAnnotations.numParameters = IOUtils.readU1();
+            Integer parametersSize = TypeUtils.byteArr2Int(runtimeVisibleParameterAnnotations.numParameters.u1);
+            for(Integer j = 0; j < parametersSize; j ++){
+                ParameterAnnotation parameterAnnotation = runtimeVisibleParameterAnnotations.parameterAnnotations[j];
+                processParameterAnnotation(parameterAnnotation);
             }
             attributes[index] = runtimeVisibleParameterAnnotations;
         }else if(TypeUtils.compare(s, attributeStrs[17])){
-            RuntimeInvisibleParameterAnnotations_attribute runtimeInvisibleParameterAnnotations = new RuntimeInvisibleParameterAnnotations_attribute();
-            runtimeInvisibleParameterAnnotations.attribute_name_index = attributes_name_index;
-            runtimeInvisibleParameterAnnotations.attribute_length = IOUtils.read_u4();
-            runtimeInvisibleParameterAnnotations.num_parameters = IOUtils.read_u1();
-            Integer parameters_size = TypeUtils.byteArr2Int(runtimeInvisibleParameterAnnotations.num_parameters.u1);
-            for(Integer j = 0; j < parameters_size; j ++){
-                parameter_annotation parameter_annotation = runtimeInvisibleParameterAnnotations.parameter_annotations[j];
-                processParameter_annotation(parameter_annotation);
+            RuntimeInvisibleParameterAnnotationsAttribute runtimeInvisibleParameterAnnotations = new RuntimeInvisibleParameterAnnotationsAttribute();
+            runtimeInvisibleParameterAnnotations.attributeNameIndex = attributesNameIndex;
+            runtimeInvisibleParameterAnnotations.attributeLength = IOUtils.readU4();
+            runtimeInvisibleParameterAnnotations.numParameters = IOUtils.readU1();
+            Integer parametersSize = TypeUtils.byteArr2Int(runtimeInvisibleParameterAnnotations.numParameters.u1);
+            for(Integer j = 0; j < parametersSize; j ++){
+                ParameterAnnotation parameterAnnotation = runtimeInvisibleParameterAnnotations.parameterAnnotations[j];
+                processParameterAnnotation(parameterAnnotation);
             }
             attributes[index] = runtimeInvisibleParameterAnnotations;
 
-            /*java8增加 RuntimeVisibleTypeAnnotations_attribute*/
+            /*java8增加 RuntimeVisibleTypeAnnotationsAttribute*/
         }else if(TypeUtils.compare(s, attributeStrs[18])){
 
-            /*java8增加 RuntimeInvisibleTypeAnnotations_attribute*/
+            /*java8增加 RuntimeInvisibleTypeAnnotationsAttribute*/
         }else if(TypeUtils.compare(s, attributeStrs[19])){
 
         }else if(TypeUtils.compare(s, attributeStrs[20])){
-            AnnotationDefault_attribute annotationDefault = new AnnotationDefault_attribute();
-            annotationDefault.attribute_name_index = attributes_name_index;
-            annotationDefault.attribute_length = IOUtils.read_u4();
-            annotationDefault.default_value = processElement_value();
+            AnnotationDefaultAttribute annotationDefault = new AnnotationDefaultAttribute();
+            annotationDefault.attributeNameIndex = attributesNameIndex;
+            annotationDefault.attributeLength = IOUtils.readU4();
+            annotationDefault.defaultValue = processElementValue();
             attributes[index] = annotationDefault;
         }else if(TypeUtils.compare(s, attributeStrs[21])){
-            BootstrapMethods_attribute bootstrapMethods = new BootstrapMethods_attribute();
-            bootstrapMethods.attribute_name_index = attributes_name_index;
-            bootstrapMethods.attribute_length = IOUtils.read_u4();
-            bootstrapMethods.num_bootstrap_methods = IOUtils.read_u2();
-            Integer bootstrapMethods_size = TypeUtils.byteArr2Int(bootstrapMethods.num_bootstrap_methods.u2);
-            bootstrapMethods.bootstrap_methods = new bootstrap_method[bootstrapMethods_size];
-            for(Integer j = 0; j < bootstrapMethods_size; j ++){
-                bootstrap_method bootstrap_method = new bootstrap_method();
-                bootstrap_method.bootstrap_method_ref = IOUtils.read_u2();
-                bootstrap_method.num_bootstrap_arguments = IOUtils.read_u2();
-                Integer arguments_size = TypeUtils.byteArr2Int(bootstrap_method.num_bootstrap_arguments.u2);
-                bootstrap_method.bootstrap_arguments = new u2[arguments_size];
-                for(Integer k = 0; k < arguments_size; k ++){
-                    bootstrap_method.bootstrap_arguments[k] = IOUtils.read_u2();
+            BootstrapMethodsAttribute bootstrapMethods = new BootstrapMethodsAttribute();
+            bootstrapMethods.attributeNameIndex = attributesNameIndex;
+            bootstrapMethods.attributeLength = IOUtils.readU4();
+            bootstrapMethods.numBootstrapMethods = IOUtils.readU2();
+            Integer bootstrapMethodsSize = TypeUtils.byteArr2Int(bootstrapMethods.numBootstrapMethods.u2);
+            bootstrapMethods.bootstrapMethods = new BootstrapMethod[bootstrapMethodsSize];
+            for(Integer j = 0; j < bootstrapMethodsSize; j ++){
+                BootstrapMethod bootstrapMethod = new BootstrapMethod();
+                bootstrapMethod.bootstrapMethodRef = IOUtils.readU2();
+                bootstrapMethod.numBootstrapArguments = IOUtils.readU2();
+                Integer argumentsSize = TypeUtils.byteArr2Int(bootstrapMethod.numBootstrapArguments.u2);
+                bootstrapMethod.bootstrapArguments = new U2[argumentsSize];
+                for(Integer k = 0; k < argumentsSize; k ++){
+                    bootstrapMethod.bootstrapArguments[k] = IOUtils.readU2();
                 }
-                bootstrapMethods.bootstrap_methods[j] = bootstrap_method;
+                bootstrapMethods.bootstrapMethods[j] = bootstrapMethod;
             }
             attributes[index] = bootstrapMethods;
 
-            /*java8增加 MethodParameters_attribute*/
+            /*java8增加 MethodParametersAttribute*/
         }else if(TypeUtils.compare(s, attributeStrs[22])){
 
         }
     }
 
-    void processParameter_annotation(parameter_annotation parameter_annotation){
-        parameter_annotation.num_annotations = IOUtils.read_u2();
-        Integer annotations_size = TypeUtils.byteArr2Int(parameter_annotation.num_annotations.u2);
-        parameter_annotation.annotations = new annotation[annotations_size];
+    void processParameterAnnotation(ParameterAnnotation parameterAnnotation){
+        parameterAnnotation.numAnnotations = IOUtils.readU2();
+        Integer annotations_size = TypeUtils.byteArr2Int(parameterAnnotation.numAnnotations.u2);
+        parameterAnnotation.annotations = new Annotation[annotations_size];
         for(Integer k = 0; k < annotations_size; k ++){
-            parameter_annotation.annotations[k] = new annotation();
-            processAnnotation(parameter_annotation.annotations[k]);
+            parameterAnnotation.annotations[k] = new Annotation();
+            processAnnotation(parameterAnnotation.annotations[k]);
         }
     }
 
-    void processAnnotation(annotation annotation){
-        annotation.type_index = IOUtils.read_u2();
-        annotation.num_element_value_pairs = IOUtils.read_u2();
-        Integer pairs_size = TypeUtils.byteArr2Int(annotation.num_element_value_pairs.u2);
-        annotation.element_value_pairs = new element_value_pair[pairs_size];
-        for(Integer k = 0; k < pairs_size; k ++){
-            annotation.element_value_pairs[k] = new element_value_pair();
-            processElement_value_pair(annotation.element_value_pairs[k]);
+    void processAnnotation(Annotation annotation){
+        annotation.typeIndex = IOUtils.readU2();
+        annotation.numElementValuePairs = IOUtils.readU2();
+        Integer pairsSize = TypeUtils.byteArr2Int(annotation.numElementValuePairs.u2);
+        annotation.elementValuePairs = new ElementValuePair[pairsSize];
+        for(Integer k = 0; k < pairsSize; k ++){
+            annotation.elementValuePairs[k] = new ElementValuePair();
+            processElementValuePair(annotation.elementValuePairs[k]);
         }
     }
 
-    void processElement_value_pair(element_value_pair element_value_pair){
-        element_value_pair.element_name_index = IOUtils.read_u2();
-        element_value_pair.value = processElement_value();
+    void processElementValuePair(ElementValuePair elementValuePair){
+        elementValuePair.elementNameIndex = IOUtils.readU2();
+        elementValuePair.value = processElementValue();
     }
 
-    element_value processElement_value(){
-        element_value element_value = null;
-        u1 element_value_tag = IOUtils.read_u1();
-        Integer tag_integer = TypeUtils.byteArr2Int(element_value_tag.u1);
+    ElementValue processElementValue(){
+        ElementValue elementValue = null;
+        U1 elementValueTag = IOUtils.readU1();
+        Integer tagInteger = TypeUtils.byteArr2Int(elementValueTag.u1);
 
-        if(tag_integer == Integer.valueOf('B')
-                ||tag_integer == Integer.valueOf('C')
-                ||tag_integer == Integer.valueOf('D')
-                ||tag_integer == Integer.valueOf('F')
-                ||tag_integer == Integer.valueOf('I')
-                ||tag_integer == Integer.valueOf('J')
-                ||tag_integer == Integer.valueOf('S')
-                ||tag_integer == Integer.valueOf('Z')
-                ||tag_integer == Integer.valueOf('s')){
-            const_value_index const_value_index =  new const_value_index();
-            const_value_index.tag = element_value_tag;
-            const_value_index.const_value_index = IOUtils.read_u2();
-            element_value = const_value_index;
+        if(Integer.valueOf('B').equals(tagInteger)
+                || Integer.valueOf('C').equals(tagInteger)
+                || Integer.valueOf('D').equals(tagInteger)
+                || Integer.valueOf('F').equals(tagInteger)
+                || Integer.valueOf('I').equals(tagInteger)
+                || Integer.valueOf('J').equals(tagInteger)
+                || Integer.valueOf('S').equals(tagInteger)
+                || Integer.valueOf('Z').equals(tagInteger)
+                || Integer.valueOf('s').equals(tagInteger)){
+            ConstValueIndex constValueIndex =  new ConstValueIndex();
+            constValueIndex.tag = elementValueTag;
+            constValueIndex.constValueIndex = IOUtils.readU2();
+            elementValue = constValueIndex;
         }
-        else if(tag_integer == Integer.valueOf('e')){
-            enum_const_value enum_const_value =  new enum_const_value();
-            enum_const_value.tag = element_value_tag;
-            enum_const_value.type_name_index = IOUtils.read_u2();
-            enum_const_value.const_name_index = IOUtils.read_u2();
-            element_value = enum_const_value;
-        }else if(tag_integer == Integer.valueOf('c')){
-            class_info_index class_info_index =  new class_info_index();
-            class_info_index.tag = element_value_tag;
-            class_info_index.class_info_index = IOUtils.read_u2();
-            element_value = class_info_index;
-        }else if(tag_integer == Integer.valueOf('@')){
-            value_annotation value_annotation = new value_annotation();
-            value_annotation.tag = element_value_tag;
-            value_annotation.annotation_value = new annotation();
-            processAnnotation(value_annotation.annotation_value);
-            element_value = value_annotation;
-        }else if(tag_integer == Integer.valueOf('[')){
-            array_value array_value =  new array_value();
-            array_value.tag = element_value_tag;
-            array_value.num_values = IOUtils.read_u2();
-            Integer num_value_integer = TypeUtils.byteArr2Int(array_value.num_values.u2);
-            element_value[] element_values = new element_value[num_value_integer];
-            for(Integer i = 0; i < num_value_integer; i++){
-                element_values[i] = processElement_value();
+        else if( Integer.valueOf('e').equals(tagInteger)){
+            EnumConstValue enumConstValue =  new EnumConstValue();
+            enumConstValue.tag = elementValueTag;
+            enumConstValue.typeNameIndex = IOUtils.readU2();
+            enumConstValue.constNameIndex = IOUtils.readU2();
+            elementValue = enumConstValue;
+        }else if(Integer.valueOf('c').equals(tagInteger)){
+            ClassInfoIndex classInfoIndex =  new ClassInfoIndex();
+            classInfoIndex.tag = elementValueTag;
+            classInfoIndex.classInfoIndex = IOUtils.readU2();
+            elementValue = classInfoIndex;
+        }else if( Integer.valueOf('@').equals(tagInteger)){
+            ValueAnnotation valueAnnotation = new ValueAnnotation();
+            valueAnnotation.tag = elementValueTag;
+            valueAnnotation.annotationValue = new Annotation();
+            processAnnotation(valueAnnotation.annotationValue);
+            elementValue = valueAnnotation;
+        }else if(Integer.valueOf('[').equals(tagInteger)){
+            ArrayValue arrayValue =  new ArrayValue();
+            arrayValue.tag = elementValueTag;
+            arrayValue.numValues = IOUtils.readU2();
+            Integer numValueInteger = TypeUtils.byteArr2Int(arrayValue.numValues.u2);
+            ElementValue[] elementValues = new ElementValue[numValueInteger];
+            for(Integer i = 0; i < numValueInteger; i++){
+                elementValues[i] = processElementValue();
             }
-            array_value.values = element_values;
-            element_value = array_value;
+            arrayValue.values = elementValues;
+            elementValue = arrayValue;
         }
-        return element_value;
+        return elementValue;
 
     }
 
-    void processStackMapTable(StackMapTable_attribute stackMapTable_attribute){
-        stackMapTable_attribute.attribute_length = IOUtils.read_u4();
-        stackMapTable_attribute.number_of_entries = IOUtils.read_u2();
-        Integer len = TypeUtils.byteArr2Int(stackMapTable_attribute.number_of_entries.u2);
-        stackMapTable_attribute.entries = new stack_map_frame[len];
+    void processStackMapTable(StackMapTableAttribute stackMapTableAttribute){
+        stackMapTableAttribute.attributeLength = IOUtils.readU4();
+        stackMapTableAttribute.numberOfEntries = IOUtils.readU2();
+        Integer len = TypeUtils.byteArr2Int(stackMapTableAttribute.numberOfEntries.u2);
+        stackMapTableAttribute.entries = new StackMapFrame[len];
         for(Integer i = 0; i < len; i++){
             // stackMapTable_attribute.entries[i];
-            u1 frame_tag = IOUtils.read_u1();
-            Integer frame_tag_integer = TypeUtils.byteArr2Int(frame_tag.u1);
+            U1 frameTag = IOUtils.readU1();
+            Integer frameTagInteger = TypeUtils.byteArr2Int(frameTag.u1);
             /* 128 至 246是预留的*/
-            /*same_frame */
-            if(frame_tag_integer >= 0 && frame_tag_integer <= 63 ){
-                same_frame same_frame = new same_frame();
-                same_frame.frame_type = frame_tag;
-                stackMapTable_attribute.entries[i] = same_frame;
+            /*SameFrame */
+            if(frameTagInteger >= 0 && frameTagInteger <= 63 ){
+                SameFrame sameFrame = new SameFrame();
+                sameFrame.frameType = frameTag;
+                stackMapTableAttribute.entries[i] = sameFrame;
 
-                /*same_locals_1_stack_item_frame*/
-            }else if(frame_tag_integer >= 64 && frame_tag_integer <= 127){
-                same_locals_1_stack_item_frame same_locals_1_stack_item_frame = new same_locals_1_stack_item_frame();
-                same_locals_1_stack_item_frame.frame_type = frame_tag;
-                same_locals_1_stack_item_frame.stack = new verification_type_info[1];
-                u1 verification_type_tag = IOUtils.read_u1();
-                same_locals_1_stack_item_frame.stack[0] = getVerificationTypeTag(verification_type_tag);
-                stackMapTable_attribute.entries[i] = same_locals_1_stack_item_frame;
+                /*SameLocals1StackItemFrame*/
+            }else if(frameTagInteger >= 64 && frameTagInteger <= 127){
+                SameLocals1StackItemFrame sameLocals1StackItemFrame = new SameLocals1StackItemFrame();
+                sameLocals1StackItemFrame.frameType = frameTag;
+                sameLocals1StackItemFrame.stack = new VerificationTypeInfo[1];
+                U1 verificationTypeTag = IOUtils.readU1();
+                sameLocals1StackItemFrame.stack[0] = getVerificationTypeTag(verificationTypeTag);
+                stackMapTableAttribute.entries[i] = sameLocals1StackItemFrame;
 
-                /*same_locals_1_stack_item_frame_extended*/
-            }else if(frame_tag_integer == 247){
-                same_locals_1_stack_item_frame_extended same_locals_1_stack_item_frame_extended = new same_locals_1_stack_item_frame_extended();
-                same_locals_1_stack_item_frame_extended.frame_type = frame_tag;
-                same_locals_1_stack_item_frame_extended.offset_delta = IOUtils.read_u2();
-                same_locals_1_stack_item_frame_extended.stack = new verification_type_info[1];
-                u1 verification_type_tag = IOUtils.read_u1();
-                same_locals_1_stack_item_frame_extended.stack[0] = getVerificationTypeTag(verification_type_tag);
-                stackMapTable_attribute.entries[i] = same_locals_1_stack_item_frame_extended;
+                /*SameLocals1StackItemFrameExtended*/
+            }else if(frameTagInteger == 247){
+                SameLocals1StackItemFrameExtended sameLocals1StackItemFrameExtended = new SameLocals1StackItemFrameExtended();
+                sameLocals1StackItemFrameExtended.frameType = frameTag;
+                sameLocals1StackItemFrameExtended.offsetDelta = IOUtils.readU2();
+                sameLocals1StackItemFrameExtended.stack = new VerificationTypeInfo[1];
+                U1 verificationTypeTag = IOUtils.readU1();
+                sameLocals1StackItemFrameExtended.stack[0] = getVerificationTypeTag(verificationTypeTag);
+                stackMapTableAttribute.entries[i] = sameLocals1StackItemFrameExtended;
 
-                /*chop_frame*/
-            }else if(frame_tag_integer >= 248 && frame_tag_integer <= 250){
-                chop_frame chop_frame = new chop_frame();
-                chop_frame.frame_type = frame_tag;
-                chop_frame.offset_delta = IOUtils.read_u2();
-                stackMapTable_attribute.entries[i] = chop_frame;
+                /*ChopFrame*/
+            }else if(frameTagInteger >= 248 && frameTagInteger <= 250){
+                ChopFrame chopFrame = new ChopFrame();
+                chopFrame.frameType = frameTag;
+                chopFrame.offsetDelta = IOUtils.readU2();
+                stackMapTableAttribute.entries[i] = chopFrame;
 
-                /*same_frame_extended*/
-            }else if(frame_tag_integer == 251){
-                same_frame_extended same_frame_extended = new same_frame_extended();
-                same_frame_extended.frame_type = frame_tag;
-                same_frame_extended.offset_delta = IOUtils.read_u2();
-                stackMapTable_attribute.entries[i] = same_frame_extended;
+                /*SameFrameExtended*/
+            }else if(frameTagInteger == 251){
+                SameFrameExtended sameFrameExtended = new SameFrameExtended();
+                sameFrameExtended.frameType = frameTag;
+                sameFrameExtended.offsetDelta = IOUtils.readU2();
+                stackMapTableAttribute.entries[i] = sameFrameExtended;
 
-                /*append_frame*/
-            }else if(frame_tag_integer >= 252 && frame_tag_integer <= 254){
-                append_frame append_frame = new append_frame();
-                append_frame.frame_type = frame_tag;
-                append_frame.offset_delta = IOUtils.read_u2();
-                int locals_size = frame_tag_integer - 251;
-                append_frame.locals = new verification_type_info[locals_size];
-                for(Integer j = 0; j < locals_size; j ++){
-                    u1 verification_type_tag = IOUtils.read_u1();
-                    append_frame.locals[j] = getVerificationTypeTag(verification_type_tag);
+                /*AppendFrame*/
+            }else if(frameTagInteger >= 252 && frameTagInteger <= 254){
+                AppendFrame appendFrame = new AppendFrame();
+                appendFrame.frameType = frameTag;
+                appendFrame.offsetDelta = IOUtils.readU2();
+                int localsSize = frameTagInteger - 251;
+                appendFrame.locals = new VerificationTypeInfo[localsSize];
+                for(Integer j = 0; j < localsSize; j ++){
+                    U1 verificationTypeTag = IOUtils.readU1();
+                    appendFrame.locals[j] = getVerificationTypeTag(verificationTypeTag);
                 }
-                stackMapTable_attribute.entries[i] = append_frame;
+                stackMapTableAttribute.entries[i] = appendFrame;
 
-                /*full_frame*/
-            }else if(frame_tag_integer >= 255 ){
-                full_frame full_frame = new full_frame();
-                full_frame.frame_type = frame_tag;
-                full_frame.offset_delta = IOUtils.read_u2();
-                full_frame.number_of_locals = IOUtils.read_u2();
-                int locals_size = TypeUtils.byteArr2Int(full_frame.number_of_locals.u2);
-                full_frame.locals = new verification_type_info[locals_size];
-                for(Integer j = 0; j < locals_size; j ++){
-                    u1 verification_type_tag = IOUtils.read_u1();
-                    full_frame.locals[j] = getVerificationTypeTag(verification_type_tag);
-                }
-
-                full_frame.number_of_stack_items = IOUtils.read_u2();
-                int stack_items_size = TypeUtils.byteArr2Int(full_frame.number_of_stack_items.u2);
-                full_frame.stack = new verification_type_info[stack_items_size];
-                for(Integer j = 0; j < stack_items_size; j ++){
-                    u1 verification_type_tag = IOUtils.read_u1();
-                    full_frame.stack[j] = getVerificationTypeTag(verification_type_tag);
+                /*FullFrame*/
+            }else if(frameTagInteger >= 255 ){
+                FullFrame fullFrame = new FullFrame();
+                fullFrame.frameType = frameTag;
+                fullFrame.offsetDelta = IOUtils.readU2();
+                fullFrame.numberOfLocals = IOUtils.readU2();
+                int localsSize = TypeUtils.byteArr2Int(fullFrame.numberOfLocals.u2);
+                fullFrame.locals = new VerificationTypeInfo[localsSize];
+                for(Integer j = 0; j < localsSize; j ++){
+                    U1 verificationTypeTag = IOUtils.readU1();
+                    fullFrame.locals[j] = getVerificationTypeTag(verificationTypeTag);
                 }
 
-                stackMapTable_attribute.entries[i] = full_frame;
+                fullFrame.numberOfStackItems = IOUtils.readU2();
+                int stackItemsSize = TypeUtils.byteArr2Int(fullFrame.numberOfStackItems.u2);
+                fullFrame.stack = new VerificationTypeInfo[stackItemsSize];
+                for(Integer j = 0; j < stackItemsSize; j ++){
+                    U1 verificationTypeTag = IOUtils.readU1();
+                    fullFrame.stack[j] = getVerificationTypeTag(verificationTypeTag);
+                }
+
+                stackMapTableAttribute.entries[i] = fullFrame;
             }
         }
     }
 
-    verification_type_info getVerificationTypeTag(u1 tag){
-        Integer tag_integer = TypeUtils.byteArr2Int(tag.u1);
-        if(tag_integer == 0){
-            Top_variable_info top_variable_info = new Top_variable_info();
-            top_variable_info.tag = tag;
-            return top_variable_info;
-        }else if(tag_integer == 1){
-            Integer_variable_info integer_variable_info = new Integer_variable_info();
-            integer_variable_info.tag = tag;
-            return integer_variable_info;
-        }else if(tag_integer == 2){
-            Float_variable_info float_variable_info = new Float_variable_info();
-            float_variable_info.tag = tag;
-            return float_variable_info;
-        }else if(tag_integer == 4){
-            Long_variable_info long_variable_info = new Long_variable_info();
-            long_variable_info.tag = tag;
-            return long_variable_info;
-        }else if(tag_integer == 3){
-            Double_variable_info double_variable_info = new Double_variable_info();
-            double_variable_info.tag = tag;
-            return double_variable_info;
-        }else if(tag_integer == 5){
-            Null_variable_info null_variable_info = new Null_variable_info();
-            null_variable_info.tag = tag;
-            return null_variable_info;
-        }else if(tag_integer == 6){
-            UninitializedThis_variable_info uninitializedThis_variable_info = new UninitializedThis_variable_info();
-            uninitializedThis_variable_info.tag = tag;
-            return uninitializedThis_variable_info;
-        }else if(tag_integer == 7){
-            Object_variable_info object_variable_info = new Object_variable_info();
-            object_variable_info.tag = tag;
-            object_variable_info.cpool_index = IOUtils.read_u2();
-            return object_variable_info;
-        }else if (tag_integer == 8){
-            Uninitialized_variable_info uninitialized_variable_info = new Uninitialized_variable_info();
-            uninitialized_variable_info.tag = tag;
-            uninitialized_variable_info.offset = IOUtils.read_u2();
-            return uninitialized_variable_info;
+    VerificationTypeInfo getVerificationTypeTag(U1 tag){
+        Integer tagInteger = TypeUtils.byteArr2Int(tag.u1);
+        if(tagInteger == 0){
+            TopVariableInfo topVariableInfo = new TopVariableInfo();
+            topVariableInfo.tag = tag;
+            return topVariableInfo;
+        }else if(tagInteger == 1){
+            IntegerVariableInfo integerVariableInfo = new IntegerVariableInfo();
+            integerVariableInfo.tag = tag;
+            return integerVariableInfo;
+        }else if(tagInteger == 2){
+            FloatVariableInfo floatVariableInfo = new FloatVariableInfo();
+            floatVariableInfo.tag = tag;
+            return floatVariableInfo;
+        }else if(tagInteger == 4){
+            LongVariableInfo longVariableInfo = new LongVariableInfo();
+            longVariableInfo.tag = tag;
+            return longVariableInfo;
+        }else if(tagInteger == 3){
+            DoubleVariableInfo doubleVariableInfo = new DoubleVariableInfo();
+            doubleVariableInfo.tag = tag;
+            return doubleVariableInfo;
+        }else if(tagInteger == 5){
+            NullVariableInfo nullVariableInfo = new NullVariableInfo();
+            nullVariableInfo.tag = tag;
+            return nullVariableInfo;
+        }else if(tagInteger == 6){
+            UninitializedThisVariableInfo uninitializedThisVariableInfo = new UninitializedThisVariableInfo();
+            uninitializedThisVariableInfo.tag = tag;
+            return uninitializedThisVariableInfo;
+        }else if(tagInteger == 7){
+            ObjectVariableInfo objectVariableInfo = new ObjectVariableInfo();
+            objectVariableInfo.tag = tag;
+            objectVariableInfo.cpoolIndex = IOUtils.readU2();
+            return objectVariableInfo;
+        }else if (tagInteger == 8){
+            UninitializedVariableInfo uninitializedVariableInfo = new UninitializedVariableInfo();
+            uninitializedVariableInfo.tag = tag;
+            uninitializedVariableInfo.offset = IOUtils.readU2();
+            return uninitializedVariableInfo;
         }
         return null;
     }
 
     enum TAG{
-        CONSTANT_Utf8("CONSTANT_Utf8", (byte)0x1),
-        CONSTANT_Integer("CONSTANT_Integer", (byte)0x3),
-        CONSTANT_Float("CONSTANT_Float", (byte)0x4),
-        CONSTANT_Long("CONSTANT_Long", (byte)0x5),
-        CONSTANT_Double("CONSTANT_Double", (byte)0x6),
-        CONSTANT_Class("CONSTANT_Class", (byte)0x7),
-        CONSTANT_String("CONSTANT_String", (byte)0x8),
-        CONSTANT_Fieldref("CONSTANT_Fieldref", (byte)0x9),
-        CONSTANT_Methodref("CONSTANT_Methodref", (byte)0x10),
-        CONSTANT_InterfaceMethodref("CONSTANT_InterfaceMethodref", (byte)0x11),
-        CONSTANT_NameAndType("CONSTANT_NameAndType", (byte)0x12),
-        CONSTANT_MethodHandle("CONSTANT_MethodHandle", (byte)0x15),
-        CONSTANT_MethodType("CONSTANT_MethodType", (byte)0x16),
-        CONSTANT_InvokeDynamic("CONSTANT_InvokeDynamic", (byte)0x17);
+        CONSTANT_Utf8("ConstantUtf8", (byte)0x1),
+        CONSTANT_Integer("ConstantInteger", (byte)0x3),
+        CONSTANT_Float("ConstantFloat", (byte)0x4),
+        CONSTANT_Long("ConstantLong", (byte)0x5),
+        CONSTANT_Double("ConstantDouble", (byte)0x6),
+        CONSTANT_Class("ConstantClass", (byte)0x7),
+        CONSTANT_String("ConstantString", (byte)0x8),
+        CONSTANT_Fieldref("ConstantFieldref", (byte)0x9),
+        CONSTANT_Methodref("ConstantMethodref", (byte)0x10),
+        CONSTANT_InterfaceMethodref("ConstantInterfacemethodref", (byte)0x11),
+        CONSTANT_NameAndType("ConstantNameandtype", (byte)0x12),
+        CONSTANT_MethodHandle("ConstantMethodhandle", (byte)0x15),
+        CONSTANT_MethodType("ConstantMethodtype", (byte)0x16),
+        CONSTANT_InvokeDynamic("ConstantInvokedynamic", (byte)0x17);
 
         public String name;
         public byte index;
@@ -745,13 +747,13 @@ public class ClassFile {
 }
 
 
-//class verification_type_info  {
-//    Top_variable_info top_variable_info;
-//    Integer_variable_info integer_variable_info;
-//    Float_variable_info float_variable_info;
-//    Long_variable_info long_variable_info;
-//    Double_variable_info double_variable_info;
-//    Null_variable_info null_variable_info;
-//    UninitializedThis_variable_info uninitializedThis_variable_info;
+//class VerificationTypeInfo  {
+//    TopVariableInfo top_variable_info;
+//    IntegerVariableInfo integer_variable_info;
+//    FloatVariableInfo float_variable_info;
+//    LongVariableInfo long_variable_info;
+//    DoubleVariableInfo double_variable_info;
+//    NullVariableInfo null_variable_info;
+//    UninitializedThisVariableInfo uninitializedThis_variable_info;
 //}
 

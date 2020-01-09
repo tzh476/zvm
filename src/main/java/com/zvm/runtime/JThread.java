@@ -1,7 +1,7 @@
 package com.zvm.runtime;
 
 
-import com.zvm.basestruct.u2;
+import com.zvm.basestruct.U2;
 
 
 public class JThread {
@@ -10,11 +10,11 @@ public class JThread {
     ThreadStack threadStack;
 
 
-    public void pushFrame(u2 max_stack, u2 max_locals){
+    public void pushFrame(U2 maxStack, U2 maxLocals){
         if(threadStack == null){
             threadStack = new ThreadStack();
         }
-        threadStack.put(new JavaFrame(max_stack, max_locals));
+        threadStack.put(new JavaFrame(maxStack, maxLocals));
     }
 
     public JavaFrame popFrame(){

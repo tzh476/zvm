@@ -1,11 +1,10 @@
 package com.zvm;
 
 public class Cmd {
-    /*
-     * -Xjre F:\LAMP\Java\jdk1.8.0_45\jre -userClassPath F:\projects\zvm\bytecode FibonacciTest
-     * */
+    /** -Xjre F:\LAMP\Java\jdk1.8.0_45\jre -userClassPath F:\projects\zvm\bytecode FibonacciTest
+     */
     public static String Xjre;
-    /*classpath*/
+
     public static String userClassPath;
     public static String curClassName;
     public static String curClassNamePath;
@@ -29,15 +28,16 @@ public class Cmd {
                 case Cmd.XJRE: {
                     i++;
                     Cmd.Xjre = args[i];
-                    Xjre = processOSSlash(Xjre);
+                    Xjre = processOsSlash(Xjre);
                 }
                 break;
                 case Cmd.CP: {
                     i++;
                     Cmd.userClassPath = args[i];
-                    userClassPath = processOSSlash(userClassPath);
+                    userClassPath = processOsSlash(userClassPath);
                 }
                 break;
+                default:
             }
         }
 
@@ -51,7 +51,7 @@ public class Cmd {
         }
     }
 
-    private static String processOSSlash(String path) {
+    private static String processOsSlash(String path) {
         if(path == null || path.length() == 0){
             return "";
         }

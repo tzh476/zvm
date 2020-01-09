@@ -362,7 +362,7 @@ file path : gc/GCTest1
 /**
  1. 嵌套类：
     - 静态嵌套类；
-    - 非静态嵌套类(non-static nested class 又名内部类，inner classes)
+    Classes
         - 普通内部类(成员内部类)
         - 局部内部类
         - 匿名内部类
@@ -495,6 +495,10 @@ generalStr
 ```
 </details>
 
+### 计划要实现
+- 反射
+- 多线程
+- 同步
 
 # 怎么运行
 <details>
@@ -516,7 +520,7 @@ generalStr
 <summary>3. cmd运行 </summary>   
 
 ```bash
-java -classpath E:\JAVA\Maven\com\alibaba\fastjson\1.2.62\fastjson-1.2.62.jar;E:\JAVA\Maven\com\google\code\gson\gson\2.8.5\gson-2.8.5.jar;F:\projects\zvm\target\classes com.zvm.JavaMain -Xjre F:\LAMP\Java\jdk1.8.0_45\jre -cp F:\projects\zvm\bytecode gc.GCTest1
+F:\projects\zvm>java -classpath E:\JAVA\Maven\com\alibaba\fastjson\1.2.62\fastjson-1.2.62.jar;E:\JAVA\Maven\com\google\code\gson\gson\2.8.5\gson-2.8.5.jar;F:\projects\zvm\target\classes com.zvm.JavaMain -cp F:\projects\zvm\bytecode gc.GCTest1
 ```
 运行结果：  
 <img height="60%" width="80%" src="./draft/howtorun_cmd.png" >
@@ -550,7 +554,7 @@ com\zvm
        IOUtils.java             #解析字节码的工具类
        method_info.java         #ClassFile中的方法表示
        ZvmClassLoader.java      #待重构
-    draft\
+    draft\                      #草稿，无需理会
     gc\
        GC.java                  #GC类，目前只有标记清除算法
     interpreter\                
@@ -560,7 +564,7 @@ com\zvm
        Interpreter.java         #取opcode并执行的类
        Opcode.java              #指令
        Ref.java                 #表示methodRef或fieldRef:含类名、描述符、方法名/字段名
-    jnative\java\lang\           #预留实现本地方法
+    jnative\                    #预留实现本地方法
     memory\
        ArrayFields.java         #保存堆中的数组
        JavaHeap.java            #表示堆，对象和数组都分配在这

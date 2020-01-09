@@ -1,7 +1,6 @@
 package com.zvm.runtime;
 
 import com.zvm.gc.GC;
-import com.zvm.jnative.CONSTANT;
 import com.zvm.memory.JavaHeap;
 import com.zvm.memory.MethodArea;
 

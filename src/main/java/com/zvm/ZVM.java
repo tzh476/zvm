@@ -1,14 +1,13 @@
 package com.zvm;
 
 import com.zvm.interpreter.Interpreter;
-import com.zvm.jnative.CONSTANT;
 import com.zvm.runtime.JavaClass;
 import com.zvm.runtime.RunTimeEnv;
 
 public class ZVM {
     public static RunTimeEnv zvmEnv;
     public ZVM(RunTimeEnv zvmEnv){
-        this.zvmEnv = zvmEnv;
+        ZVM.zvmEnv = zvmEnv;
     }
 
     public void callMain(String main, String descriptor, String classPath){

@@ -12,9 +12,9 @@ public class OperandStack {
     public Integer size;
     Slot[] slots;
 
-    public OperandStack(Integer max_stack) {
-        slots = new Slot[max_stack];
-        for(Integer i = 0; i < max_stack; i++){
+    public OperandStack(Integer maxStack) {
+        slots = new Slot[maxStack];
+        for(Integer i = 0; i < maxStack; i++){
             slots[i] = new Slot();
         }
         size = 0;

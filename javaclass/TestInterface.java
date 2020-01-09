@@ -1,9 +1,9 @@
 
 interface TestInterface {
-    final static Integer a = 10;
-    final Integer b = 10;
-    final String c = "13241d";
-    String d = "hellolll";
+    final static Integer A = 10;
+    final Integer B = 10;
+    final String C = "13241d";
+    String D = "hellolll";
 
     public void interfaceMethod();
 }

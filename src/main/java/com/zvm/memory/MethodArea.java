@@ -1,13 +1,12 @@
 package com.zvm.memory;
 
-import com.google.gson.Gson;
 import com.zvm.*;
 import com.zvm.basestruct.AccessFlag;
-import com.zvm.basestruct.u2;
-import com.zvm.basestruct.u4;
+import com.zvm.basestruct.U2;
+import com.zvm.basestruct.U4;
 import com.zvm.classfile.*;
-import com.zvm.classfile.attribute.Attribute_Base;
-import com.zvm.classfile.attribute.ConstantValue_attribute;
+import com.zvm.classfile.attribute.AttributeBase;
+import com.zvm.classfile.attribute.ConstantValueAttribute;
 import com.zvm.classfile.constantpool.*;
 import com.zvm.interpreter.Interpreter;
 import com.zvm.interpreter.Ref;
@@ -31,7 +30,8 @@ public class MethodArea {
 
     ZvmClassLoader zvmClassLoader = new ZvmClassLoader();
 
-    /*hack，不支持调用<clinit>的类，如Arrays的<clinit>包含断言相关的方法调用*/
+    /**
+     * hack，不支持调用<clinit>的类，如Arrays的<clinit>包含断言相关的方法调用*/
     List<String> unSupportInitClasses = Arrays.asList("java/util/Arrays","java/lang/Math");
 
     /**
@@ -73,11 +73,11 @@ public class MethodArea {
     }
 
     public String getSuperClassName(ClassFile classFile){
-        int cpIndex = TypeUtils.byteArr2Int(classFile.super_class.u2);
-        CONSTANT_Class constant_class = (CONSTANT_Class) classFile.constant_pool.cp_info[cpIndex - 1];
-        int classCpIndex = TypeUtils.byteArr2Int(constant_class.name_index.u2);
-        CONSTANT_Utf8 constant_utf8 = (CONSTANT_Utf8) classFile.constant_pool.cp_info[classCpIndex - 1];
-        String superClassName = TypeUtils.u12String(constant_utf8.bytes);
+        int cpIndex = TypeUtils.byteArr2Int(classFile.superClass.u2);
+        ConstantClass constantClass = (ConstantClass) classFile.constantPool.cpInfo[cpIndex - 1];
+        int classCpIndex = TypeUtils.byteArr2Int(constantClass.nameIndex.u2);
+        ConstantUtf8 constantUtf8 = (ConstantUtf8) classFile.constantPool.cpInfo[classCpIndex - 1];
+        String superClassName = TypeUtils.u12String(constantUtf8.bytes);
         return superClassName;
     }
 
@@ -186,21 +186,21 @@ public class MethodArea {
 
     private void allocAndInitStaticVars(JavaClass javaClass) {
         ClassFile classFile = javaClass.getClassFile();
-        field_info[] field_infos = classFile.fields;
-        CONSTANT_Base[] cp =  classFile.constant_pool.cp_info;
+        FieldInfo[] fieldInfos = classFile.fields;
+        ConstantBase[] cp =  classFile.constantPool.cpInfo;
         Integer staticSlotCount = javaClass.staticFieldSlotCount;
         javaClass.staticVars = new StaticVars(staticSlotCount);
         StaticVars staticVars = javaClass.staticVars;
-        for (int i = 0, len = field_infos.length; i < len; i++){
-            field_info field_info = field_infos[i];
-            u2 access_flags = field_info.access_flags;
-            int constValueIndex = getConstValueIndex(field_info.attributes);
+        for (int i = 0, len = fieldInfos.length; i < len; i++){
+            FieldInfo fieldInfo = fieldInfos[i];
+            U2 accessFlags = fieldInfo.accessFlags;
+            int constValueIndex = getConstValueIndex(fieldInfo.attributes);
 
-            if(isFinal(access_flags) && isStatic(access_flags)){
-                int slotId = field_info.slotId;
-                int descriptorIndex = TypeUtils.byteArr2Int(field_infos[i].descriptor_index.u2);
-                CONSTANT_Utf8 constant_utf8 = (CONSTANT_Utf8) cp[descriptorIndex - 1];
-                String descriptorName = TypeUtils.u12String(constant_utf8.bytes);
+            if(isFinal(accessFlags) && isStatic(accessFlags)){
+                int slotId = fieldInfo.slotId;
+                int descriptorIndex = TypeUtils.byteArr2Int(fieldInfos[i].descriptorIndex.u2);
+                ConstantUtf8 constantUtf8 = (ConstantUtf8) cp[descriptorIndex - 1];
+                String descriptorName = TypeUtils.u12String(constantUtf8.bytes);
                 char s = descriptorName.charAt(0);
                 if(s == 'Z' || s == 'B' || s == 'C' || s == 'S' || s == 'I'){
                     /*hack 如在java/util/Arrays类中含有assertionsDisabled字段，无值的*/
@@ -208,23 +208,23 @@ public class MethodArea {
                         staticVars.putIntByIndex(slotId, 1);
                         continue;
                     }
-                    CONSTANT_Integer constant_integer = (CONSTANT_Integer) cp[constValueIndex - 1];
-                    int value = TypeUtils.byteArr2Int(constant_integer.bytes.u4);
+                    ConstantInteger constantInteger = (ConstantInteger) cp[constValueIndex - 1];
+                    int value = TypeUtils.byteArr2Int(constantInteger.bytes.u4);
                     staticVars.putIntByIndex(slotId, value);
                 }else if ( s == 'J' ){
-                    CONSTANT_Long constant_long = (CONSTANT_Long) cp[constValueIndex - 1];
-                    u4 highBytes = constant_long.high_bytes;
-                    u4 lowBytes = constant_long.low_bytes;
+                    ConstantLong constantLong = (ConstantLong) cp[constValueIndex - 1];
+                    U4 highBytes = constantLong.highBytes;
+                    U4 lowBytes = constantLong.lowBytes;
                     staticVars.putLong(slotId, TypeUtils.byteArr2Int(highBytes.u4), TypeUtils.byteArr2Int(lowBytes.u4));
                 }else if (s == 'F'){
-                    CONSTANT_Float constant_float = (CONSTANT_Float) cp[constValueIndex - 1];
-                    u4 ldcBytes = constant_float.bytes;
+                    ConstantFloat constantFloat = (ConstantFloat) cp[constValueIndex - 1];
+                    U4 ldcBytes = constantFloat.bytes;
                     float value = TypeUtils.byteArr2Float(ldcBytes.u4);
                     staticVars.putFloat(slotId, value);
                 }else if (s == 'D'){
-                    CONSTANT_Double constant_double = (CONSTANT_Double) cp[constValueIndex - 1];
-                    u4 highBytes = constant_double.high_bytes;
-                    u4 lowBytes = constant_double.low_bytes;
+                    ConstantDouble constantDouble = (ConstantDouble) cp[constValueIndex - 1];
+                    U4 highBytes = constantDouble.highBytes;
+                    U4 lowBytes = constantDouble.lowBytes;
                     staticVars.putLong(slotId, TypeUtils.byteArr2Int(highBytes.u4), TypeUtils.byteArr2Int(lowBytes.u4));
                 }else if(s == 'L' || s== '['){
                     /*to do*/
@@ -236,13 +236,13 @@ public class MethodArea {
     }
 
 
-    private int getConstValueIndex(Attribute_Base[] attributes) {
+    private int getConstValueIndex(AttributeBase[] attributes) {
         int constValueIndex = 0;
         int len = attributes.length;
         for(int i = 0; i < len; i++){
-            if(attributes[i] instanceof ConstantValue_attribute){
-                ConstantValue_attribute constantValue_attributes = (ConstantValue_attribute) attributes[i];
-                constValueIndex = TypeUtils.byteArr2Int(constantValue_attributes.constantvalue_index.u2);
+            if(attributes[i] instanceof ConstantValueAttribute){
+                ConstantValueAttribute constantValueAttribute = (ConstantValueAttribute) attributes[i];
+                constValueIndex = TypeUtils.byteArr2Int(constantValueAttribute.constantvalueIndex.u2);
                 return constValueIndex;
             }
         }
@@ -251,15 +251,15 @@ public class MethodArea {
 
     private void calcStaticFieldSlotIds(JavaClass javaClass) {
         ClassFile classFile = javaClass.getClassFile();
-        field_info[] field_infos = classFile.fields;
-        CONSTANT_Base[] cp =  classFile.constant_pool.cp_info;
-        int len = field_infos.length;
+        FieldInfo[] fieldInfos = classFile.fields;
+        ConstantBase[] cp =  classFile.constantPool.cpInfo;
+        int len = fieldInfos.length;
         int slotId = 0;
         for(int i = 0; i < len; i ++){
-            u2 access_flags = field_infos[i].access_flags;
-            if(isStatic(access_flags)){
-                field_infos[i].slotId = slotId;
-                slotId = countSlotId(slotId, field_infos[i], cp);
+            U2 accessFlags = fieldInfos[i].accessFlags;
+            if(isStatic(accessFlags)){
+                fieldInfos[i].slotId = slotId;
+                slotId = countSlotId(slotId, fieldInfos[i], cp);
             }
         }
         javaClass.staticFieldSlotCount = slotId;
@@ -272,24 +272,24 @@ public class MethodArea {
         return false;
     }
 
-    static public boolean isStatic(u2 access_flags) {
-        int flags = TypeUtils.byteArr2Int(access_flags.u2);
+    static public boolean isStatic(U2 accessFlags) {
+        int flags = TypeUtils.byteArr2Int(accessFlags.u2);
         if(0 != (flags & AccessFlag.ACC_STATIC)){
             return true;
         }
         return false;
     }
 
-    static public boolean isNative(u2 access_flags) {
-        int flags = TypeUtils.byteArr2Int(access_flags.u2);
+    static public boolean isNative(U2 accessFlags) {
+        int flags = TypeUtils.byteArr2Int(accessFlags.u2);
         if(0 != (flags & AccessFlag.ACC_NATIVE)){
             return true;
         }
         return false;
     }
 
-    private boolean isFinal(u2 access_flags) {
-        int flags = TypeUtils.byteArr2Int(access_flags.u2);
+    private boolean isFinal(U2 accessFlags) {
+        int flags = TypeUtils.byteArr2Int(accessFlags.u2);
         if(0 != (flags & AccessFlag.ACC_FINAL)){
             return true;
         }
@@ -298,29 +298,29 @@ public class MethodArea {
 
     private void calcInstanceFieldSlotIds(JavaClass javaClass) {
         ClassFile classFile = javaClass.getClassFile();
-        field_info[] field_infos = classFile.fields;
-        CONSTANT_Base[] cp =  classFile.constant_pool.cp_info;
-        int len = field_infos.length;
+        FieldInfo[] fieldInfos = classFile.fields;
+        ConstantBase[] cp =  classFile.constantPool.cpInfo;
+        int len = fieldInfos.length;
         int slotId = 0;
         if(javaClass.superClassName != null && !javaClass.superClassName.isEmpty()){
             JavaClass superClass = findClass(javaClass.superClassName);
             slotId = superClass.instanceFieldSlotCount;
         }
         for(int i = 0; i < len; i ++){
-            u2 access_flags = field_infos[i].access_flags;
-            if(!isStatic(access_flags)){
-                field_infos[i].slotId = slotId;
-                slotId = countSlotId(slotId, field_infos[i], cp);
+            U2 accessFlags = fieldInfos[i].accessFlags;
+            if(!isStatic(accessFlags)){
+                fieldInfos[i].slotId = slotId;
+                slotId = countSlotId(slotId, fieldInfos[i], cp);
             }
         }
         javaClass.instanceFieldSlotCount = slotId;
     }
 
-    private int countSlotId(int slotId, field_info field_info, CONSTANT_Base[] cp) {
+    private int countSlotId(int slotId, FieldInfo fieldInfo, ConstantBase[] cp) {
         slotId ++;
-        int descriptorIndex = TypeUtils.byteArr2Int(field_info.descriptor_index.u2);
-        CONSTANT_Utf8 constant_utf8 = (CONSTANT_Utf8) cp[descriptorIndex - 1];
-        String descriptorName = TypeUtils.u12String(constant_utf8.bytes);
+        int descriptorIndex = TypeUtils.byteArr2Int(fieldInfo.descriptorIndex.u2);
+        ConstantUtf8 constantUtf8 = (ConstantUtf8) cp[descriptorIndex - 1];
+        String descriptorName = TypeUtils.u12String(constantUtf8.bytes);
         if(isLongOrDouble(descriptorName)){
             slotId++;
         }

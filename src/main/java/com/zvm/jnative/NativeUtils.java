@@ -15,11 +15,11 @@ public class NativeUtils {
      */
     public void registerNatives() {
         //native.Register(jlSystem, "arraycopy", "(Ljava/lang/Object;ILjava/lang/Object;II)V", arraycopy)
-        registerNative(CONSTANT.ARRAYCOPY_CLASSNAME, CONSTANT.ARRAYCOPY_DESCRIPTOR, CONSTANT.ARRAYCOPY_METHODNAME);
+        registerNative(Constant.ARRAYCOPY_CLASSNAME, Constant.ARRAYCOPY_DESCRIPTOR, Constant.ARRAYCOPY_METHODNAME);
     }
 
     public void registerNative(String className, String descriptorName, String methodName){
-        runTimeEnv.nativeMethods.add(className + "~" +descriptorName + "~" + methodName);
+        RunTimeEnv.nativeMethods.add(className + "~" +descriptorName + "~" + methodName);
     }
 
     public static boolean hasNativeClass(Ref ref){

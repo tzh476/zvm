@@ -3,7 +3,7 @@ package nestedclass;
 /**
  1. 嵌套类：
     - 静态嵌套类；
-    - 非静态嵌套类(non-static nested class 又名内部类，inner classes)
+    - 非静态嵌套类(non-static nested class 又名内部类，inner Classes)
         - 普通内部类(成员内部类)
         - 局部内部类
         - 匿名内部类
@@ -37,6 +37,7 @@ public class T0NestedClass {
 
         AnonymousClass anonymousClass = new AnonymousClass(){
             public String anonymousClassKey = "anonymousClassValue";
+            @Override
             public void test(){
                 System.out.println(anonymousClassKey);
             }

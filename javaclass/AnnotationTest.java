@@ -17,7 +17,7 @@ import java.lang.reflect.Method;
 class Person {
 
     /**
-     * empty()方法同时被 "@Deprecated" 和 "@MyAnnotation(javaClass={"a","b"})"所标注
+     * empty()方法同时被 "@Deprecated" 和 "@MyAnnotation(javaClass={"A","B"})"所标注
      * (01) @Deprecated，意味着empty()方法，不再被建议使用
      * (02) @MyAnnotation, 意味着empty() 方法对应的MyAnnotation的value值是默认值"unknown"
      */
@@ -67,8 +67,9 @@ public class AnnotationTest {
             MyAnnotation myAnnotation = method.getAnnotation(MyAnnotation.class);
             // 获取 myAnnotation的值，并打印出来
             String[] values = myAnnotation.value();
-            for (String str:values)
-                System.out.printf(str+", ");
+            for (String str:values) {
+                System.out.printf(str + ", ");
+            }
             System.out.println();
         }
 

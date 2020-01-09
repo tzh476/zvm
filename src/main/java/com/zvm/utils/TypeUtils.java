@@ -1,6 +1,6 @@
 package com.zvm.utils;
 
-import com.zvm.basestruct.u1;
+import com.zvm.basestruct.U1;
 
 public class TypeUtils {
     /**
@@ -75,12 +75,12 @@ public class TypeUtils {
     }
 
     /**
-     * u1[] to String
+     * U1[] to String
      *
      * @param bytes
      * @return
      */
-    static public String u12String(u1[] bytes) {
+    static public String u12String(U1[] bytes) {
         Integer size = bytes.length;
         char[] res = new char[size];
         for (Integer i = 0; i < size; i++) {
@@ -98,7 +98,7 @@ public class TypeUtils {
         }
         Integer len0 = s.length();
         Integer len1 = d.length();
-        if(len0 != len1){
+        if(!len0.equals(len1)){
             return false;
         }
 

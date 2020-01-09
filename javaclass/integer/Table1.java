@@ -20,10 +20,10 @@ import java.lang.annotation.*;
     Class sayClass();
     Son saySon();
 
-    int age=5;
-    char c = 'd';
-    short sh = 12;
-    double d = 3.14;
+    int AGE =5;
+    char C = 'd';
+    short SH = 12;
+    double D = 3.14;
 
 }
 @Retention(RetentionPolicy.RUNTIME)
@@ -34,7 +34,7 @@ import java.lang.annotation.*;
 
 public class Table1 {
 
-    public static final Son son = new Son(){
+    public static final Son SON = new Son(){
         @Override
         public String hello() {
             return null;
@@ -75,10 +75,10 @@ public class Table1 {
                 System.out.println("tag.sayClass==" + ((Table) tag).sayClass());
                 System.out.println("tag.saySon==" + ((Table) tag).saySon());
 
-                System.out.println(((Table) tag).age);
-                System.out.println(((Table) tag).c);
-                System.out.println(((Table) tag).sh);
-                System.out.println(((Table) tag).d);
+                System.out.println(((Table) tag).AGE);
+                System.out.println(((Table) tag).C);
+                System.out.println(((Table) tag).SH);
+                System.out.println(((Table) tag).D);
 
             }
         }

@@ -1,12 +1,12 @@
 package com.zvm.interpreter;
 
-import com.zvm.basestruct.u1;
+import com.zvm.basestruct.U1;
 
 public class CodeUtils {
-    public u1[] code;
+    public U1[] code;
     private int pc;
 
-    public CodeUtils(u1[] code, int pc){
+    public CodeUtils(U1[] code, int pc){
         this.code = code;
         this.pc = pc;
     }
