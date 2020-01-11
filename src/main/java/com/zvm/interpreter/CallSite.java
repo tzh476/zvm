@@ -41,6 +41,8 @@ public class CallSite {
         accessFlags = methodInfo.accessFlags;
         /*对于native方法，注入字节码*/
         if(MethodArea.isNative(accessFlags)){
+            nameIndex = methodInfo.nameIndex;
+            descriptorIndex = methodInfo.descriptorIndex;
             maxStack.u2 = new byte[]{0x4};
             maxLocals.u2 = new byte[]{0x5};
             codeLength.u4 = new byte[]{0x2};

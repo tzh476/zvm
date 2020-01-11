@@ -35,8 +35,8 @@ public class JavaClass {
         Integer methodSize = TypeUtils.byteArr2Int(classFile.methodsCount.u2);
         for(Integer i = 0; i < methodSize; i++){
 
-            String cpMethodName = getString(classFile.methods[i].nameIndex);
-            String cpMethodDescriptor = getString(classFile.methods[i].descriptorIndex);
+            String cpMethodName = constantUtf8Index2String(classFile.methods[i].nameIndex);
+            String cpMethodDescriptor = constantUtf8Index2String(classFile.methods[i].descriptorIndex);
 
             if(TypeUtils.compare(cpMethodName, methodName) && TypeUtils.compare(cpMethodDescriptor, methodDescriptor)){
                 return classFile.methods[i];
@@ -50,8 +50,8 @@ public class JavaClass {
         Integer fieldSize = TypeUtils.byteArr2Int(classFile.fieldCount.u2);
         for(Integer i = 0; i < fieldSize; i++){
 
-            String cpFieldName = getString(classFile.fields[i].nameIndex);
-            String cpFieldDescriptor = getString(classFile.fields[i].descriptorIndex);
+            String cpFieldName = constantUtf8Index2String(classFile.fields[i].nameIndex);
+            String cpFieldDescriptor = constantUtf8Index2String(classFile.fields[i].descriptorIndex);
             if(TypeUtils.compare(cpFieldName, fieldName) && TypeUtils.compare(cpFieldDescriptor, fieldDescriptor)){
                 return classFile.fields[i];
             }
@@ -80,8 +80,12 @@ public class JavaClass {
         return this.classFile;
     }
 
-
-    public String getString(U2 index){
+    /**
+     * 传入ConstantUtf8 类型的index，在常量池中获得对应字符串
+     * @param index
+     * @return
+     */
+    public String constantUtf8Index2String(U2 index){
         ConstantUtf8 constantUtf8 = (ConstantUtf8) classFile.constantPool.cpInfo[TypeUtils.byteArr2Int(index.u2) - 1];
         return TypeUtils.u12String(constantUtf8.bytes);
     }

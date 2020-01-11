@@ -42,10 +42,11 @@ public class Interpreter {
         callSite.setCallSite( method_info);
 
         jThread.pushFrame(callSite.maxStack, callSite.maxLocals);
-        executeByteCode(jThread, javaClass, callSite.code, TypeUtils.byteArr2Int(callSite.codeLength.u4));
+        executeByteCode(jThread, javaClass, callSite, TypeUtils.byteArr2Int(callSite.codeLength.u4));
     }
 
-    public void executeByteCode(JThread jThread, JavaClass javaClass, U1[] codeRaw, int codeLength) {
+    public void executeByteCode(JThread jThread, JavaClass javaClass, CallSite callSite, int codeLength) {
+        U1[] codeRaw = callSite.code;
         JavaFrame javaFrame = jThread.getTopFrame();
         OperandStack operandStack = javaFrame.operandStack;
         LocalVars localVars = javaFrame.localVars;
@@ -1189,10 +1190,7 @@ public class Interpreter {
                 }
                 break;
                 case Opcode.INVOKENATIVE: {
-//                    short invokeIndex = code.consumeU1();
-//                    ConstantBase[] constant_bases = javaClass.getClassFile().constantPool.CpInfo;
-//                    ConstantBase constant_base = constant_bases[invokeIndex - 1];
-                    invokeNative(javaClass);
+                    invokeNative(javaClass, callSite);
                 }
                 break;
                 case Opcode.IMPDEP2: {
@@ -1201,7 +1199,6 @@ public class Interpreter {
             }
         }
     }
-
 
 
     private void putCharArrField(JObject charArrayJObject, char[] chars) {
@@ -1329,11 +1326,6 @@ public class Interpreter {
     }
 
 
-//    private void invokeSpecial(JavaClass javaClass, ConstantBase constant_methodref) {
-//        Ref methodRef = processRef(javaClass, constant_methodref);
-//        invokeSpecial(methodRef);
-//    }
-
     public void invokeSpecial(Ref methodRef) {
 
         MethodInfo method_info = parseMethodRef(methodRef);
@@ -1353,7 +1345,7 @@ public class Interpreter {
         for(int i = 0; i < slotCount; i++){
             curLocalVars.putSlot(slotCount - 1 - i, invokerStack.popSlot());
         }
-        executeByteCode(jThread, method_info.javaClass, callSite.code, TypeUtils.byteArr2Int(callSite.codeLength.u4));
+        executeByteCode(jThread, method_info.javaClass, callSite, TypeUtils.byteArr2Int(callSite.codeLength.u4));
     }
 
 
@@ -1397,7 +1389,7 @@ public class Interpreter {
             curLocalVars.putSlot(slotCount - 1 - i, invokerStack.popSlot());
         }
 
-        executeByteCode(jThread, method_info.javaClass, callSite.code, TypeUtils.byteArr2Int(callSite.codeLength.u4));
+        executeByteCode(jThread, method_info.javaClass, callSite, TypeUtils.byteArr2Int(callSite.codeLength.u4));
     }
 
     /**
@@ -1471,8 +1463,8 @@ public class Interpreter {
             return ;
         }
 
-        /*如System类中的registerNatives直接返回，System的arraycopy*/
-        if(MethodArea.isNative(method_info.accessFlags) && ! NativeUtils.hasNativeClass(ref)){
+        /*注册过的native方法才执行*/
+        if(MethodArea.isNative(method_info.accessFlags) && ! NativeUtils.hasNativeMethod(ref)){
             return;
         }
         Descriptor descriptor = processDescriptor(ref.descriptorName);
@@ -1490,35 +1482,24 @@ public class Interpreter {
             curLocalVars.putSlot(slotCount - 1 - i, invokerStack.popSlot());
         }
 
-        executeByteCode(jThread, curClass, callSite.code, TypeUtils.byteArr2Int(callSite.codeLength.u4));
+        executeByteCode(jThread, curClass, callSite, TypeUtils.byteArr2Int(callSite.codeLength.u4));
     }
 
     /**
      * 调用native方法,暂时只支持arraycopy
      * @param javaClass
+     * @param callSite
      */
-    private void invokeNative(JavaClass javaClass) {
-
-        JavaFrame javaFrame = jThread.getTopFrame();
-        arraycopy(javaFrame);
-    }
-
-    private void arraycopy(JavaFrame javaFrame) {
-        OperandStack operandStack = javaFrame.operandStack;
-        LocalVars localVars = javaFrame.localVars;
-        JObject src = localVars.getJObject(0);
-        int srcPos = localVars.getIntByIndex(1);
-        JObject dest = localVars.getJObject(2);
-        int descPos = localVars.getIntByIndex(3);
-        int length = localVars.getIntByIndex(4);
-
-        ArrayFields srcFields = runTimeEnv.javaHeap.arrayContainer.get(src.offset);
-        ArrayFields destFields = runTimeEnv.javaHeap.arrayContainer.get(dest.offset);
-
-        for(int i = 0; i < length; i ++){
-            /*暂时只考虑char*/
-            destFields.putChar(descPos + i, srcFields.getChar(srcPos + i));
+    private void invokeNative(JavaClass javaClass, CallSite callSite) {
+        Ref methodRef = new Ref();
+        methodRef.refName = javaClass.constantUtf8Index2String(callSite.nameIndex);
+        methodRef.descriptorName = javaClass.constantUtf8Index2String(callSite.descriptorIndex);
+        methodRef.className = javaClass.classPath;
+        if(!NativeUtils.hasNativeMethod(methodRef)){
+            return;
         }
+        JavaFrame javaFrame = jThread.getTopFrame();
+        NativeUtils.executeMethod(runTimeEnv, javaFrame, methodRef);
     }
 
     /**
@@ -1675,6 +1656,12 @@ public class Interpreter {
         return descriptor;
     }
 
+    /**
+     * 计算方法的参数占用Slot的个数
+     * @param method_info
+     * @param parameters
+     * @return
+     */
     private int calParametersSlot(MethodInfo method_info, List<Integer> parameters){
         int parametersCount = parameters.size();
 

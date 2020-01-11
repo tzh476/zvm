@@ -13,7 +13,7 @@ public class JavaMain {
 
         ZVM zvm = new ZVM(zvmEnv);
 
-        NativeUtils nativeUtils = new NativeUtils(zvmEnv);
+        NativeUtils nativeUtils = new NativeUtils();
         nativeUtils.registerNatives();
 
         zvm.callMain("main", "([Ljava/lang/String;)V", curClassName);

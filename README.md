@@ -670,19 +670,20 @@ com\zvm
 <details>
 <summary>1. 文档、书籍参考 </summary>
 
-- [java虚拟机规范](https://docs.oracle.com/javase/specs/jvms/se8/jvms8.pdf)
-- 《自己动手写Java虚拟机》
-- java虚拟机规范(java se7)中文版
-- java虚拟机规范(java se8)中文版
-- 周志明的《深入理解java虚拟机》
+- [Java 虚拟机规范](https://docs.oracle.com/javase/specs/jvms/se8/jvms8.pdf)
+- 《自己动手写 Java 虚拟机》
+- Java虚拟机规范(Java se7)中文版
+- Java虚拟机规范(Java se8)中文版
+- 周志明的《深入理解 Java 虚拟机》
 </details>
 
 <details>
 <summary>2. 代码参考 </summary>
 
-- [go实现jvm](https://github.com/zxh0/jvmgo-book)
-- [c++实现的java虚拟机](https://github.com/kelthuzadx/yvm)
-- [Hotspot源码](https://github.com/tzh476/Hotspot)
+- [Go 实现 JVM](https://github.com/zxh0/jvmgo-book)
+- [c++ 实现的 Java 虚拟机](https://github.com/kelthuzadx/yvm)
+- [Hotspot 源码](https://github.com/tzh476/Hotspot)
+- [Java 实现 JVM](https://github.com/guxingke/mini-jvm)
 </details>
 
 <details>

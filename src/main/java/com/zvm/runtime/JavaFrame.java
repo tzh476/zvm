@@ -7,7 +7,8 @@ import com.zvm.basestruct.U2;
  * 运行时，表示一个方法帧，lowerFrame指向调用者
  */
 public class JavaFrame {
-    public JavaFrame lowerFrame;/*保留调用当前帧的帧*/
+    /** 保留调用当前帧的帧*/
+    public JavaFrame lowerFrame;
 
     public Integer maxStack;
     public Integer maxLocals;
@@ -22,7 +23,4 @@ public class JavaFrame {
         localVars = new LocalVars(this.maxLocals);
     }
 
-    public void putInt(int value){
-        operandStack.putInt(value);
-    }
 }
