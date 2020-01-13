@@ -2,6 +2,10 @@ package com.zvm.interpreter;
 
 import com.zvm.basestruct.U1;
 
+/**
+ * 方法中 Code 属性的读取工具
+ * @author Rail
+ */
 public class CodeUtils {
     public U1[] code;
     private int pc;

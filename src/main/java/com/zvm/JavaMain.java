@@ -16,6 +16,8 @@ public class JavaMain {
         NativeUtils nativeUtils = new NativeUtils();
         nativeUtils.registerNatives();
 
+
+
         zvm.callMain("main", "([Ljava/lang/String;)V", curClassName);
     }
 

@@ -181,7 +181,10 @@ public class MethodArea {
             return;
         }
         //System.out.println(new Gson().toJson(ref));
-        interpreter.invokeSpecial(ref);
+        if(!javaClass.isInited){
+            interpreter.invokeSpecial(ref);
+        }
+        javaClass.isInited = true;
     }
 
     private void allocAndInitStaticVars(JavaClass javaClass) {

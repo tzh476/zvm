@@ -13,6 +13,7 @@ public class ZVM {
     public void callMain(String main, String descriptor, String classPath){
         JavaClass javaClass = zvmEnv.methodArea.loadClass(classPath);
         Interpreter interpreter = new Interpreter(zvmEnv);
+        interpreter.initInstructions();
         zvmEnv.methodArea.linkClass(classPath);
         interpreter.invokeByName(javaClass, main, descriptor);
     }

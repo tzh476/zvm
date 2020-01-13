@@ -1,4 +1,4 @@
-package com.zvm.interpreter;
+package com.zvm.instruction;
 
 import com.google.gson.Gson;
 
