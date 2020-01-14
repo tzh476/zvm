@@ -192,7 +192,7 @@ public class Opcode {
     public final static int INVOKESPECIAL = 0xb7;
     public final static int INVOKESTATIC = 0xb8;
     public final static int INVOKEINTERFACE = 0xb9;
-    public final static int XXXUNUSEDXXX = 0xba;
+    public final static int INVOKEDYNAMIC = 0xba;
     public final static int NEW_ = 0xbb;
     public final static int NEWARRAY = 0xbc;
     public final static int ANEWARRAY = 0xbd;

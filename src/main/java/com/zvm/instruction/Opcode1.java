@@ -198,7 +198,7 @@ public class Opcode1 implements Serializable {
       int INVOKESPECIAL = 0xb7;
       int INVOKESTATIC = 0xb8;
       int INVOKEINTERFACE = 0xb9;
-      int XXXUNUSEDXXX = 0xba;
+      int INVOKEDYNAMIC = 0xba;
       int NEW_ = 0xbb;
       int NEWARRAY = 0xbc;
       int ANEWARRAY = 0xbd;

@@ -8,6 +8,7 @@ import com.zvm.runtime.*;
 
 public class InvokeSpecial implements Instruction {
 
+
     @Override
     public void execute(RunTimeEnv runTimeEnv, JThread jThread, JavaClass javaClass, CallSite callSite, Interpreter interpreter, CodeUtils code) {
         JavaFrame javaFrame = jThread.getTopFrame();

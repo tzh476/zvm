@@ -3,31 +3,31 @@ package com.zvm.interpreter;
 import com.google.gson.Gson;
 import com.zvm.basestruct.U1;
 import com.zvm.classfile.*;
-import com.zvm.classfile.constantpool.*;
 import com.zvm.instruction.Instruction;
 import com.zvm.instruction.Opcode;
-import com.zvm.instruction.Opcode1;
+import com.zvm.instruction.synchronization.MonitorEnter;
+import com.zvm.instruction.synchronization.MonitorExit;
+import com.zvm.instruction.arithmetic.arithmetic.*;
+import com.zvm.instruction.arithmetic.bitwise.*;
+import com.zvm.instruction.arithmetic.logic.*;
+import com.zvm.instruction.arithmetic.relation.*;
+import com.zvm.instruction.arithmetic.unary.Iinc;
+import com.zvm.instruction.controltransfer.*;
+import com.zvm.instruction.exception.Athrow;
+import com.zvm.instruction.loadandstore.Wide;
 import com.zvm.instruction.loadandstore.constant.*;
 import com.zvm.instruction.loadandstore.load.*;
 import com.zvm.instruction.loadandstore.store.*;
-import com.zvm.instruction.methodinvocation.InvokeSpecial;
-import com.zvm.instruction.methodinvocation.InvokeStatic;
-import com.zvm.instruction.methodinvocation.InvokeVirtual;
+import com.zvm.instruction.methodinvocation.*;
 import com.zvm.instruction.objectcreatemanipulate.*;
-import com.zvm.jnative.NativeUtils;
-import com.zvm.memory.ArrayFields;
-import com.zvm.memory.MethodArea;
+import com.zvm.instruction.oprandstack.*;
+import com.zvm.instruction.typeconversion.*;
 import com.zvm.runtime.*;
 import com.zvm.runtime.struct.JObject;
-import com.zvm.basestruct.TypeCode;
 import com.zvm.utils.TypeUtils;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-
-import static com.zvm.basestruct.TypeCode.*;
 
 public class Interpreter {
 
@@ -54,6 +54,10 @@ public class Interpreter {
         instructionMap.put(Opcode.PUTFIELD, new PutField());
         instructionMap.put(Opcode.NEWARRAY, new NewArray());
         instructionMap.put(Opcode.ANEWARRAY, new ANewArray());
+        instructionMap.put(Opcode.ARRAYLENGTH, new ArrayLength());
+        instructionMap.put(Opcode.CHECKCAST, new CheckCast());
+        instructionMap.put(Opcode.INSTANCEOF_, new Instanceof_());
+        instructionMap.put(Opcode.MULTIANEWARRAY, new MultiANewArray());
 
         /** 加载和存储指令*/
         instructionMap.put(Opcode.NOP, new Nop());
@@ -140,11 +144,136 @@ public class Interpreter {
         instructionMap.put(Opcode.DSTORE_2, new Dstore_2());
         instructionMap.put(Opcode.DSTORE_3, new Dstore_3());
 
+        instructionMap.put(Opcode.AASTORE, new Aastore());
+        instructionMap.put(Opcode.BASTORE, new Bastore());
+        instructionMap.put(Opcode.CASTORE, new Castore());
+        instructionMap.put(Opcode.DASTORE, new Dastore());
+        instructionMap.put(Opcode.FASTORE, new Fastore());
+        instructionMap.put(Opcode.IASTORE, new Iastore());
+        instructionMap.put(Opcode.LASTORE, new Lastore());
+        instructionMap.put(Opcode.SASTORE, new Sastore());
+        instructionMap.put(Opcode.WIDE, new Wide());
 
         /** 方法调用和返回指令*/
         instructionMap.put(Opcode.INVOKESTATIC, new InvokeStatic());
         instructionMap.put(Opcode.INVOKESPECIAL, new InvokeSpecial());
         instructionMap.put(Opcode.INVOKEVIRTUAL, new InvokeVirtual());
+        instructionMap.put(Opcode.INVOKENATIVE, new InvokeNative());
+        instructionMap.put(Opcode.INVOKEINTERFACE, new InvokeInterface());
+        instructionMap.put(Opcode.INVOKEDYNAMIC, new InvokeDynamic());
+
+        /** 运算指令*/
+        instructionMap.put(Opcode.IADD, new Iadd());
+        instructionMap.put(Opcode.FADD, new Fadd());
+        instructionMap.put(Opcode.LADD, new Ladd());
+        instructionMap.put(Opcode.DADD, new Dadd());
+        instructionMap.put(Opcode.ISUB, new Isub());
+        instructionMap.put(Opcode.FSUB, new Fsub());
+        instructionMap.put(Opcode.LSUB, new Lsub());
+        instructionMap.put(Opcode.DSUB, new Dsub());
+
+        instructionMap.put(Opcode.IMUL, new Imul());
+        instructionMap.put(Opcode.LMUL, new Lmul());
+        instructionMap.put(Opcode.FMUL, new Fmul());
+        instructionMap.put(Opcode.DMUL, new Dmul());
+        instructionMap.put(Opcode.IDIV, new Idiv());
+        instructionMap.put(Opcode.LDIV, new Ldiv());
+        instructionMap.put(Opcode.FDIV, new Fdiv());
+        instructionMap.put(Opcode.DDIV, new Ddiv());
+
+        instructionMap.put(Opcode.DCMPG, new Dcmpg());
+        instructionMap.put(Opcode.DCMPL, new Dcmpl());
+        instructionMap.put(Opcode.FCMPG, new Fcmpg());
+        instructionMap.put(Opcode.FCMPL, new Fcmpl());
+        instructionMap.put(Opcode.LCMP, new Lcmp());
+
+        instructionMap.put(Opcode.IINC, new Iinc());
+            /** 求余 */
+        instructionMap.put(Opcode.IREM, new Irem());
+        instructionMap.put(Opcode.LREM, new Lrem());
+        instructionMap.put(Opcode.FREM, new Frem());
+        instructionMap.put(Opcode.DREM, new Drem());
+            /** 取反 */
+        instructionMap.put(Opcode.INEG, new Ineg());
+        instructionMap.put(Opcode.LNEG, new Lneg());
+        instructionMap.put(Opcode.FNEG, new Fneg());
+        instructionMap.put(Opcode.DNEG, new Dneg());
+            /** 位移 */
+        instructionMap.put(Opcode.ISHL, new Ishl());
+        instructionMap.put(Opcode.LSHL, new Lshl());
+        instructionMap.put(Opcode.ISHR, new Ishr());
+        instructionMap.put(Opcode.LSHR, new Lshr());
+        instructionMap.put(Opcode.IUSHR, new Iushr());
+        instructionMap.put(Opcode.LUSHR, new Lushr());
+
+        instructionMap.put(Opcode.IOR, new Ior());
+        instructionMap.put(Opcode.LOR, new Lor());
+        instructionMap.put(Opcode.IXOR, new Ixor());
+        instructionMap.put(Opcode.LXOR, new Lxor());
+        instructionMap.put(Opcode.IAND, new Iand());
+        instructionMap.put(Opcode.LAND, new Land());
+
+
+        /** 控制转移 */
+        instructionMap.put(Opcode.IFEQ, new Ifeq());
+        instructionMap.put(Opcode.IFGE, new Ifge());
+        instructionMap.put(Opcode.IFGT, new Ifgt());
+        instructionMap.put(Opcode.IFLE, new Ifle());
+        instructionMap.put(Opcode.IFLT, new Iflt());
+        instructionMap.put(Opcode.IFNE, new Ifne());
+        instructionMap.put(Opcode.IFNULL, new Ifnull());
+        instructionMap.put(Opcode.IFNONNULL, new Ifnonnull());
+
+        instructionMap.put(Opcode.IF_ICMPEQ, new If_Icmpeq());
+        instructionMap.put(Opcode.IF_ICMPGE, new If_Icmpge());
+        instructionMap.put(Opcode.IF_ICMPGT, new If_Icmpgt());
+        instructionMap.put(Opcode.IF_ICMPLE, new If_Icmple());
+        instructionMap.put(Opcode.IF_ICMPLT, new If_Icmplt());
+        instructionMap.put(Opcode.IF_ICMPNE, new If_Icmpne());
+        instructionMap.put(Opcode.IF_ACMPEQ, new If_Acmpeq());
+        instructionMap.put(Opcode.IF_ACMPNE, new If_Acmpne());
+        instructionMap.put(Opcode.GOTO_, new Goto_());
+        instructionMap.put(Opcode.GOTO_W, new Goto_W());
+        instructionMap.put(Opcode.JSR, new Jsr());
+        instructionMap.put(Opcode.JSR_W, new Jsr_W());
+        instructionMap.put(Opcode.RET, new Ret());
+        instructionMap.put(Opcode.TABLESWITCH, new TableSwitch());
+        instructionMap.put(Opcode.LOOKUPSWITCH, new LookupSwitch());
+
+        /** 操作数栈管理指令*/
+        instructionMap.put(Opcode.DUP, new Dup());
+        instructionMap.put(Opcode.DUP_X1, new Dup_X1());
+        instructionMap.put(Opcode.DUP_X2, new Dup_X2());
+        instructionMap.put(Opcode.DUP2, new Dup2());
+        instructionMap.put(Opcode.DUP2_X1, new Dup2_X1());
+        instructionMap.put(Opcode.DUP2_X2, new Dup2_X2());
+        instructionMap.put(Opcode.POP, new Pop());
+        instructionMap.put(Opcode.POP2, new Pop2());
+        instructionMap.put(Opcode.SWAP, new Swap());
+
+        /** 类型转换 */
+        instructionMap.put(Opcode.D2F, new D2f());
+        instructionMap.put(Opcode.D2I, new D2i());
+        instructionMap.put(Opcode.D2L, new D2l());
+        instructionMap.put(Opcode.F2D, new F2d());
+        instructionMap.put(Opcode.F2I, new F2i());
+        instructionMap.put(Opcode.F2L, new F2l());
+        instructionMap.put(Opcode.I2B, new I2b());
+        instructionMap.put(Opcode.I2C, new I2c());
+        instructionMap.put(Opcode.I2D, new I2d());
+        instructionMap.put(Opcode.I2F, new I2f());
+        instructionMap.put(Opcode.I2L, new I2l());
+        instructionMap.put(Opcode.I2S, new I2s());
+        instructionMap.put(Opcode.L2D, new L2d());
+        instructionMap.put(Opcode.L2F, new L2f());
+        instructionMap.put(Opcode.L2I, new L2i());
+
+        /** 抛出错误 */
+        instructionMap.put(Opcode.ATHROW, new Athrow());
+
+        /** 同步 */
+        instructionMap.put(Opcode.MONITORENTER, new MonitorEnter());
+        instructionMap.put(Opcode.MONITOREXIT, new MonitorExit());
 
     }
 
@@ -184,510 +313,6 @@ public class Interpreter {
             }
 
             switch (opcodeInt) {
-
-                case Opcode.LASTORE: {
-                    long value = operandStack.popLong();
-                    int index = operandStack.popInt();
-                    JObject arrayObject = operandStack.popJObject();
-                    ArrayFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(arrayObject.offset);
-                    arrayFields.putLong(index, value);
-                }
-                break;
-                case Opcode.FASTORE: {
-                    float value = operandStack.popFloat();
-                    int index = operandStack.popInt();
-                    JObject arrayObject = operandStack.popJObject();
-                    ArrayFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(arrayObject.offset);
-                    arrayFields.putFloat(index, value);
-                }
-                break;
-                case Opcode.DASTORE: {
-                    double value = operandStack.popDouble();
-                    int index = operandStack.popInt();
-                    JObject arrayObject = operandStack.popJObject();
-                    ArrayFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(arrayObject.offset);
-                    arrayFields.putDouble( index, value);
-                }
-                break;
-                case Opcode.AASTORE: {
-                    JObject value = operandStack.popJObject();
-                    int index = operandStack.popInt();
-                    JObject arrayObject = operandStack.popJObject();
-                    ArrayFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(arrayObject.offset);
-                    arrayFields.putJOject( index, value);
-                }
-                break;
-                case Opcode.BASTORE: {
-                }
-                break;
-                case Opcode.CASTORE: {
-                }
-                break;
-                case Opcode.SASTORE: {
-                }
-                break;
-                case Opcode.POP: {
-                }
-                break;
-                case Opcode.POP2: {
-                }
-                break;
-                case Opcode.DUP: {
-                    operandStack.putSlot(operandStack.getSlot());
-                }
-                break;
-                case Opcode.IADD: {
-                    int var1 = operandStack.popInt();
-                    int var0 = operandStack.popInt();
-                    int sum = var0 + var1;
-                    operandStack.putInt(sum);
-                }
-                break;
-                case Opcode.LADD: {
-                    long var1 = operandStack.popLong();
-                    long var0 = operandStack.popLong();
-                    long addValue = var0 + var1;
-                    operandStack.putLong(addValue);
-                }
-                break;
-                case Opcode.FADD: {
-                    float var1 = operandStack.popFloat();
-                    float var0 = operandStack.popFloat();
-                    float addValue = var0 + var1;
-                    operandStack.putFloat(addValue);
-                }
-                break;
-                case Opcode.DADD: {
-                    double var1 = operandStack.popDouble();
-                    double var0 = operandStack.popDouble();
-                    double addValue = var0 + var1;
-                    operandStack.putDouble(addValue);
-                }
-                break;
-                case Opcode.ISUB: {
-                    int var1 = operandStack.popInt();
-                    int var0 = operandStack.popInt();
-                    int subValue = var0 - var1;
-                    operandStack.putInt(subValue);
-                }
-                break;
-                case Opcode.LSUB: {
-                    long var1 = operandStack.popLong();
-                    long var0 = operandStack.popLong();
-                    long subValue = var0 - var1;
-                    operandStack.putLong(subValue);
-                }
-                break;
-                case Opcode.FSUB: {
-                    float var1 = operandStack.popFloat();
-                    float var0 = operandStack.popFloat();
-                    float subValue = var0 - var1;
-                    operandStack.putFloat(subValue);
-                }
-                break;
-                case Opcode.DSUB: {
-                    double var1 = operandStack.popLong();
-                    double var0 = operandStack.popLong();
-                    double subValue = var0 - var1;
-                    operandStack.putDouble(subValue);
-                }
-                break;
-                case Opcode.IMUL: {
-                    int var1 = operandStack.popInt();
-                    int var0 = operandStack.popInt();
-                    int sum = var0 * var1;
-                    operandStack.putInt(sum);
-                }
-                break;
-                case Opcode.LMUL: {
-                }
-                break;
-                case Opcode.IREM: {
-                }
-                break;
-                case Opcode.LREM: {
-                }
-                break;
-                case Opcode.FREM: {
-                }
-                break;
-                case Opcode.DREM: {
-                }
-                break;
-                case Opcode.INEG: {
-                }
-                break;
-                case Opcode.LNEG: {
-                }
-                break;
-                case Opcode.FNEG: {
-                }
-                break;
-                case Opcode.DNEG: {
-                }
-                break;
-                case Opcode.ISHL: {
-                }
-                break;
-                case Opcode.LSHL: {
-                }
-                break;
-                case Opcode.IOR: {
-                }
-                break;
-                case Opcode.LOR: {
-                }
-                break;
-                case Opcode.IXOR: {
-                }
-                break;
-                case Opcode.LXOR: {
-                }
-                break;
-                case Opcode.IINC: {
-                    byte localVarIndex = code.consumeU1();
-                    byte constValue = code.consumeU1();
-                    int localVar = localVars.getIntByIndex(localVarIndex);
-                    localVars.putIntByIndex(localVarIndex, localVar + constValue);
-                }
-                break;
-                case Opcode.I2L: {
-                }
-                break;
-                case Opcode.I2F: {
-                }
-                break;
-                case Opcode.I2D: {
-                    int iValue = operandStack.popInt();
-                    double dValue = iValue + 0.0;
-                    operandStack.putDouble(dValue);
-                }
-                break;
-                case Opcode.L2I: {
-                }
-                break;
-                case Opcode.L2F: {
-                }
-                break;
-                case Opcode.D2F: {
-                }
-                break;
-                case Opcode.I2B: {
-                }
-                break;
-                case Opcode.I2C: {
-                }
-                break;
-                case Opcode.I2S: {
-                }
-                break;
-                case Opcode.LCMP: {
-                    long var1 = operandStack.popLong();
-                    long var0 = operandStack.popLong();
-                    int cmpRes = 0;
-                    if(var0 > var1){
-                        cmpRes = 1;
-                    }else if(var0 < var1){
-                        cmpRes = -1;
-                    }
-                    operandStack.putInt(cmpRes);
-                }
-                break;
-                case Opcode.FCMPL: {
-                    /*未考虑出现NaN的情况*/
-                    float var1 = operandStack.popFloat();
-                    float var0 = operandStack.popFloat();
-                    int cmpRes = 0;
-                    if(var0 > var1){
-                        cmpRes = 1;
-                    }else if(var0 < var1){
-                        cmpRes = -1;
-                    }
-                    operandStack.putInt(cmpRes);
-                }
-                break;
-                case Opcode.FCMPG: {
-                    /*未考虑出现NaN的情况*/
-                    float var1 = operandStack.popFloat();
-                    float var0 = operandStack.popFloat();
-                    int cmpRes = 0;
-                    if(var0 > var1){
-                        cmpRes = 1;
-                    }else if(var0 < var1){
-                        cmpRes = -1;
-                    }
-                    operandStack.putInt(cmpRes);
-                }
-                break;
-                case Opcode.DCMPL: {
-                    /*未考虑出现NaN的情况*/
-                    double var1 = operandStack.popDouble();
-                    double var0 = operandStack.popDouble();
-                    int cmpRes = 0;
-                    if(var0 > var1){
-                        cmpRes = 1;
-                    }else if(var0 < var1){
-                        cmpRes = -1;
-                    }
-                    operandStack.putInt(cmpRes);
-                }
-                break;
-                case Opcode.DCMPG: {
-                    /*未考虑出现NaN的情况*/
-                    double var1 = operandStack.popDouble();
-                    double var0 = operandStack.popDouble();
-                    int cmpRes = 0;
-                    if(var0 > var1){
-                        cmpRes = 1;
-                    }else if(var0 < var1){
-                        cmpRes = -1;
-                    }
-                    operandStack.putInt(cmpRes);
-                }
-                break;
-                case Opcode.IFEQ: {
-                    int ifeqValue = operandStack.popInt();
-                    if(ifeqValue == 0){
-                        int offset = code.readU2();
-                        code.pcAddBackOne(offset);
-                    }else {
-                        code.pcAdd(2);
-                    }
-
-                }
-                break;
-
-                case Opcode.IASTORE: {
-                    int value = operandStack.popInt();
-                    int index = operandStack.popInt();
-                    JObject arrayObject = operandStack.popJObject();
-                    ArrayFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(arrayObject.offset);
-                    arrayFields.putInt(index, value);
-                }
-                break;
-                case Opcode.DUP_X1: {
-                }
-                break;
-                case Opcode.DUP_X2: {
-                }
-                break;
-                case Opcode.DUP2: {
-                }
-                break;
-                case Opcode.DUP2_X1: {
-                }
-                break;
-                case Opcode.DUP2_X2: {
-                }
-                break;
-                case Opcode.SWAP: {
-                }
-                break;
-                case Opcode.FMUL: {
-                }
-                break;
-                case Opcode.DMUL: {
-                    double var1 = operandStack.popDouble();
-                    double var0 = operandStack.popDouble();
-                    double sum = var0 * var1;
-                    operandStack.putDouble(sum);
-                }
-                break;
-                case Opcode.IDIV: {
-                }
-                break;
-                case Opcode.LDIV: {
-                }
-                break;
-                case Opcode.FDIV: {
-                }
-                break;
-                case Opcode.DDIV: {
-                }
-                break;
-                case Opcode.ISHR: {
-                }
-                break;
-                case Opcode.LSHR: {
-                }
-                break;
-                case Opcode.IUSHR: {
-                }
-                break;
-                case Opcode.LUSHR: {
-                }
-                break;
-                case Opcode.IAND: {
-                }
-                break;
-                case Opcode.LAND: {
-                }
-                break;
-                case Opcode.L2D: {
-                }
-                break;
-                case Opcode.F2I: {
-                }
-                break;
-                case Opcode.F2L: {
-                }
-                break;
-                case Opcode.F2D: {
-                }
-                break;
-                case Opcode.D2I: {
-                }
-                break;
-                case Opcode.D2L: {
-                }
-                break;
-                case Opcode.IFNE: {
-                    int var0 = operandStack.popInt();
-                    short offset = code.readU2();
-                    if(var0 != 0){
-                        code.pcAddBackOne(offset);
-                    }else {
-                        code.pcAdd(2);
-                    }
-                }
-                break;
-                case Opcode.IFLT: {
-                    int var0 = operandStack.popInt();
-                    short offset = code.readU2();
-                    if(var0 < 0){
-                        code.pcAddBackOne(offset);
-                    }else {
-                        code.pcAdd(2);
-                    }
-                }
-                break;
-                case Opcode.IFGE: {
-                    int var0 = operandStack.popInt();
-                    short offset = code.readU2();
-                    if(var0 >= 0){
-                        code.pcAddBackOne(offset);
-                    }else {
-                        code.pcAdd(2);
-                    }
-                }
-                break;
-                case Opcode.IFGT: {
-                    int var0 = operandStack.popInt();
-                    short offset = code.readU2();
-                    if(var0 > 0){
-                        code.pcAddBackOne(offset);
-                    }else {
-                        code.pcAdd(2);
-                    }
-                }
-                break;
-                case Opcode.IFLE: {
-                    int var0 = operandStack.popInt();
-                    short offset = code.readU2();
-                    if(var0 <= 0){
-                        code.pcAddBackOne(offset);
-                    }else {
-                        code.pcAdd(2);
-                    }
-                }
-                break;
-                case Opcode.IF_ICMPEQ: {
-                    int var1 = operandStack.popInt();
-                    int var0 = operandStack.popInt();
-                    short offset = code.readU2();
-                    if(var0 == var1){
-                        /*分支*/
-                        code.pcAddBackOne(offset);
-                    }else {
-                        code.pcAdd(2);
-                    }
-                }
-                break;
-                case Opcode.IF_ICMPNE: {
-                    int var1 = operandStack.popInt();
-                    int var0 = operandStack.popInt();
-                    short offset = code.readU2();
-                    if(var0 != var1){
-                        /*分支*/
-                        code.pcAddBackOne(offset);
-                    }else {
-                        code.pcAdd(2);
-                    }
-                }
-                break;
-                case Opcode.IF_ICMPLT: {
-                    int var1 = operandStack.popInt();
-                    int var0 = operandStack.popInt();
-                    short offset = code.readU2();
-                    if(var0 == var1){
-                        /*分支*/
-                        code.pcAddBackOne(offset);
-                    }else {
-                        code.pcAdd(2);
-                    }
-                }
-                break;
-                case Opcode.IF_ICMPGE: {
-                    int var1 = operandStack.popInt();
-                    int var0 = operandStack.popInt();
-                    short offset = code.readU2();
-                    if(var0 >= var1){
-                        /*分支*/
-                        code.pcAddBackOne(offset);
-                    }else {
-                        code.pcAdd(2);
-                    }
-                }
-                break;
-                case Opcode.IF_ICMPGT: {
-                    int var1 = operandStack.popInt();
-                    int var0 = operandStack.popInt();
-                    short offset = code.readU2();
-                    if(var0 > var1){
-                        /*分支*/
-                        code.pcAddBackOne(offset);
-                    }else {
-                        code.pcAdd(2);
-                    }
-                }
-                break;
-                case Opcode.IF_ICMPLE: {
-                    int var1 = operandStack.popInt();
-                    int var0 = operandStack.popInt();
-                    short offset = code.readU2();
-                    if(var0 <= var1){
-                        /*分支*/
-                        code.pcAddBackOne(offset);
-                    }else {
-                        code.pcAdd(2);
-                    }
-                }
-                break;
-                case Opcode.IF_ACMPEQ: {
-
-                }
-                break;
-                case Opcode.IF_ACMPNE: {
-
-                }
-                break;
-                case Opcode.GOTO_: {
-                    short offset = code.readU2();
-                    code.pcAddBackOne(offset );
-                }
-                break;
-                case Opcode.JSR: {
-                }
-                break;
-                case Opcode.RET: {
-                }
-                break;
-                case Opcode.TABLESWITCH: {
-                }
-                break;
-                case Opcode.LOOKUPSWITCH: {
-                }
-                break;
                 case Opcode.IRETURN: {
                     jThread.popFrame();
                     JavaFrame invokerFrame = jThread.getTopFrame();
@@ -727,292 +352,15 @@ public class Interpreter {
                     jThread.popFrame();
                     return;
                 }
-                case Opcode.INVOKESPECIAL: {
-                    short invokeIndex = code.consumeU2();
-                    ConstantBase[] constant_bases = javaClass.getClassFile().constantPool.cpInfo;
-                    ConstantBase constant_methodref = constant_bases[invokeIndex - 1];
-                    Ref methodRef = JavaClass.processRef(javaClass, constant_methodref);
-
-                    invokeSpecial(methodRef);
-
-                }
-                break;
-                case Opcode.INVOKEINTERFACE: {
-                }
-                break;
-                case Opcode.XXXUNUSEDXXX: {
-                }
-                break;
-
-                case Opcode.ARRAYLENGTH: {
-                    JObject arrayJObject = operandStack.popJObject();
-                    ArrayFields arrayFields = runTimeEnv.javaHeap.arrayContainer.get(arrayJObject.offset);
-                    int size = arrayFields.arraySize;
-                    operandStack.putInt(size);
-                }
-                break;
-                case Opcode.ATHROW: {
-                }
-                break;
-                case Opcode.CHECKCAST: {
-                    code.consumeU2();
-                }
-                break;
-                case Opcode.INSTANCEOF_: {
-                }
-                break;
-                case Opcode.MONITORENTER: {
-                }
-                break;
-                case Opcode.MONITOREXIT: {
-                }
-                break;
-                case Opcode.WIDE: {
-                }
-                break;
-                case Opcode.MULTIANEWARRAY: {
-                }
-                break;
-                case Opcode.IFNULL: {
-                }
-                break;
-                case Opcode.IFNONNULL: {
-                    JObject jObject = operandStack.popJObject();
-                    if(jObject != null){
-                        int offset = code.readU2();
-                        code.pcAddBackOne(offset);
-                    }else {
-                        code.pcAdd(2);
-                    }
-                }
-                break;
-                case Opcode.GOTO_W: {
-                }
-                break;
-                case Opcode.JSR_W: {
-                }
-                break;
-                case Opcode.BREAKPOINT: {
-                }
-                break;
-                case Opcode.INVOKENATIVE: {
-                    invokeNative(javaClass, callSite);
-                }
-                break;
-                case Opcode.IMPDEP2: {
-                }
-                break;
             }
         }
     }
 
 
     public void invokeSpecial(Ref methodRef) {
-
-        MethodInfo method_info = parseMethodRef(methodRef);
-        /*调用传递参数 如(J)J*/
-        Descriptor descriptor = processDescriptor(methodRef.descriptorName);
-
-        CallSite callSite = new CallSite();
-        callSite.setCallSite( method_info);
-        OperandStack invokerStack = jThread.getTopFrame().operandStack;
-        jThread.pushFrame(callSite.maxStack, callSite.maxLocals);
-        JavaFrame curFrame = jThread.getTopFrame();
-        LocalVars curLocalVars = curFrame.localVars;
-
-        /*调用传递参数*/
-        int slotCount = calParametersSlot(method_info, descriptor.parameters);
-
-        for(int i = 0; i < slotCount; i++){
-            curLocalVars.putSlot(slotCount - 1 - i, invokerStack.popSlot());
-        }
-        executeByteCode(jThread, method_info.javaClass, callSite);
+        Instruction instruction = instructionMap.get(Opcode.INVOKESPECIAL);
+        ((InvokeSpecial)instruction).invokeSpecial(runTimeEnv, jThread,this, methodRef);
     }
-
-
-
-
-    /**
-     * 解析方法:将方法的argSlotCount和javaClass赋值
-     * @param methodRef
-     */
-    private MethodInfo parseMethodRef(Ref methodRef) {
-        runTimeEnv.methodArea.loadClass(methodRef.className);
-        runTimeEnv.methodArea.linkClass(methodRef.className);
-        //runTimeEnv.methodArea.initClass(methodRef.className, this);
-        JavaClass javaClass = runTimeEnv.methodArea.findClass(methodRef.className);
-        MethodInfo method_info = javaClass.findMethod(methodRef.refName, methodRef.descriptorName);
-        method_info.javaClass = javaClass;
-        /*argSlotCount未赋值过，则赋值*/
-        if(method_info.argSlotCount == -1){
-            Descriptor descriptor = processDescriptor(methodRef.descriptorName);
-            int slotCount = calParametersSlot(method_info, descriptor.parameters);
-            method_info.argSlotCount = slotCount;
-
-        }
-        return method_info;
-    }
-
-    /**
-     * 调用native方法,暂时只支持arraycopy
-     * @param javaClass
-     * @param callSite
-     */
-    private void invokeNative(JavaClass javaClass, CallSite callSite) {
-        Ref methodRef = new Ref();
-        methodRef.refName = javaClass.constantUtf8Index2String(callSite.nameIndex);
-        methodRef.descriptorName = javaClass.constantUtf8Index2String(callSite.descriptorIndex);
-        methodRef.className = javaClass.classPath;
-        if(!NativeUtils.hasNativeMethod(methodRef)){
-            return;
-        }
-        JavaFrame javaFrame = jThread.getTopFrame();
-        NativeUtils.executeMethod(runTimeEnv, javaFrame, methodRef);
-    }
-
-    /**
-     * 解析方法的修饰符，如(J)J解析为如下形式：Descriptor：{parameters:[J],returnType:J}
-     * @param descriptorName
-     * @return
-     */
-    private Descriptor processDescriptor(String descriptorName) {
-        Descriptor descriptor = new Descriptor();
-        List<Integer> parameters = new ArrayList<>();
-        Integer returnType = new Integer(0);
-        char[] descriptorNameArr = descriptorName.toCharArray();
-        int i = 0;
-        while (descriptorNameArr[i] != ')'){
-            switch (descriptorNameArr[i]) {
-                case 'B': {
-                    parameters.add(T_BYTE);
-                }
-                break;
-                case 'C': {
-                    parameters.add(T_CHAR);
-                }
-                break;
-                case 'D': {
-                    parameters.add(TypeCode.T_DOUBLE);
-                }
-                break;
-                case 'F': {
-                    parameters.add(TypeCode.T_FLOAT);
-                }
-                break;
-                case 'I': {
-                    parameters.add(TypeCode.T_INT);
-                }
-                break;
-                case 'J': {
-                    parameters.add(TypeCode.T_LONG);
-                }
-                break;
-                case 'S': {
-                    parameters.add(TypeCode.T_SHORT);
-                }
-                break;
-                case 'Z': {
-                    parameters.add(TypeCode.T_BOOLEAN);
-                }
-                break;
-                case '[': {
-                    int arrayComponentType = ++i;
-                    while (descriptorNameArr[arrayComponentType] == '[') {
-                        arrayComponentType++;
-                    }
-                    i = arrayComponentType;
-                    parameters.add(TypeCode.T_EXTRA_ARRAY);
-                }
-                break;
-                case 'L': {
-                    int objectType = i++;
-                    while (descriptorNameArr[objectType] != ';') {
-                        objectType++;
-                    }
-                    i = objectType;
-                    parameters.add(TypeCode.T_EXTRA_OBJECT);
-                }
-                break;
-            }
-            i++;
-        }
-        int len = descriptorName.length();
-        while (i < len) {
-            switch (descriptorNameArr[i]) {
-                case 'B':{
-                    returnType = T_BYTE;
-                }
-                break;
-                case 'C':{
-                    returnType = T_CHAR;
-                }
-                break;
-                case 'D':{
-                    returnType = T_DOUBLE;
-                }
-                break;
-                case 'F':{
-                    returnType = T_FLOAT;
-                }
-                break;
-                case 'I':{
-                    returnType = T_INT;
-                }
-                break;
-                case 'J':{
-                    returnType = T_LONG;
-                }
-                break;
-                case 'S':{
-                    returnType = T_SHORT;
-                }
-                break;
-                case 'Z':{
-                    returnType = T_BOOLEAN;
-                }
-                break;
-                case 'V':{
-                    returnType = T_EXTRA_VOID;
-                }
-                break;
-                case '[': {
-                    returnType = T_EXTRA_ARRAY;
-                }
-                break;
-                case 'L': {
-                    returnType = T_EXTRA_OBJECT;
-                }
-                break;
-            }
-            i++;
-        }
-        descriptor.parameters = parameters;
-        descriptor.returnType = returnType;
-        return descriptor;
-    }
-
-    /**
-     * 计算方法的参数占用Slot的个数
-     * @param method_info
-     * @param parameters
-     * @return
-     */
-    private int calParametersSlot(MethodInfo method_info, List<Integer> parameters){
-        int parametersCount = parameters.size();
-
-        int slotCount = parametersCount;
-        for(int i = 0; i < parametersCount; i++){
-            if(parameters.get(i) == TypeCode.T_LONG
-                    ||parameters.get(i) == TypeCode.T_DOUBLE){
-                slotCount ++;
-            }
-        }
-        if(!MethodArea.isStatic(method_info.accessFlags)){
-            slotCount ++;/*'this' 引用*/
-        }
-        return slotCount;
-    }
-
 
 
 }

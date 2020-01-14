@@ -20,7 +20,7 @@ public class NativeUtils {
          *  native.Register(jlSystem, "arraycopy", "(Ljava/lang/Object;ILjava/lang/Object;II)V", arraycopy)
          */
 
-        String method = Constant.ARRAYCOPY_CLASSNAME + "~" +Constant.ARRAYCOPY_DESCRIPTOR + "~" + Constant.ARRAYCOPY_METHODNAME;
+        String method = NativeConstant.ARRAYCOPY_CLASSNAME + "~" + NativeConstant.ARRAYCOPY_DESCRIPTOR + "~" + NativeConstant.ARRAYCOPY_METHODNAME;
 
         registerNative(method, ( RunTimeEnv runTimeEnv, JavaFrame javaFrame)->{
             System.arraycopy(runTimeEnv, javaFrame);

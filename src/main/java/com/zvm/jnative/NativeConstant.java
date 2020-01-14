@@ -1,6 +1,6 @@
 package com.zvm.jnative;
 
-public class Constant {
+public class NativeConstant {
     /**
      * registerNative("", "(Ljava/lang/Object;ILjava/lang/Object;II)V", "arraycopy");
      */

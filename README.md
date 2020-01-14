@@ -557,14 +557,37 @@ com\zvm
     draft\                      #草稿，无需理会
     gc\
        GC.java                  #GC类，目前只有标记清除算法
+    instruction\                #指令实现(根据Java虚拟机规范分类建立子目录)
+       arithmetic\              #运算指令
+          arithmetic\           #算术运算
+          bitwise\              #位运算符
+          logic\                #逻辑运算符
+          relation\             #关系运算符
+          unary\                #一元运算符  
+       controltransfer\         #控制转移 
+       exception\               #抛出异常
+       loadandstore\            #加载和存储
+          constant\             #常量加载至操作数栈
+          load\                 #局部变量表至操作数栈
+          store\                #操作数栈到局部变量表
+       methodinvocation\        #方法调用
+       objectcreatemanipulate\  #对象创建和操作
+       oprandstack\             #操作数栈操作
+       synchronization\         #同步
+       typeconversion\          #类型转换
+       Opcode.java              #指令opcode
+       Instruction.java         #所有指令都implements这个接口
     interpreter\                
        CallSite.java            #调用方法时的入口
        CodeUtils.java           #控制pc的工具类
        Descriptor.java          #方法调用时，表示返回数据和入参结构
        Interpreter.java         #取opcode并执行的类
-       Opcode.java              #指令
        Ref.java                 #表示methodRef或fieldRef:含类名、描述符、方法名/字段名
-    jnative\                    #预留实现本地方法
+    jnative\                    #实现本地方法
+        NativeConstant.java     #调用相关常量
+        NativeMethod.java       #所有本地方法都需要实现这个接口
+        NativeUtils.java        #本地方法注册调用工具
+        System.java             #实现System类中的本地方法
     memory\
        ArrayFields.java         #保存堆中的数组
        JavaHeap.java            #表示堆，对象和数组都分配在这
