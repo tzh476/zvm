@@ -2,7 +2,7 @@ package com.zvm.draft;
 
 import com.alibaba.fastjson.JSON;
 import com.google.gson.Gson;
-import com.zvm.interpreter.Opcode1;
+import com.zvm.instruction.Opcode1;
 
 public class MainTest {
     public static void main(String[] args){

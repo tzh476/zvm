@@ -9,10 +9,7 @@ import com.zvm.instruction.Opcode;
 import com.zvm.instruction.Opcode1;
 import com.zvm.instruction.loadandstore.constant.*;
 import com.zvm.instruction.loadandstore.load.*;
-import com.zvm.instruction.loadandstore.store.Dstore;
-import com.zvm.instruction.loadandstore.store.Fstore;
-import com.zvm.instruction.loadandstore.store.Istore;
-import com.zvm.instruction.loadandstore.store.Lstore;
+import com.zvm.instruction.loadandstore.store.*;
 import com.zvm.instruction.methodinvocation.InvokeSpecial;
 import com.zvm.instruction.methodinvocation.InvokeStatic;
 import com.zvm.instruction.methodinvocation.InvokeVirtual;
@@ -114,11 +111,34 @@ public class Interpreter {
         instructionMap.put(Opcode.SALOAD, new Saload());
 
         instructionMap.put(Opcode.ISTORE, new Istore());
+        instructionMap.put(Opcode.ISTORE_0, new Istore_0());
+        instructionMap.put(Opcode.ISTORE_1, new Istore_1());
+        instructionMap.put(Opcode.ISTORE_2, new Istore_2());
+        instructionMap.put(Opcode.ISTORE_3, new Istore_3());
+
         instructionMap.put(Opcode.FSTORE, new Fstore());
+        instructionMap.put(Opcode.FSTORE_0, new Fstore_0());
+        instructionMap.put(Opcode.FSTORE_1, new Fstore_1());
+        instructionMap.put(Opcode.FSTORE_2, new Fstore_2());
+        instructionMap.put(Opcode.FSTORE_3, new Fstore_3());
+
+        instructionMap.put(Opcode.ASTORE, new Astore());
+        instructionMap.put(Opcode.ASTORE_0, new Astore_0());
+        instructionMap.put(Opcode.ASTORE_1, new Astore_1());
+        instructionMap.put(Opcode.ASTORE_2, new Astore_2());
+        instructionMap.put(Opcode.ASTORE_3, new Astore_3());
+
         instructionMap.put(Opcode.LSTORE, new Lstore());
+        instructionMap.put(Opcode.LSTORE_0, new Lstore_0());
+        instructionMap.put(Opcode.LSTORE_1, new Lstore_1());
+        instructionMap.put(Opcode.LSTORE_2, new Lstore_2());
+        instructionMap.put(Opcode.LSTORE_3, new Lstore_3());
+
         instructionMap.put(Opcode.DSTORE, new Dstore());
-
-
+        instructionMap.put(Opcode.DSTORE_0, new Dstore_0());
+        instructionMap.put(Opcode.DSTORE_1, new Dstore_1());
+        instructionMap.put(Opcode.DSTORE_2, new Dstore_2());
+        instructionMap.put(Opcode.DSTORE_3, new Dstore_3());
 
 
         /** 方法调用和返回指令*/
@@ -165,46 +185,6 @@ public class Interpreter {
 
             switch (opcodeInt) {
 
-                case Opcode.LSTORE_1: {
-                    localVars.putLong(1, operandStack.popLong());
-                }
-                break;
-                case Opcode.LSTORE_2: {
-                    localVars.putLong(2, operandStack.popLong());
-                }
-                break;
-                case Opcode.LSTORE_3: {
-                    localVars.putLong(3, operandStack.popLong());
-                }
-                break;
-                case Opcode.FSTORE_0: {
-                    localVars.putFloat(0, operandStack.popFloat());
-                }
-                break;
-                case Opcode.FSTORE_1: {
-                    localVars.putFloat(1, operandStack.popFloat());
-                }
-                break;
-                case Opcode.FSTORE_2: {
-                    localVars.putFloat(2, operandStack.popFloat());
-                }
-                break;
-                case Opcode.FSTORE_3: {
-                    localVars.putFloat(3, operandStack.popFloat());
-                }
-                break;
-                case Opcode.DSTORE_0: {
-                    localVars.putDouble(0, operandStack.popDouble());
-                }
-                break;
-                case Opcode.DSTORE_1: {
-                    localVars.putDouble(1, operandStack.popDouble());
-                }
-                break;
-                case Opcode.DSTORE_2: {
-                    localVars.putDouble(2, operandStack.popDouble());
-                }
-                break;
                 case Opcode.LASTORE: {
                     long value = operandStack.popLong();
                     int index = operandStack.popInt();
@@ -477,51 +457,6 @@ public class Interpreter {
                 }
                 break;
 
-                case Opcode.ASTORE: {
-                    int index = code.consumeU1();
-                    localVars.putJObject(index, operandStack.popJObject());
-                }
-                break;
-                case Opcode.ISTORE_0: {
-                    localVars.putIntByIndex(0, operandStack.popInt());
-                }
-                break;
-                case Opcode.ISTORE_1: {
-                    localVars.putIntByIndex(1, operandStack.popInt());
-                }
-                break;
-                case Opcode.ISTORE_2: {
-                    localVars.putIntByIndex(2, operandStack.popInt());
-                }
-                break;
-                case Opcode.ISTORE_3: {
-                    localVars.putIntByIndex(3, operandStack.popInt());
-                }
-                break;
-                case Opcode.LSTORE_0: {
-                    localVars.putLong(0, operandStack.popLong());
-                }
-                break;
-                case Opcode.DSTORE_3: {
-                    localVars.putDouble(3, operandStack.popDouble());
-                }
-                break;
-                case Opcode.ASTORE_0: {
-                    localVars.putJObject(0, operandStack.popJObject());
-                }
-                break;
-                case Opcode.ASTORE_1: {
-                    localVars.putJObject(1, operandStack.popJObject());
-                }
-                break;
-                case Opcode.ASTORE_2: {
-                    localVars.putJObject(2, operandStack.popJObject());
-                }
-                break;
-                case Opcode.ASTORE_3: {
-                    localVars.putJObject(3, operandStack.popJObject());
-                }
-                break;
                 case Opcode.IASTORE: {
                     int value = operandStack.popInt();
                     int index = operandStack.popInt();
@@ -792,26 +727,6 @@ public class Interpreter {
                     jThread.popFrame();
                     return;
                 }
-                case Opcode.GETSTATIC: {
-
-                }
-                break;
-                case Opcode.PUTSTATIC: {
-
-                }
-                break;
-                case Opcode.GETFIELD: {
-
-                }
-                break;
-                case Opcode.PUTFIELD: {
-
-                }
-                break;
-                case Opcode.INVOKEVIRTUAL: {
-
-                }
-                break;
                 case Opcode.INVOKESPECIAL: {
                     short invokeIndex = code.consumeU2();
                     ConstantBase[] constant_bases = javaClass.getClassFile().constantPool.cpInfo;
@@ -819,10 +734,6 @@ public class Interpreter {
                     Ref methodRef = JavaClass.processRef(javaClass, constant_methodref);
 
                     invokeSpecial(methodRef);
-
-                }
-                break;
-                case Opcode.INVOKESTATIC: {
 
                 }
                 break;
